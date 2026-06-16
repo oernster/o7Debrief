@@ -43,7 +43,11 @@ def _header(lines: list[str], header: dict, footer: dict) -> None:
     """Append the report title and the session header block."""
     lines.append(_TITLE)
     lines.append(_BLANK)
-    lines.append(f"**CMDR {header['commander']}** | {header['ship']}")
+    ship_line = f"**CMDR {header['commander']}** | {header['ship']}"
+    name = header["ship_name"]
+    if name:
+        ship_line += f' | "{name}"'
+    lines.append(ship_line)
     lines.append(
         f"{header['session_start']} to {header['session_end']} "
         f"({header['duration']})"

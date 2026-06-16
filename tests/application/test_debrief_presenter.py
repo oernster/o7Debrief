@@ -298,6 +298,19 @@ def test_header_shows_the_ship_when_known() -> None:
     assert context["header"]["ship"] == "Panther Clipper Mk II"
 
 
+def test_header_shows_the_ship_name_when_present() -> None:
+    debrief = build.debrief(
+        beats=(),
+        activity=ActivityRollup(modes_used=()),
+        ship="Panther Clipper Mk II",
+        ship_name="STARDUST",
+    )
+
+    context = _presenter().present(debrief).to_context()
+
+    assert context["header"]["ship_name"] == "STARDUST"
+
+
 def test_header_falls_back_to_unknown_ship_when_absent() -> None:
     debrief = build.debrief(beats=(), activity=ActivityRollup(modes_used=()))
 

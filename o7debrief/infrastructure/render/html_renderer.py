@@ -119,7 +119,9 @@ footer { color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem;
 <body>
 <div class="wrap">
   <h1>Commander Mission Debrief</h1>
-  <p class="sub">CMDR {{ header.commander }} &middot; {{ header.ship }}</p>
+  <p class="sub">CMDR {{ header.commander }} &middot; {{ header.ship }}
+  {%- if header.ship_name %} &middot; &ldquo;{{ header.ship_name }}&rdquo;{% endif -%}
+  </p>
 
   <div class="panel meta">
     <div><span>Session start</span><br>{{ header.session_start }}</div>

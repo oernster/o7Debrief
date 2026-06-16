@@ -20,31 +20,39 @@ from o7debrief.domain.value_objects.commander_id import CommanderId
 __all__ = ["DebriefBuilder"]
 
 # Journal event and fields naming the ship the commander is flying. The
-# localised name is preferred; the internal symbol is the fallback. These are
-# the journal's own vocabulary, declared here so the builder is their reader.
+# localised type name is preferred over the internal symbol; the player's own
+# ship name is a separate field. These are the journal's own vocabulary,
+# declared here so the builder is their reader.
 _LOAD_GAME_EVENT = "LoadGame"
 _SHIP_DISPLAY_FIELD = "Ship_Localised"
 _SHIP_FIELD = "Ship"
+_SHIP_NAME_FIELD = "ShipName"
 
 
-def _ship_of(events: tuple[RawEvent, ...]) -> str:
-    """Return the ship from the latest LoadGame event, or an empty string.
+def _ship_type_and_name(events: tuple[RawEvent, ...]) -> tuple[str, str]:
+    """Return the (type, name) of the ship from the latest LoadGame event.
 
-    The localised name (for example "Panther Clipper Mk II") is preferred; the
-    internal symbol is the fallback. The latest LoadGame wins, so a ship swap
-    across an all-history read reports the most recent vessel.
+    The localised type name (for example "Panther Clipper Mk II") is preferred
+    over the internal symbol, and the player's custom ship name (``ShipName``)
+    is read alongside it. The latest LoadGame wins, so a ship swap across an
+    all-history read reports the most recent vessel. Either part is an empty
+    string when the journal does not carry it.
     """
-    ship = ""
+    ship_type = ""
+    ship_name = ""
     for event in events:
         if event.event_type != _LOAD_GAME_EVENT:
             continue
         display = event.get(_SHIP_DISPLAY_FIELD)
         internal = event.get(_SHIP_FIELD)
         if isinstance(display, str) and display.strip():
-            ship = display
+            ship_type = display
         elif isinstance(internal, str) and internal.strip():
-            ship = internal
-    return ship
+            ship_type = internal
+        name = event.get(_SHIP_NAME_FIELD)
+        if isinstance(name, str) and name.strip():
+            ship_name = name
+    return ship_type, ship_name
 
 
 class DebriefBuilder:
@@ -67,6 +75,13 @@ class DebriefBuilder:
         """
         window = window_of(events)
         beats = build_beats(events, self._spec)
+        ship_type, ship_name = _ship_type_and_name(events)
         return assemble(
-            commander, window, beats, rank_progression, self._spec, _ship_of(events)
+            commander,
+            window,
+            beats,
+            rank_progression,
+            self._spec,
+            ship_type,
+            ship_name,
         )

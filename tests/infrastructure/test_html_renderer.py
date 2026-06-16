@@ -87,6 +87,20 @@ def test_render_includes_commander_metrics_and_sections() -> None:
     assert "Milestones" in html
 
 
+def test_render_includes_the_ship_type_and_name() -> None:
+    debrief = build.debrief(
+        beats=(),
+        activity=ActivityRollup(modes_used=()),
+        ship="Krait Mk II",
+        ship_name="Stardust",
+    )
+
+    html = HtmlDebriefExporter().render(_present(debrief)).decode("utf-8")
+
+    assert "Krait Mk II" in html
+    assert "Stardust" in html
+
+
 def test_render_escapes_html_in_journal_values() -> None:
     beats = (
         build.beat(BeatKind.SCAN_BODY, ActivityDomain.EXPLORATION, 1, system="<x>"),

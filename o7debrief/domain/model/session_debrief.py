@@ -37,6 +37,7 @@ class SessionDebrief:
     rank_progression: tuple[RankDelta, ...]
     config_schema_version: str
     ship: str = ""
+    ship_name: str = ""
 
     def __post_init__(self) -> None:
         previous: float | None = None

@@ -85,6 +85,7 @@ def build_header(debrief, fmt, resolver) -> HeaderView:
     return HeaderView(
         commander=debrief.commander.name,
         ship=debrief.ship or resolver.generic(*_UNKNOWN_SHIP),
+        ship_name=debrief.ship_name,
         session_start=fmt.datetime(debrief.window.start.iso_utc),
         session_end=fmt.datetime(debrief.window.end.iso_utc),
         duration=fmt.duration(debrief.window.duration_s),

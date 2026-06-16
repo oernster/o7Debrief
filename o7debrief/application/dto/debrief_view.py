@@ -41,12 +41,14 @@ class HeaderView:
     start_system: str
     end_system: str
     systems_visited: str
+    ship_name: str = ""
 
     def as_dict(self) -> dict:
         """Return the header as a plain dict in contract key order."""
         return {
             "commander": self.commander,
             "ship": self.ship,
+            "ship_name": self.ship_name,
             "session_start": self.session_start,
             "session_end": self.session_end,
             "duration": self.duration,

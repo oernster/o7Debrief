@@ -26,6 +26,7 @@ from o7debrief.application.errors import (
 _HEADER_KEYS = {
     "commander",
     "ship",
+    "ship_name",
     "session_start",
     "session_end",
     "duration",

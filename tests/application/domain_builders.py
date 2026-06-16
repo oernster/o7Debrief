@@ -132,6 +132,7 @@ def debrief(
     net_credits: int = 0,
     schema_version: str = "1",
     ship: str = "",
+    ship_name: str = "",
 ) -> SessionDebrief:
     """Assemble a SessionDebrief from prepared parts for presenter tests."""
     start = SystemName(start_system) if start_system is not None else None
@@ -147,4 +148,5 @@ def debrief(
         rank_progression=ranks,
         config_schema_version=schema_version,
         ship=ship,
+        ship_name=ship_name,
     )

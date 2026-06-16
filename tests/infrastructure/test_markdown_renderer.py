@@ -69,6 +69,20 @@ def test_render_has_headings_and_fenced_headline() -> None:
     assert "2,000,000" in md
 
 
+def test_render_includes_the_ship_type_and_name() -> None:
+    debrief = build.debrief(
+        beats=(),
+        activity=ActivityRollup(modes_used=()),
+        ship="Krait Mk II",
+        ship_name="Stardust",
+    )
+
+    md = MarkdownDebriefExporter().render(_present(debrief)).decode("utf-8")
+
+    assert "Krait Mk II" in md
+    assert "Stardust" in md
+
+
 def test_render_tags_timeline_with_mode_label() -> None:
     md = MarkdownDebriefExporter().render(_populated_view()).decode("utf-8")
 

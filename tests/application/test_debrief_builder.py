@@ -56,3 +56,41 @@ def test_build_ship_is_empty_without_a_load_game() -> None:
     result = builder.build(commander(), events, ())
 
     assert result.ship == ""
+
+
+def test_build_reads_the_ship_name_from_the_load_game_event() -> None:
+    events = (
+        event(
+            "LoadGame",
+            0,
+            Ship="PantherMkII",
+            Ship_Localised="Panther Clipper Mk II",
+            ShipName="STARDUST",
+        ),
+        event("Shutdown", 30),
+    )
+    builder = DebriefBuilder(spec())
+
+    result = builder.build(commander(), events, ())
+
+    assert result.ship == "Panther Clipper Mk II"
+    assert result.ship_name == "STARDUST"
+
+
+def test_build_ship_name_is_empty_when_the_ship_is_unnamed() -> None:
+    events = (event("LoadGame", 0, Ship="PantherMkII"), event("Shutdown", 30))
+    builder = DebriefBuilder(spec())
+
+    result = builder.build(commander(), events, ())
+
+    assert result.ship_name == ""
+
+
+def test_build_ship_is_empty_when_the_load_game_names_no_ship() -> None:
+    events = (event("LoadGame", 0), event("Shutdown", 30))
+    builder = DebriefBuilder(spec())
+
+    result = builder.build(commander(), events, ())
+
+    assert result.ship == ""
+    assert result.ship_name == ""

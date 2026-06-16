@@ -210,6 +210,7 @@ def assemble(
     rank_progression: tuple[RankDelta, ...],
     spec: RollupSpec,
     ship: str = "",
+    ship_name: str = "",
 ) -> SessionDebrief:
     """Fold the session's beats into a complete SessionDebrief."""
     start_system, end_system = _endpoints(beats)
@@ -224,4 +225,5 @@ def assemble(
         rank_progression=rank_progression,
         config_schema_version=spec.schema_version,
         ship=ship,
+        ship_name=ship_name,
     )
