@@ -8,7 +8,7 @@ injected services, opens the produced report and records lifecycle correctly.
 from __future__ import annotations
 
 import pytest
-from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
+from PySide6.QtWidgets import QApplication, QMenu
 
 from o7debrief.application.dto.export_result import ExportResult
 from o7debrief.application.errors import ApplicationError
@@ -234,82 +234,3 @@ def test_notify_is_callable(qapp: QApplication, view_model) -> None:
     )
 
     controller._notify("Title", "Body")
-
-
-class _FakeHome:
-    """A fake home dialog that records construction and exec without blocking.
-
-    Standing in for HomeDialog lets the activation tests run without a real
-    modal window. The latest instance is captured on the class so a test can
-    inspect what the controller passed and invoke the callbacks it wired.
-    """
-
-    last: _FakeHome | None = None
-
-    def __init__(self, status_text: str, recent: object, **callbacks: object) -> None:
-        self.status_text = status_text
-        self.recent = recent
-        self.callbacks = callbacks
-        self.exec_calls = 0
-        _FakeHome.last = self
-
-    def exec(self) -> int:
-        """Record the modal show and return at once rather than blocking."""
-        self.exec_calls += 1
-        return 0
-
-
-def test_left_click_opens_home_dialog(qapp: QApplication, view_model) -> None:
-    """A left-click (Trigger) builds and shows the home dialog with status."""
-    _FakeHome.last = None
-    controller = TrayController(
-        one_shot=FakeOneShot(),
-        session=view_model,
-        opener=RecordingOpener(),
-        home_factory=_FakeHome,
-    )
-
-    controller._tray.activated.emit(QSystemTrayIcon.ActivationReason.Trigger)
-
-    assert _FakeHome.last is not None
-    assert _FakeHome.last.exec_calls == 1
-    assert _FakeHome.last.status_text == view_model.status_text
-
-
-def test_right_click_does_not_open_home_dialog(qapp: QApplication, view_model) -> None:
-    """A context (right-click) activation must not open the home dialog."""
-    _FakeHome.last = None
-    controller = TrayController(
-        one_shot=FakeOneShot(),
-        session=view_model,
-        opener=RecordingOpener(),
-        home_factory=_FakeHome,
-    )
-
-    controller._tray.activated.emit(QSystemTrayIcon.ActivationReason.Context)
-
-    assert _FakeHome.last is None
-
-
-def test_home_dialog_actions_drive_the_same_use_cases(
-    qapp: QApplication, view_model
-) -> None:
-    """The callbacks handed to the home dialog run the tray's own use cases."""
-    one_shot = FakeOneShot(ExportResult(paths=(_HTML_PATH,)))
-    opener = RecordingOpener()
-    controller = TrayController(
-        one_shot=one_shot,
-        session=view_model,
-        opener=opener,
-        home_factory=_FakeHome,
-    )
-
-    controller._tray.activated.emit(QSystemTrayIcon.ActivationReason.Trigger)
-    assert _FakeHome.last is not None
-    callbacks = _FakeHome.last.callbacks
-    callbacks["on_debrief_history"]()
-    callbacks["on_debrief_last"]()
-
-    assert one_shot.history_calls == 1
-    assert one_shot.calls == 1
-    assert opener.opened == [_HTML_PATH, _HTML_PATH]

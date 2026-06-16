@@ -105,29 +105,56 @@ class HomeDialog(QDialog):
         layout.setSpacing(_SPACING_PX)
         layout.addLayout(self._build_header(icon))
 
-        status = QLabel(status_text)
-        status.setWordWrap(True)
-        layout.addWidget(status)
+        self._status_label = QLabel(status_text)
+        self._status_label.setWordWrap(True)
+        layout.addWidget(self._status_label)
 
         layout.addWidget(_divider())
         layout.addWidget(self._action_button(_LAST_SESSION_TEXT, on_debrief_last))
         layout.addWidget(self._action_button(_HISTORY_TEXT, on_debrief_history))
 
         layout.addWidget(_heading(_RECENT_HEADING))
-        layout.addWidget(self._build_recent(recent))
+        self._recent_holder = QWidget()
+        self._recent_holder_layout = QVBoxLayout(self._recent_holder)
+        self._recent_holder_layout.setContentsMargins(
+            _NO_MARGIN, _NO_MARGIN, _NO_MARGIN, _NO_MARGIN
+        )
+        self._recent_holder_layout.setSpacing(_SPACING_PX)
+        layout.addWidget(self._recent_holder)
+        self._populate_recent(recent)
 
         layout.addWidget(_divider())
         layout.addLayout(self._build_footer(on_settings, on_about))
 
+    def refresh(self, status_text: str, recent: Sequence[str]) -> None:
+        """Update the status line and recent list of an already-open dialog.
+
+        A debrief generated from the tray menu while this dialog is showing
+        would otherwise leave it on the snapshot it was built with; this rebinds
+        the status caption and rebuilds the recent list in place.
+        """
+        self._status_label.setText(status_text)
+        self._populate_recent(recent)
+
     def showEvent(self, event: QShowEvent) -> None:
-        """Raise and focus the dialog when shown so it lands in front.
+        """Bring the dialog to the front when it is first shown.
 
         Opened from a tray left-click the app is not the foreground window;
         without this the dialog can surface behind other windows. The click
-        grants the process focus rights; clearing any minimised state then
-        raising and activating here brings it reliably to the front.
+        grants the process focus rights, so bringing it to the front here lands
+        it reliably above other windows.
         """
         super().showEvent(event)
+        self.bring_to_front()
+
+    def bring_to_front(self) -> None:
+        """Restore, raise and focus the dialog so it lands in front.
+
+        Clearing the minimised flag is what actually restores an iconified
+        window; on Windows raising and activating alone leave a minimised dialog
+        sitting in the taskbar. This runs both on first show and when a second
+        tray click surfaces an already-open dialog.
+        """
         self.setWindowState(
             (self.windowState() & ~Qt.WindowState.WindowMinimized)
             | Qt.WindowState.WindowActive
@@ -156,6 +183,20 @@ class HomeDialog(QDialog):
         button = QPushButton(text)
         button.clicked.connect(lambda _checked=False: handler())
         return button
+
+    def _populate_recent(self, recent: Sequence[str]) -> None:
+        """Replace the recent-list widget inside its holder with a fresh build.
+
+        The old widget is detached from the dialog before deletion so a rebuilt
+        list never leaves stale buttons behind in the object tree.
+        """
+        while self._recent_holder_layout.count():
+            item = self._recent_holder_layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.setParent(None)
+                widget.deleteLater()
+        self._recent_holder_layout.addWidget(self._build_recent(recent))
 
     def _build_recent(self, recent: Sequence[str]) -> QWidget:
         """Build the recent-debriefs list, or a muted placeholder when empty.

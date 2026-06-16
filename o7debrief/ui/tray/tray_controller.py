@@ -125,6 +125,7 @@ class TrayController(QObject):
         self._on_licence = on_licence
         self._on_quit = on_quit
         self._recent: list[str] = []
+        self._home: HomeDialog | None = None
 
         self._tray = QSystemTrayIcon(self)
         if icon is not None:
@@ -239,7 +240,12 @@ class TrayController(QObject):
         self._handle_result(result)
 
     def _handle_result(self, result: ExportResult) -> None:
-        """Remember produced paths, refresh the submenu and open the report."""
+        """Remember produced paths, refresh the menu and open the report.
+
+        When the home dialog is open its recent list and status are refreshed in
+        place, so a debrief generated from the tray menu while it is showing
+        updates the dialog instead of leaving it on its opening snapshot.
+        """
         if not result.paths:
             self._notify(_EMPTY_TITLE, _EMPTY_BODY)
             return
@@ -247,6 +253,8 @@ class TrayController(QObject):
             if path not in self._recent:
                 self._recent.append(path)
         self._rebuild_recent_menu()
+        if self._home is not None:
+            self._home.refresh(self._session.status_text, tuple(self._recent))
         self._opener(result.paths[_PRIMARY_PATH])
         self._notify(_GENERATED_TITLE, _GENERATED_BODY)
 
@@ -284,7 +292,18 @@ class TrayController(QObject):
             self._open_home()
 
     def _open_home(self) -> None:
-        """Build and show the home dialog wired to this controller's actions."""
+        """Show the home dialog wired to this controller's actions, or raise it.
+
+        The dialog is modeless (``show`` rather than ``exec``) so the tray
+        context menu stays reachable while it is open; that is what lets a
+        debrief triggered from the menu refresh the dialog. A second left-click
+        brings the existing dialog to the front (restoring it if minimised)
+        instead of opening another, and the reference is dropped on close so a
+        stale, closed dialog is never refreshed.
+        """
+        if self._home is not None:
+            self._home.bring_to_front()
+            return
         dialog = self._home_factory(
             self._session.status_text,
             tuple(self._recent),
@@ -295,7 +314,13 @@ class TrayController(QObject):
             on_open_recent=self._opener,
             icon=self._icon,
         )
-        dialog.exec()
+        self._home = dialog
+        dialog.finished.connect(self._on_home_closed)
+        dialog.show()
+
+    def _on_home_closed(self, _result: int = 0) -> None:
+        """Drop the reference to the home dialog once it has closed."""
+        self._home = None
 
     # ------------------------------------------------------------------ status
 
