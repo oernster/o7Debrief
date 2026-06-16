@@ -69,7 +69,7 @@ Implements the application's ports against the real world; it is never imported 
 
 - Journal IO: Journal directory discovery, the incremental byte-offset tail that reads only new bytes and the parse skeleton. This IO is reused from the author's EDColonisationAsst, which already solves Journal path discovery and incremental tailing.
 - Configuration loading from TOML via stdlib `tomllib`, supplying the event taxonomy and any tunable values so the domain stays free of magic numbers.
-- Exporters: the Jinja2 HTML renderer (inlined CSS, zero JavaScript) and the Markdown renderer, plus file writing. Each timeline row renders its activity (domain) glyph with the control mode shown as a compact tag, so a row reads as what the Commander did rather than which control mode held it.
+- Exporters: the Jinja2 HTML renderer (inlined CSS, zero JavaScript) and the Markdown renderer, plus file writing. Each timeline row renders its activity (domain) glyph with the control mode shown as a compact tag, so a row reads as what the Commander did rather than which control mode held it. The session log is ordered most recent first.
 - A GitHub release source for the update check: a single short, best-effort HTTPS GET built on the standard-library `urllib` (no third-party HTTP dependency), returning the latest release tag or None on any failure.
 
 ### ui

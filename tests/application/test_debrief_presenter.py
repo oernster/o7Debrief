@@ -103,9 +103,9 @@ def test_present_full_debrief_yields_contract_shape() -> None:
     # All eleven domains are present, in canonical order starting with travel.
     assert len(context["domains"]) == 11
     assert context["domains"][0]["key"] == "travel"
-    # Timeline has one entry per moment with resolved mode strings.
+    # Timeline has one entry per moment, most recent first, with resolved modes.
     modes = [entry["mode"] for entry in context["timeline"]]
-    assert modes == ["ship", "ship", "srv", "foot", "ship"]
+    assert modes == ["ship", "foot", "srv", "ship", "ship"]
     # Both ladders appear; the promoted one carries no steady note.
     assert len(context["ranks"]) == 2
     assert context["ranks"][0]["promoted"] is True
@@ -371,10 +371,10 @@ def test_ship_changes_form_a_shipyard_timeline_category() -> None:
 
     context = _presenter().present(debrief).to_context()
 
-    # The ship changes appear in the chronological log.
+    # The ship changes appear in the session log, most recent first.
     assert [entry["text"] for entry in context["timeline"]] == [
-        "SHIP_SWAP",
         "SHIP_PURCHASE",
+        "SHIP_SWAP",
     ]
     # They group under a shipyard timeline category...
     by_key = {category["key"]: category for category in context["timeline_categories"]}

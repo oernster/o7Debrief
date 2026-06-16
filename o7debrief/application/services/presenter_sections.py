@@ -170,19 +170,21 @@ def _timeline_entry(moment, fmt, resolver) -> TimelineEntry:
 
 
 def build_timeline(debrief, fmt, resolver) -> tuple[TimelineEntry, ...]:
-    """Build one timeline entry per moment, in chronological order."""
-    return tuple(_timeline_entry(moment, fmt, resolver) for moment in debrief.moments)
+    """Build one timeline entry per moment, most recent first."""
+    return tuple(
+        _timeline_entry(moment, fmt, resolver) for moment in reversed(debrief.moments)
+    )
 
 
 def build_timeline_categories(debrief, fmt, resolver) -> tuple[TimelineCategory, ...]:
     """Group the timeline by activity domain, in the canonical domain order.
 
-    Each category carries only its own moments, still chronological, so the
-    report can offer per-category views beside the full time-ordered log.
+    Each category carries only its own moments, most recent first, so the
+    report can offer per-category views beside the full session log.
     Domains with no moments this session are omitted.
     """
     grouped: dict[str, list[TimelineEntry]] = {}
-    for moment in debrief.moments:
+    for moment in reversed(debrief.moments):
         key = moment.domain.name.lower()
         grouped.setdefault(key, []).append(_timeline_entry(moment, fmt, resolver))
     categories: list[TimelineCategory] = []
