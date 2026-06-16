@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>o7 Debrief - Commander Mission Debrief for Elite Dangerous</title>
+<meta name="description" content="o7 Debrief turns your Elite Dangerous journal into a self-contained Commander Mission Debrief. Local-first, Windows, every figure traced to a real journal field.">
+<link rel="icon" href="assets/o7Debrief.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="o7 Debrief">
+<meta property="og:title" content="o7 Debrief - Commander Mission Debrief for Elite Dangerous">
+<meta property="og:description" content="Turn your Elite Dangerous journal into a shareable session debrief. Every figure is real, nothing is padded. Local-first, Windows, free and open source.">
+<meta property="og:url" content="https://oernster.github.io/o7Debrief/">
+<meta property="og:image" content="https://oernster.github.io/o7Debrief/assets/social-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="o7 Debrief - Commander Mission Debrief for Elite Dangerous">
+<meta name="twitter:description" content="Turn your Elite Dangerous journal into a shareable session debrief. Local-first, Windows, free and open source.">
+<meta name="twitter:image" content="https://oernster.github.io/o7Debrief/assets/social-card.png">
+<meta name="twitter:image:alt" content="o7 Debrief - Commander Mission Debrief for Elite Dangerous">
+<meta property="og:image:alt" content="o7 Debrief - Commander Mission Debrief for Elite Dangerous">
+<meta property="og:locale" content="en_GB">
+<link rel="canonical" href="https://oernster.github.io/o7Debrief/">
+<meta name="author" content="Oliver Ernster">
+<meta name="application-name" content="o7 Debrief">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0d0d10">
+<meta name="keywords" content="Elite Dangerous, o7 Debrief, Commander Mission Debrief, session report, journal parser, exobiology, exploration, mining, trading, bounty hunting, rank progress, Windows, free, open source">
+<style>
+  :root {
+    --bg: #0d0d10;
+    --surface: #16161d;
+    --edge: #2a2a33;
+    --accent: #f07b05;
+    --accent-soft: #f8a24a;
+    --text: #d7d7da;
+    --muted: #8a8a93;
+    --mono: 'Consolas', 'Cascadia Code', ui-monospace, 'SF Mono', monospace;
+    --sans: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.6;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    z-index: 10;
+  }
+  a { color: var(--accent-soft); text-decoration: none; }
+  a:hover { color: var(--accent); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  header.hero {
+    text-align: center;
+    padding: 88px 0 64px;
+  }
+  .hero img.logo { width: 96px; height: 96px; image-rendering: auto; }
+  .hero h1 {
+    font-family: var(--mono);
+    font-size: clamp(40px, 8vw, 68px);
+    font-weight: 700;
+    color: var(--accent);
+    margin: 16px 0 4px;
+    letter-spacing: 1px;
+    text-shadow: 0 0 24px rgba(240, 123, 5, 0.35);
+  }
+  .hero .tagline {
+    font-family: var(--mono);
+    color: var(--muted);
+    font-size: 16px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin: 0 0 24px;
+  }
+  .hero p.pitch {
+    max-width: 660px;
+    margin: 0 auto 32px;
+    font-size: 19px;
+    color: var(--text);
+  }
+  .cta { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-block;
+    padding: 13px 28px;
+    border-radius: 24px;
+    font-weight: 700;
+    font-size: 15px;
+    border: 1px solid var(--edge);
+  }
+  .btn.primary {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+  }
+  .btn.primary:hover { background: var(--accent-soft); color: var(--bg); }
+  .btn.ghost { background: var(--surface); color: var(--text); }
+  .btn.ghost:hover { background: var(--edge); }
+  .platform-note {
+    margin-top: 18px;
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+  }
+
+  section { padding: 40px 0; }
+  h2 {
+    font-family: var(--mono);
+    color: var(--accent);
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--edge);
+    padding-bottom: 10px;
+    margin-bottom: 28px;
+  }
+
+  .features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 18px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--edge);
+    border-radius: 12px;
+    padding: 22px;
+  }
+  .card .icon { font-size: 24px; }
+  .card h3 {
+    margin: 10px 0 6px;
+    font-size: 17px;
+    color: var(--text);
+    font-family: var(--mono);
+  }
+  .card p { margin: 0; color: var(--muted); font-size: 15px; }
+
+  .shot { text-align: center; }
+  .shot a { display: inline-block; }
+  .shot img {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid var(--edge);
+    border-radius: 12px;
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.6);
+  }
+  .shot .caption { margin-top: 14px; font-size: 14px; color: var(--muted); }
+
+  .tray-shot { text-align: center; }
+  .tray-shot img {
+    width: 100%; max-width: 360px; height: auto; border-radius: 10px;
+  }
+  .tray-shot .caption {
+    margin: 16px auto 0; max-width: 520px; font-size: 14px; color: var(--muted);
+  }
+
+  footer {
+    border-top: 1px solid var(--edge);
+    margin-top: 32px;
+    padding: 32px 0 56px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  footer .mono { font-family: var(--mono); }
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "o7 Debrief",
+  "applicationCategory": "GameApplication",
+  "operatingSystem": "Windows 10, Windows 11",
+  "url": "https://oernster.github.io/o7Debrief/",
+  "image": "https://oernster.github.io/o7Debrief/assets/social-card.png",
+  "description": "A local-first Windows app that turns your Elite Dangerous journal into a self-contained Commander Mission Debrief. Every figure traces back to a real journal entry.",
+  "author": {
+    "@type": "Person",
+    "name": "Oliver Ernster",
+    "url": "https://github.com/oernster"
+  },
+  "license": "https://www.gnu.org/licenses/lgpl-3.0.html",
+  "isAccessibleForFree": true,
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "GBP"
+  }
+}
+</script>
+</head>
+<body>
+  <div class="wrap">
+
+    <header class="hero">
+      <img class="logo" src="assets/o7Debrief.png" alt="o7 Debrief icon">
+      <h1>o7 Debrief</h1>
+      <p class="tagline">Commander Mission Debrief</p>
+      <p class="pitch">
+        A local-first Windows app that turns your Elite Dangerous journal into a
+        single self-contained mission debrief. Every figure traces back to a
+        real journal field. Nothing is estimated, inferred or padded.
+      </p>
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/oernster/o7Debrief/releases/latest">Download</a>
+        <a class="btn ghost" href="example-report.html">View example report</a>
+        <a class="btn ghost" href="https://github.com/oernster/o7Debrief">View on GitHub</a>
+      </div>
+      <p class="platform-note">Windows 10 and 11 &middot; runs quietly from the system tray</p>
+    </header>
+
+    <section id="features">
+      <h2>What it does</h2>
+      <div class="features">
+        <div class="card">
+          <div class="icon">&#128225;</div>
+          <h3>Live tray watcher</h3>
+          <p>Follows the active journal from the system tray and generates a debrief automatically when you shut the game down.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#128338;</div>
+          <h3>Debrief any time</h3>
+          <p>Cold one-shot mode reports your last session, or your whole history to date, even if the app was not running while you played.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#128202;</div>
+          <h3>Real numbers only</h3>
+          <p>Every credit, jump and scan maps to a real entry in your journal, so the figures are verifiable and never guessed, inferred or padded.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#128196;</div>
+          <h3>Self-contained report</h3>
+          <p>A debrief is one self-contained file you can open in any browser or keep, plus a text version ready to paste onto Discord or Reddit.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#127894;</div>
+          <h3>Honest rank reporting</h3>
+          <p>Tier-ups show at once and fractional rank percentages settle at the next launch, because the journal only snapshots progress at startup.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#128274;</div>
+          <h3>Local-first</h3>
+          <p>No cloud, no account, no telemetry. Your journal never leaves your machine, and the app needs no administrator rights to install.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="tray">
+      <h2>Lives in the system tray</h2>
+      <div class="tray-shot">
+        <img src="assets/tray-menu.png" loading="lazy" alt="The o7 Debrief system tray menu: debrief the last session or the whole history to date, reopen recent reports, Settings, Help and Quit">
+        <p class="caption">Debrief your last session or your whole history to date and reopen recent reports from the tray menu; left-click the icon to open the home screen.</p>
+      </div>
+    </section>
+
+    <section id="screenshot">
+      <h2>Example output</h2>
+      <div class="shot">
+        <a href="example-report.html" title="Open the full example report">
+          <img src="assets/screenshot.png" loading="lazy" alt="An example o7 Debrief report showing session totals, per-domain activity, a session log and rank progress">
+        </a>
+        <p class="caption">A debrief rendered from sample data. <a href="example-report.html">Open the full example report &rarr;</a></p>
+      </div>
+    </section>
+
+    <footer>
+      <p class="mono">o7 Debrief</p>
+      <p>
+        Built by Oliver Ernster &middot; released under the GNU Lesser General Public Licence v3.0 (LGPL-3.0)
+        &middot; <a href="https://github.com/oernster/o7Debrief">github.com/oernster/o7Debrief</a>
+      </p>
+      <p>Elite Dangerous is a trademark of Frontier Developments plc. This is an unofficial, fan-made tool.</p>
+    </footer>
+
+  </div>
+</body>
+</html>

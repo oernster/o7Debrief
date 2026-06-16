@@ -216,3 +216,26 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# o7Debrief build + installer artifacts (Nuitka)
+# Nuitka standalone/onefile working and output directories.
+main.build/
+main.dist/
+main.onefile-build/
+o7debrief.build/
+o7debrief.dist/
+o7debrief.onefile-build/
+# buildexe.py / buildinstaller.py output trees.
+# (dist/ is already ignored generically above.)
+dist-installer/
+dist-installer.build/
+# Staged installer payload (built fresh each run from the app bundle).
+installer/payload/
+# Built executables.
+o7Debrief.exe
+o7DebriefSetup.exe
+# Build provenance marker, if emitted.
+BUILD_ID
+
+# Private / local files (not for distribution)
+discord-advert.txt

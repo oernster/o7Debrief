@@ -1,0 +1,587 @@
+# o7Debrief conceptual-event taxonomy.
+#
+# This file is the single source of truth for every label, icon, threshold and
+# event-to-beat mapping used when turning an Elite Dangerous journal into a
+# Commander debrief. No magic numbers or domain strings live in code: the domain
+# and application layers read everything they need from here. British spelling
+# is used in comments. No em dashes appear anywhere.
+#
+# The file is plain TOML and parses with the standard-library tomllib module.
+
+# The order in which domain sections appear in the generated report. Declared at
+# the top level (before any table) so it reads as a document-wide setting.
+section_order = [
+    "travel",
+    "exploration",
+    "exobiology",
+    "combat",
+    "trade",
+    "mining",
+    "missions",
+    "engineering",
+    "srv",
+    "on_foot",
+    "carrier",
+]
+
+[meta]
+app_name = "o7 Debrief"
+license = "LGPL-3.0-or-later"
+schema_version = "1"
+# Journal events that bracket a play session. The first marks a fresh start,
+# the others mark a resumed game; any of them opens a new debrief window.
+session_start_events = ["LoadGame", "Fileheader"]
+session_resume_events = ["Resurrect", "Continued"]
+# When true, a domain with no recorded beats is omitted from the report.
+hide_empty_domains = true
+
+# ---------------------------------------------------------------------------
+# Domains: the broad gameplay areas a beat can belong to. The key matches the
+# ActivityDomain enum member name in lower case. icon is a token resolved by the
+# ui theme layer; default_mode names the usual control context for the domain.
+# ---------------------------------------------------------------------------
+
+[[domain]]
+key = "travel"
+title = "Travel"
+icon = "rocket"
+default_mode = "ship"
+
+[[domain]]
+key = "exploration"
+title = "Exploration"
+icon = "telescope"
+default_mode = "ship"
+
+[[domain]]
+key = "combat"
+title = "Combat"
+icon = "crosshair"
+default_mode = "ship"
+
+[[domain]]
+key = "trade"
+title = "Trade"
+icon = "scales"
+default_mode = "ship"
+
+[[domain]]
+key = "mining"
+title = "Mining"
+icon = "pickaxe"
+default_mode = "ship"
+
+[[domain]]
+key = "missions"
+title = "Missions"
+icon = "clipboard"
+default_mode = "ship"
+
+[[domain]]
+key = "engineering"
+title = "Engineering"
+icon = "wrench"
+default_mode = "ship"
+
+[[domain]]
+key = "carrier"
+title = "Fleet Carrier"
+icon = "anchor"
+default_mode = "ship"
+
+[[domain]]
+key = "srv"
+title = "SRV"
+icon = "buggy"
+default_mode = "srv"
+
+[[domain]]
+key = "on_foot"
+title = "On Foot"
+icon = "boot"
+default_mode = "foot"
+
+[[domain]]
+key = "exobiology"
+title = "Exobiology"
+icon = "leaf"
+default_mode = "foot"
+
+# ---------------------------------------------------------------------------
+# Modes: the physical control context. label and icon drive the report; tag is
+# the short Markdown ASCII marker placed beside a beat to show its context.
+# ---------------------------------------------------------------------------
+
+[modes.ship]
+label = "Ship"
+icon = "ship"
+tag = "S"
+
+[modes.srv]
+label = "SRV"
+icon = "buggy"
+tag = "R"
+
+[modes.foot]
+label = "On Foot"
+icon = "boot"
+tag = "F"
+
+# ---------------------------------------------------------------------------
+# Beats: event-to-beat rules. Each rule maps a journal event type to a single
+# conceptual beat. domain matches a [[domain]] key; mode matches a [modes.*]
+# key; kind matches the BeatKind enum member name in lower case. text is a
+# Jinja2 template rendered against the event payload. credits_field and
+# magnitude_field are optional; each names the journal payload key the rollups
+# read for that beat's credit delta or numeric magnitude (income events only,
+# so net credits is not inflated by spending).
+# ---------------------------------------------------------------------------
+
+[[beat]]
+event = "FSDJump"
+domain = "travel"
+mode = "ship"
+kind = "jump"
+magnitude_field = "JumpDist"
+text = "Jumped to {{ StarSystem }} ({{ JumpDist }} ly)."
+
+[[beat]]
+event = "Scan"
+domain = "exploration"
+mode = "ship"
+kind = "scan_body"
+text = "Scanned {{ BodyName }}."
+
+[[beat]]
+event = "SAAScanComplete"
+domain = "exploration"
+mode = "ship"
+kind = "map_body"
+text = "Mapped {{ BodyName }} in full."
+
+[[beat]]
+event = "FSSDiscoveryScan"
+domain = "exploration"
+mode = "ship"
+kind = "honk"
+text = "Ran a discovery scan of {{ SystemName }}."
+
+[[beat]]
+event = "MultiSellExplorationData"
+domain = "exploration"
+mode = "ship"
+kind = "sell_exploration"
+credits_field = "TotalEarnings"
+text = "Sold exploration data for {{ TotalEarnings }} Cr."
+
+[[beat]]
+event = "Bounty"
+domain = "combat"
+mode = "ship"
+kind = "bounty"
+credits_field = "TotalReward"
+text = "Claimed a bounty on a {{ Target }} worth {{ TotalReward }} Cr."
+
+[[beat]]
+event = "FactionKillBond"
+domain = "combat"
+mode = "ship"
+kind = "bond"
+credits_field = "Reward"
+text = "Earned a combat bond worth {{ Reward }} Cr."
+
+[[beat]]
+event = "Died"
+domain = "combat"
+mode = "ship"
+kind = "death"
+text = "Was destroyed and rebought the ship."
+
+[[beat]]
+event = "MarketBuy"
+domain = "trade"
+mode = "ship"
+kind = "market_buy"
+text = "Bought {{ Count }} t of {{ Type }} at {{ BuyPrice }} Cr each."
+
+[[beat]]
+event = "MarketSell"
+domain = "trade"
+mode = "ship"
+kind = "market_sell"
+credits_field = "TotalSale"
+text = "Sold {{ Count }} t of {{ Type }} for {{ TotalSale }} Cr."
+
+[[beat]]
+event = "MiningRefined"
+domain = "mining"
+mode = "ship"
+kind = "refine"
+text = "Refined a tonne of {{ Type }}."
+
+[[beat]]
+event = "MissionCompleted"
+domain = "missions"
+mode = "ship"
+kind = "mission_complete"
+credits_field = "Reward"
+text = "Completed mission for {{ Faction }} ({{ Reward }} Cr)."
+
+[[beat]]
+event = "EngineerCraft"
+domain = "engineering"
+mode = "ship"
+kind = "engineer_craft"
+text = "Applied {{ BlueprintName }} grade {{ Level }} to {{ Module }}."
+
+[[beat]]
+event = "CarrierJump"
+domain = "carrier"
+mode = "ship"
+kind = "carrier_jump"
+text = "Jumped the fleet carrier to {{ StarSystem }}."
+
+[[beat]]
+event = "LaunchSRV"
+domain = "srv"
+mode = "srv"
+kind = "srv_deploy"
+text = "Deployed the SRV onto the surface."
+
+[[beat]]
+event = "Disembark"
+domain = "on_foot"
+mode = "foot"
+kind = "disembark"
+text = "Disembarked on foot."
+
+[[beat]]
+event = "ScanOrganic"
+domain = "exobiology"
+mode = "foot"
+kind = "exobio_sample"
+text = "Sampled {{ Species }} ({{ ScanType }})."
+
+[[beat]]
+event = "SellOrganicData"
+domain = "exobiology"
+mode = "foot"
+kind = "exobio_sell"
+# A SellOrganicData payload carries no single credit total: each sample sits
+# in the BioData array with its own Value and first-discovery Bonus. The credit
+# delta is the sum of Value and Bonus across every entry.
+credits_array_field = "BioData"
+credits_item_fields = ["Value", "Bonus"]
+text = "Sold organic data."
+
+[[beat]]
+event = "ApproachSettlement"
+domain = "on_foot"
+mode = "foot"
+kind = "settlement_visit"
+text = "Arrived at {{ Name }}."
+
+[[beat]]
+event = "Promotion"
+domain = "missions"
+mode = "ship"
+kind = "promotion"
+text = "Earned a rank promotion."
+
+# ---------------------------------------------------------------------------
+# Aggregates: rollup rules producing the headline metrics. domain matches a
+# [[domain]] key; op is one of count, sum, sum_distinct, max; event matches the
+# journal event type to roll up. field names the numeric payload key for sum and
+# max; unit is an optional display suffix; where_flag, when present, names a
+# boolean payload key that must be truthy for the row to be counted.
+# ---------------------------------------------------------------------------
+
+[[aggregate]]
+domain = "travel"
+label = "Jumps"
+op = "count"
+event = "FSDJump"
+
+[[aggregate]]
+domain = "travel"
+label = "Distance travelled"
+op = "sum"
+event = "FSDJump"
+field = "JumpDist"
+unit = "ly"
+
+[[aggregate]]
+domain = "travel"
+label = "Systems visited"
+op = "sum_distinct"
+event = "FSDJump"
+field = "StarSystem"
+
+[[aggregate]]
+domain = "exploration"
+label = "Bodies scanned"
+op = "count"
+event = "Scan"
+
+[[aggregate]]
+domain = "exploration"
+label = "First discoveries"
+op = "count"
+event = "Scan"
+where_flag = "WasDiscovered"
+
+[[aggregate]]
+domain = "exploration"
+label = "Bodies mapped"
+op = "count"
+event = "SAAScanComplete"
+
+[[aggregate]]
+domain = "combat"
+label = "Bounties claimed"
+op = "count"
+event = "Bounty"
+
+[[aggregate]]
+domain = "combat"
+label = "Combat bonds"
+op = "count"
+event = "FactionKillBond"
+
+[[aggregate]]
+domain = "trade"
+label = "Trade profit"
+op = "sum"
+event = "MarketSell"
+field = "TotalSale"
+unit = "Cr"
+
+[[aggregate]]
+domain = "mining"
+label = "Tonnes refined"
+op = "count"
+event = "MiningRefined"
+
+[[aggregate]]
+domain = "missions"
+label = "Missions completed"
+op = "count"
+event = "MissionCompleted"
+
+[[aggregate]]
+domain = "exobiology"
+label = "Organic samples"
+op = "count"
+event = "ScanOrganic"
+
+[[aggregate]]
+domain = "exobiology"
+label = "Exobiology credits"
+op = "sum"
+event = "SellOrganicData"
+field = "TotalValue"
+unit = "Cr"
+
+[[aggregate]]
+domain = "on_foot"
+label = "Settlements visited"
+op = "sum_distinct"
+event = "ApproachSettlement"
+field = "Name"
+
+[[aggregate]]
+domain = "srv"
+label = "SRV deployments"
+op = "count"
+event = "LaunchSRV"
+
+# ---------------------------------------------------------------------------
+# Thresholds: named numeric values the domain compares against. Keeping them
+# here means no threshold literal ever appears in code.
+# ---------------------------------------------------------------------------
+
+[thresholds]
+long_jump_ly = 50.0
+big_payout_credits = 1000000
+high_value_exobio_credits = 5000000
+
+# ---------------------------------------------------------------------------
+# Ranks: ladder definitions and their tier-name tables, supplied as reference
+# data so no rank name is ever hardcoded in logic. tiers is ordered from the
+# lowest rank to the highest; an event's numeric rank index selects the name.
+# ---------------------------------------------------------------------------
+
+[[rank]]
+key = "combat"
+title = "Combat"
+tiers = [
+    "Harmless",
+    "Mostly Harmless",
+    "Novice",
+    "Competent",
+    "Expert",
+    "Master",
+    "Dangerous",
+    "Deadly",
+    "Elite",
+    "Elite I",
+    "Elite II",
+    "Elite III",
+    "Elite IV",
+    "Elite V",
+]
+
+[[rank]]
+key = "trade"
+title = "Trade"
+tiers = [
+    "Penniless",
+    "Mostly Penniless",
+    "Peddler",
+    "Dealer",
+    "Merchant",
+    "Broker",
+    "Entrepreneur",
+    "Tycoon",
+    "Elite",
+    "Elite I",
+    "Elite II",
+    "Elite III",
+    "Elite IV",
+    "Elite V",
+]
+
+[[rank]]
+key = "explore"
+title = "Exploration"
+tiers = [
+    "Aimless",
+    "Mostly Aimless",
+    "Scout",
+    "Surveyor",
+    "Trailblazer",
+    "Pathfinder",
+    "Ranger",
+    "Pioneer",
+    "Elite",
+    "Elite I",
+    "Elite II",
+    "Elite III",
+    "Elite IV",
+    "Elite V",
+]
+
+[[rank]]
+key = "cqc"
+title = "CQC"
+tiers = [
+    "Helpless",
+    "Mostly Helpless",
+    "Amateur",
+    "Semi Professional",
+    "Professional",
+    "Champion",
+    "Hero",
+    "Legend",
+    "Elite",
+    "Elite I",
+    "Elite II",
+    "Elite III",
+    "Elite IV",
+    "Elite V",
+]
+
+[[rank]]
+key = "federation"
+title = "Federation"
+tiers = [
+    "None",
+    "Recruit",
+    "Cadet",
+    "Midshipman",
+    "Petty Officer",
+    "Chief Petty Officer",
+    "Warrant Officer",
+    "Ensign",
+    "Lieutenant",
+    "Lieutenant Commander",
+    "Post Commander",
+    "Post Captain",
+    "Rear Admiral",
+    "Vice Admiral",
+    "Admiral",
+]
+
+[[rank]]
+key = "empire"
+title = "Empire"
+tiers = [
+    "None",
+    "Outsider",
+    "Serf",
+    "Master",
+    "Squire",
+    "Knight",
+    "Lord",
+    "Baron",
+    "Viscount",
+    "Count",
+    "Earl",
+    "Marquis",
+    "Duke",
+    "Prince",
+    "King",
+]
+
+[[rank]]
+key = "soldier"
+title = "Mercenary"
+tiers = [
+    "Defenceless",
+    "Mostly Defenceless",
+    "Rookie",
+    "Soldier",
+    "Gunslinger",
+    "Warrior",
+    "Gladiator",
+    "Deadeye",
+    "Elite",
+    "Elite I",
+    "Elite II",
+    "Elite III",
+    "Elite IV",
+    "Elite V",
+]
+
+[[rank]]
+key = "exobiologist"
+title = "Exobiologist"
+tiers = [
+    "Directionless",
+    "Mostly Directionless",
+    "Compiler",
+    "Collector",
+    "Cataloguer",
+    "Taxonomist",
+    "Ecologist",
+    "Geneticist",
+    "Elite",
+    "Elite I",
+    "Elite II",
+    "Elite III",
+    "Elite IV",
+    "Elite V",
+]
+
+# ---------------------------------------------------------------------------
+# Format: display formatting tokens for the report. Keeping these here means
+# the renderer carries no formatting literals of its own.
+# ---------------------------------------------------------------------------
+
+[format]
+credits_suffix = "Cr"
+distance_suffix = "ly"
+thousands = true
+duration_format = "{hours}h {minutes}m"
+time_format = "%H:%M:%S"
+datetime_format = "%Y-%m-%d %H:%M:%S"

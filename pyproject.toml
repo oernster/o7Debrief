@@ -1,0 +1,68 @@
+# Build and tooling configuration for o7Debrief.
+# British spelling used throughout comments. No em dashes anywhere.
+
+[build-system]
+# setuptools as the build backend, declared here so no setup.py is needed.
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "o7debrief"
+dynamic = ["version"]
+description = "Elite Dangerous Commander mission debrief generator."
+readme = "README.md"
+requires-python = ">=3.13"
+license = "LGPL-3.0-or-later"
+authors = [{ name = "Oliver Ernster" }]
+dependencies = [
+    "PySide6>=6.6",
+    "Jinja2>=3.1",
+]
+
+[project.optional-dependencies]
+# Development-only tooling: test runner, coverage, formatter and linter.
+dev = [
+    "pytest>=8",
+    "pytest-cov>=5",
+    "black>=24",
+    "flake8>=7",
+]
+
+[tool.setuptools.packages.find]
+# Discover the o7debrief package (and its subpackages) from the repo root.
+include = ["o7debrief*"]
+
+[tool.setuptools.dynamic]
+# VERSION (project root) is the single source of truth for the app version.
+version = { file = "VERSION" }
+
+[tool.black]
+line-length = 88
+target-version = ["py313"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# The hard gate covers only the two pure layers (domain and application).
+# Infrastructure, ui and main.py are integration-tested, not gated here.
+addopts = "--cov=o7debrief.domain --cov=o7debrief.application --cov-branch --cov-report=term-missing --cov-fail-under=100"
+
+[tool.coverage.run]
+branch = true
+# Omit the layers that are not part of the hard coverage gate.
+omit = [
+    "o7debrief/infrastructure/*",
+    "o7debrief/ui/*",
+    "o7debrief/main.py",
+]
+
+[tool.coverage.report]
+# Lines that are structurally unreachable or are pure declarations and so
+# must not count against the 100% gate.
+exclude_lines = [
+    "pragma: no cover",
+    "\\.\\.\\.",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@(abc\\.)?abstractmethod",
+    "if __name__ == .__main__.:",
+]

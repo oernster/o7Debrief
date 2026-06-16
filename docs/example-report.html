@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>o7 Debrief - Commander Jameson</title>
+<style>
+:root {
+  --bg: #0d0d10; --panel: #16161d; --edge: #2a2a33;
+  --accent: #f07b05; --accent-soft: #f8a24a;
+  --text: #d7d7da; --muted: #8a8a93;
+  --pos: #5fd07a; --neg: #e06f6f; --neutral: #8a8a93;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; padding: 2rem 1rem; background: var(--bg); color: var(--text);
+  font-family: "Consolas", "DejaVu Sans Mono", monospace; line-height: 1.5;
+}
+.wrap { max-width: 60rem; margin: 0 auto; }
+h1 { color: var(--accent); font-size: 1.6rem; margin: 0 0 0.25rem;
+  letter-spacing: 0.04em; }
+h2 { color: var(--accent-soft); font-size: 1.05rem; text-transform: uppercase;
+  letter-spacing: 0.04em; border-bottom: 1px solid var(--edge);
+  padding-bottom: 0.3rem; margin: 2rem 0 1rem; }
+.sub { color: var(--muted); margin: 0 0 1.5rem; }
+.panel { background: var(--panel); border: 1px solid var(--edge);
+  border-radius: 6px; padding: 1rem 1.2rem; }
+.meta { display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 0.6rem 1.5rem; }
+.meta span { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; }
+.grid { display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 1rem; }
+.metric { background: var(--panel); border: 1px solid var(--edge);
+  border-radius: 6px; padding: 0.9rem 1rem; }
+.metric .label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; }
+.metric .value { font-size: 1.5rem; color: var(--accent); margin-top: 0.2rem; }
+.metric .delta { font-size: 0.85rem; margin-top: 0.2rem; }
+.positive { color: var(--pos); } .negative { color: var(--neg); }
+.neutral { color: var(--neutral); }
+.card .title { color: var(--accent-soft); font-size: 1rem; margin-bottom: 0.5rem; }
+.stats { list-style: none; margin: 0; padding: 0; }
+.stats li { display: flex; justify-content: space-between;
+  border-bottom: 1px dotted var(--edge); padding: 0.2rem 0; }
+.stats li span:first-child { color: var(--muted); }
+.note { color: var(--muted); font-style: italic; margin-top: 0.5rem; }
+.timeline { list-style: none; margin: 0; padding: 0; }
+.timeline li { display: grid; grid-template-columns: 5.5rem 2rem 1fr; gap: 0.5rem;
+  padding: 0.3rem 0; border-bottom: 1px solid var(--edge); }
+.timeline .t { color: var(--muted); }
+.timeline .sys { color: var(--accent-soft); }
+.ranks, .milestones { list-style: none; margin: 0; padding: 0; }
+.ranks li, .milestones li { padding: 0.35rem 0; border-bottom: 1px solid var(--edge); }
+.promoted { color: var(--accent); }
+footer { color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem;
+  border-top: 1px solid var(--edge); padding-top: 1rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Commander Mission Debrief</h1>
+  <p class="sub">CMDR Jameson &middot; Unknown ship</p>
+
+  <div class="panel meta">
+    <div><span>Session start</span><br>2026-06-15 19:00:00</div>
+    <div><span>Session end</span><br>2026-06-15 21:00:00</div>
+    <div><span>Duration</span><br>2h 0m</div>
+    <div><span>From</span><br>LHS 3447</div>
+    <div><span>To</span><br>Diaguandri</div>
+    <div><span>Systems visited</span><br>2</div>
+  </div>
+
+  <h2>Headline</h2>
+  <div class="grid">
+    
+    <div class="metric">
+      <div class="label">Net credits</div>
+      <div class="value">7,677,000 Cr</div>
+      
+      <div class="delta positive">+7,677,000 Cr</div>
+      
+    </div>
+    
+    <div class="metric">
+      <div class="label">Jumps</div>
+      <div class="value">2</div>
+      
+    </div>
+    
+    <div class="metric">
+      <div class="label">Bodies scanned</div>
+      <div class="value">2</div>
+      
+    </div>
+    
+    <div class="metric">
+      <div class="label">Kills</div>
+      <div class="value">3</div>
+      
+    </div>
+    
+  </div>
+
+  
+  <h2>Activity</h2>
+  <div class="grid">
+    
+    <div class="panel card">
+      <div class="title">🚀 Travel</div>
+      <ul class="stats">
+        
+        <li><span>Jumps</span><span>2</span></li>
+        
+        <li><span>Distance</span><span>55 ly</span></li>
+        
+      </ul>
+      
+    </div>
+    
+    <div class="panel card">
+      <div class="title">🔭 Exploration</div>
+      <ul class="stats">
+        
+        <li><span>Bodies scanned</span><span>2</span></li>
+        
+        <li><span>Bodies mapped</span><span>1</span></li>
+        
+        <li><span>Discovery scans</span><span>1</span></li>
+        
+        <li><span>Data sold</span><span>1,840,000 Cr</span></li>
+        
+      </ul>
+      
+    </div>
+    
+    <div class="panel card">
+      <div class="title">🎯 Combat</div>
+      <ul class="stats">
+        
+        <li><span>Kills</span><span>3</span></li>
+        
+        <li><span>Bounties</span><span>725,000 Cr</span></li>
+        
+        <li><span>Combat bonds</span><span>120,000 Cr</span></li>
+        
+      </ul>
+      
+    </div>
+    
+    <div class="panel card">
+      <div class="title">⚖️ Trade</div>
+      <ul class="stats">
+        
+        <li><span>Buys</span><span>1</span></li>
+        
+        <li><span>Sells</span><span>1</span></li>
+        
+        <li><span>Spent</span><span>0 Cr</span></li>
+        
+        <li><span>Earned</span><span>512,000 Cr</span></li>
+        
+      </ul>
+      
+    </div>
+    
+    <div class="panel card">
+      <div class="title">⛏️ Mining</div>
+      <ul class="stats">
+        
+        <li><span>Refined</span><span>1</span></li>
+        
+      </ul>
+      
+    </div>
+    
+    <div class="panel card">
+      <div class="title">📋 Missions</div>
+      <ul class="stats">
+        
+        <li><span>Completed</span><span>1</span></li>
+        
+        <li><span>Rewards</span><span>680,000 Cr</span></li>
+        
+      </ul>
+      
+    </div>
+    
+    <div class="panel card">
+      <div class="title">🔧 Engineering</div>
+      <ul class="stats">
+        
+        <li><span>Modifications</span><span>1</span></li>
+        
+      </ul>
+      
+    </div>
+    
+    <div class="panel card">
+      <div class="title">🍃 Exobiology</div>
+      <ul class="stats">
+        
+        <li><span>Samples</span><span>1</span></li>
+        
+        <li><span>Organic data sold</span><span>3,800,000 Cr</span></li>
+        
+      </ul>
+      
+    </div>
+    
+    <div class="panel card">
+      <div class="title">🚙 SRV</div>
+      <ul class="stats">
+        
+        <li><span>Deployments</span><span>1</span></li>
+        
+      </ul>
+      
+    </div>
+    
+    <div class="panel card">
+      <div class="title">🥾 On Foot</div>
+      <ul class="stats">
+        
+        <li><span>Disembarks</span><span>1</span></li>
+        
+        <li><span>Settlements</span><span>1</span></li>
+        
+      </ul>
+      
+    </div>
+    
+  </div>
+  
+
+  
+  <h2>Session log</h2>
+  <div class="panel">
+    <ul class="timeline">
+      
+      <li>
+        <span class="t">19:02:10</span>
+        <span title="Ship">🛸</span>
+        <span>Jump
+          <span class="sys">LHS 3447</span></span>
+      </li>
+      
+      <li>
+        <span class="t">19:05:30</span>
+        <span title="Ship">🛸</span>
+        <span>Jump
+          <span class="sys">Diaguandri</span></span>
+      </li>
+      
+      <li>
+        <span class="t">19:08:00</span>
+        <span title="Ship">🛸</span>
+        <span>Honk</span>
+      </li>
+      
+      <li>
+        <span class="t">19:10:00</span>
+        <span title="Ship">🛸</span>
+        <span>Scan Body</span>
+      </li>
+      
+      <li>
+        <span class="t">19:12:00</span>
+        <span title="Ship">🛸</span>
+        <span>Scan Body</span>
+      </li>
+      
+      <li>
+        <span class="t">19:14:00</span>
+        <span title="Ship">🛸</span>
+        <span>Map Body</span>
+      </li>
+      
+      <li>
+        <span class="t">19:20:00</span>
+        <span title="Ship">🛸</span>
+        <span>Bounty</span>
+      </li>
+      
+      <li>
+        <span class="t">19:22:00</span>
+        <span title="Ship">🛸</span>
+        <span>Bounty</span>
+      </li>
+      
+      <li>
+        <span class="t">19:25:00</span>
+        <span title="Ship">🛸</span>
+        <span>Bond</span>
+      </li>
+      
+      <li>
+        <span class="t">19:30:00</span>
+        <span title="Ship">🛸</span>
+        <span>Market Buy</span>
+      </li>
+      
+      <li>
+        <span class="t">19:45:00</span>
+        <span title="Ship">🛸</span>
+        <span>Market Sell</span>
+      </li>
+      
+      <li>
+        <span class="t">19:50:00</span>
+        <span title="Ship">🛸</span>
+        <span>Sell Exploration</span>
+      </li>
+      
+      <li>
+        <span class="t">20:00:00</span>
+        <span title="On Foot">🥾</span>
+        <span>Disembark</span>
+      </li>
+      
+      <li>
+        <span class="t">20:02:00</span>
+        <span title="On Foot">🥾</span>
+        <span>Exobio Sample</span>
+      </li>
+      
+      <li>
+        <span class="t">20:20:00</span>
+        <span title="On Foot">🥾</span>
+        <span>Exobio Sell</span>
+      </li>
+      
+      <li>
+        <span class="t">20:25:00</span>
+        <span title="On Foot">🥾</span>
+        <span>Refine</span>
+      </li>
+      
+      <li>
+        <span class="t">20:30:00</span>
+        <span title="On Foot">🥾</span>
+        <span>Engineer Craft</span>
+      </li>
+      
+      <li>
+        <span class="t">20:35:00</span>
+        <span title="On Foot">🥾</span>
+        <span>Mission Complete</span>
+      </li>
+      
+      <li>
+        <span class="t">20:40:00</span>
+        <span title="On Foot">🥾</span>
+        <span>Promotion</span>
+      </li>
+      
+      <li>
+        <span class="t">20:40:05</span>
+        <span title="On Foot">🥾</span>
+        <span>Promotion</span>
+      </li>
+      
+      <li>
+        <span class="t">20:45:00</span>
+        <span title="SRV">🚙</span>
+        <span>Srv Deploy</span>
+      </li>
+      
+      <li>
+        <span class="t">20:50:00</span>
+        <span title="SRV">🚙</span>
+        <span>Settlement Visit</span>
+      </li>
+      
+    </ul>
+  </div>
+  
+
+  
+  <h2>Rank progress</h2>
+  <div class="panel">
+    <ul class="ranks">
+      
+      <li>
+        <strong class="promoted">
+          Combat</strong>:
+        Harmless &rarr; Master
+        
+      </li>
+      
+      <li>
+        <strong class="promoted">
+          Exploration</strong>:
+        Aimless &rarr; Trailblazer
+        
+      </li>
+      
+    </ul>
+  </div>
+  
+
+  
+  <h2>Milestones</h2>
+  <div class="panel">
+    <ul class="milestones">
+      
+      <li>🏅 Earned a rank promotion.</li>
+      
+      <li>💰 Banked a major payout.</li>
+      
+    </ul>
+  </div>
+  
+
+  <footer>
+    o7 Debrief v0 &middot; LGPL-3.0-or-later<br>
+    
+    Journal 2026-06-15 19:00:00 to 2026-06-15 21:00:00
+  </footer>
+</div>
+</body>
+</html>
