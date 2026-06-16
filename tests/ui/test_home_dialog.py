@@ -8,7 +8,7 @@ though the button shows only the file name.
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import QApplication, QLabel, QPushButton
+from PySide6.QtWidgets import QApplication, QLabel, QPushButton, QScrollArea
 
 from o7debrief.ui.windows.home import HomeDialog
 
@@ -74,6 +74,20 @@ def test_recent_entries_reopen_by_full_path(qapp: QApplication) -> None:
         button.click()
 
     assert opened == [_HTML_PATH, _MD_PATH]
+
+
+def test_many_recents_are_scrollable(qapp: QApplication) -> None:
+    """A long run of debriefs is capped in a scroll area, all still reachable."""
+    paths = tuple(f"C:/out/debrief_{index}.html" for index in range(8))
+    dialog, _, _ = _make(recent=paths)
+
+    assert dialog.findChildren(QScrollArea)  # the list is wrapped to scroll
+    recent_buttons = [
+        button
+        for button in dialog.findChildren(QPushButton)
+        if button.toolTip() in paths
+    ]
+    assert len(recent_buttons) == 8
 
 
 def test_status_headline_is_shown(qapp: QApplication) -> None:

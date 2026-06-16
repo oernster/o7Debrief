@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -51,6 +52,10 @@ _MIN_WIDTH_PX = 460
 _SPACING_PX = 10
 _DIVIDER_PX = 1
 _NO_MARGIN = 0
+# Beyond this many recent debriefs the list scrolls inside a capped panel
+# rather than growing the dialog past the bottom of the screen.
+_RECENT_SCROLL_THRESHOLD = 5
+_RECENT_MAX_HEIGHT_PX = 220
 
 # Title styling, mirroring the heading colour from the shared dialog theme.
 _TITLE_STYLE = f"color: {HEADING_COLOUR}; font-size: 20px; font-weight: bold;"
@@ -153,19 +158,32 @@ class HomeDialog(QDialog):
         return button
 
     def _build_recent(self, recent: Sequence[str]) -> QWidget:
-        """Build the recent-debriefs list, or a muted placeholder when empty."""
+        """Build the recent-debriefs list, or a muted placeholder when empty.
+
+        A long run can produce many debriefs, so once the list passes a
+        threshold it is capped and scrolls rather than growing the dialog past
+        the bottom of the screen.
+        """
+        if not recent:
+            empty = QLabel(_NO_RECENT_TEXT)
+            empty.setEnabled(False)
+            return empty
         container = QWidget()
         column = QVBoxLayout(container)
         column.setContentsMargins(_NO_MARGIN, _NO_MARGIN, _NO_MARGIN, _NO_MARGIN)
         column.setSpacing(_SPACING_PX)
-        if not recent:
-            empty = QLabel(_NO_RECENT_TEXT)
-            empty.setEnabled(False)
-            column.addWidget(empty)
-            return container
         for path in recent:
             column.addWidget(self._recent_button(path))
-        return container
+        if len(recent) <= _RECENT_SCROLL_THRESHOLD:
+            return container
+        scroll = QScrollArea()
+        scroll.setWidget(container)
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setFixedHeight(_RECENT_MAX_HEIGHT_PX)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.viewport().setStyleSheet("background: transparent;")
+        return scroll
 
     def _recent_button(self, path: str) -> QPushButton:
         """Return a button that reopens one produced debrief by its path."""
