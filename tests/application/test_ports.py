@@ -16,6 +16,7 @@ from tests.application.fakes import (
     FakeJournalSource,
     FakePreferencesStore,
     FakeRankStore,
+    FakeReleaseSource,
     FakeSink,
     FixedClock,
     spec,
@@ -29,6 +30,7 @@ from o7debrief.application.ports.debrief_sink import DebriefSink
 from o7debrief.application.ports.journal_source import JournalSource
 from o7debrief.application.ports.preferences_store import PreferencesStore
 from o7debrief.application.ports.rank_snapshot_store import RankSnapshotStore
+from o7debrief.application.ports.release_source import ReleaseSource
 
 
 def test_fakes_conform_to_their_ports() -> None:
@@ -40,6 +42,7 @@ def test_fakes_conform_to_their_ports() -> None:
     store: RankSnapshotStore = FakeRankStore()
     preferences: PreferencesStore = FakePreferencesStore()
     clock: Clock = FixedClock("2026-06-15T00:00:00Z")
+    release: ReleaseSource = FakeReleaseSource("1.2.0")
 
     # Bound to their port types above; exercise one read on each to confirm
     # the shapes line up at runtime as well as for the type checker.
@@ -51,6 +54,7 @@ def test_fakes_conform_to_their_ports() -> None:
     assert store.load(_AnyCommander()) is None
     assert preferences.load().export_format == "html"
     assert clock.now_utc() == "2026-06-15T00:00:00Z"
+    assert release.latest_version() == "1.2.0"
 
 
 class _AnyCommander:

@@ -88,6 +88,8 @@ def test_labels_use_the_resolver_key_convention() -> None:
     assert spec.label_for("domain.srv.icon", miss) == "buggy"
     assert spec.label_for("mode.ship.label", miss) == "Ship"
     assert spec.label_for("mode.foot.label", miss) == "On Foot"
+    assert spec.label_for("mode.ship.tag", miss) == "S"
+    assert spec.label_for("mode.foot.tag", miss) == "F"
     assert spec.label_for("rank.combat.title", miss) == "Combat"
     assert spec.label_for("rank.combat.tier.0", miss) == "Harmless"
     assert spec.label_for(f"rank.combat.tier.{_COMBAT_ELITE_INDEX}", miss) == "Elite"

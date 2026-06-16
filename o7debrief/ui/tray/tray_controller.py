@@ -23,6 +23,7 @@ standard library only.
 
 from __future__ import annotations
 
+import webbrowser
 from typing import TYPE_CHECKING, Callable
 
 from PySide6.QtCore import QObject, QTimer
@@ -30,7 +31,9 @@ from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import QMenu, QSystemTrayIcon
 
 from o7debrief.application.errors import ApplicationError
+from o7debrief.ui.tray.menu_style import MENU_STYLESHEET
 from o7debrief.ui.tray.recents_pager import NullArchive, RecentsPager
+from o7debrief.ui.tray.update_check import check_for_updates
 from o7debrief.ui.windows.home import HomeDialog
 from o7debrief.ui.windows.preview import open_debrief
 
@@ -40,6 +43,7 @@ if TYPE_CHECKING:  # pragma: no cover - type-only imports, no runtime dependency
     from o7debrief.application.services.one_shot_debrief_service import (
         OneShotDebriefService,
     )
+    from o7debrief.application.services.update_service import UpdateService
     from o7debrief.ui.view_models.session_view_model import SessionViewModel
 
 __all__ = ["TrayController"]
@@ -53,6 +57,7 @@ _LAST_SESSION_TEXT = "Debrief my last session"
 _HISTORY_TEXT = "Debrief my history to date"
 _RECENT_TEXT = "Recent debriefs"
 _SETTINGS_TEXT = "Settings"
+_CHECK_UPDATES_TEXT = "Check for updates"
 _QUIT_TEXT = "Quit"
 _HELP_TEXT = "Help"
 _ABOUT_TEXT = "About o7 Debrief"
@@ -81,25 +86,6 @@ _PRIMARY_PATH = 0
 # How many recent debriefs are shown per page in the submenu and home dialog.
 _RECENT_PAGE_SIZE = 10
 
-# Dark-dossier styling for the tray menu, matching the splash and dialogs so the
-# whole app reads as one piece rather than a native grey menu.
-_MENU_STYLESHEET = """
-QMenu {
-    background-color: #16161d;
-    border: 1px solid #2a2a33;
-    padding: 6px;
-    color: #d7d7da;
-}
-QMenu::item {
-    padding: 8px 32px 8px 18px;
-    margin: 1px 4px;
-    border-radius: 6px;
-}
-QMenu::item:selected { background-color: #2a2a33; color: #f8a24a; }
-QMenu::item:disabled { color: #6f6f78; }
-QMenu::separator { height: 1px; background: #2a2a33; margin: 6px 8px; }
-"""
-
 
 def _noop() -> None:
     """Do nothing; the default handler for injected action callbacks."""
@@ -121,6 +107,9 @@ class TrayController(QObject):
         on_about: Callable[[], None] = _noop,
         on_licence: Callable[[], None] = _noop,
         on_quit: Callable[[], None] = _noop,
+        update_service: UpdateService | None = None,
+        releases_url: str = "",
+        web_opener: Callable[[str], bool] = webbrowser.open,
         refresh_interval_ms: int = _STATUS_REFRESH_MS,
         parent: QObject | None = None,
     ) -> None:
@@ -134,6 +123,9 @@ class TrayController(QObject):
         self._on_about = on_about
         self._on_licence = on_licence
         self._on_quit = on_quit
+        self._update_service = update_service
+        self._releases_url = releases_url
+        self._web_opener = web_opener
         self._home: HomeDialog | None = None
         self._pager = RecentsPager(
             archive if archive is not None else NullArchive(), _RECENT_PAGE_SIZE
@@ -149,7 +141,7 @@ class TrayController(QObject):
         self._recent_menu = QMenu(_RECENT_TEXT)
         self._build_menu()
         for menu in (self._menu, self._recent_menu, self._help_menu):
-            menu.setStyleSheet(_MENU_STYLESHEET)
+            menu.setStyleSheet(MENU_STYLESHEET)
         self._tray.setContextMenu(self._menu)
         self._tray.activated.connect(self._on_tray_activated)
 
@@ -190,6 +182,8 @@ class TrayController(QObject):
         self._menu.addMenu(self._recent_menu)
         self._menu.addSeparator()
         self._add_action(_SETTINGS_TEXT, self._on_settings_triggered)
+        if self._update_service is not None:
+            self._add_action(_CHECK_UPDATES_TEXT, self._on_check_updates)
         self._help_menu = self._build_help_menu()
         self._menu.addMenu(self._help_menu)
         self._add_action(_QUIT_TEXT, self._on_quit_triggered)
@@ -310,6 +304,12 @@ class TrayController(QObject):
     def _on_settings_triggered(self) -> None:
         """Invoke the injected settings handler."""
         self._on_settings()
+
+    def _on_check_updates(self) -> None:
+        """Run a manual update check: notify and open releases if newer."""
+        check_for_updates(
+            self._update_service, self._notify, self._web_opener, self._releases_url
+        )
 
     def _on_about_triggered(self) -> None:
         """Invoke the injected About handler."""

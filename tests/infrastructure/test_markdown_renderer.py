@@ -90,6 +90,7 @@ def test_render_tags_timeline_with_mode_label() -> None:
 
     assert "## Session Log" in md
     assert "[Ship]" in md  # control-mode label tag on a moment
+    assert "• [Ship]" in md  # the activity icon sits before the mode tag
 
 
 def test_render_includes_rank_progress_when_present() -> None:

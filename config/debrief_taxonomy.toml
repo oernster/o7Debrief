@@ -57,13 +57,13 @@ default_mode = "ship"
 [[domain]]
 key = "combat"
 title = "Combat"
-icon = "crosshair"
+icon = "swords"
 default_mode = "ship"
 
 [[domain]]
 key = "trade"
 title = "Trade"
-icon = "scales"
+icon = "exchange"
 default_mode = "ship"
 
 [[domain]]
@@ -111,7 +111,7 @@ default_mode = "foot"
 [[domain]]
 key = "shipyard"
 title = "Shipyard"
-icon = "ship"
+icon = "shipyard"
 default_mode = "ship"
 
 # ---------------------------------------------------------------------------

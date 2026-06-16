@@ -191,6 +191,10 @@ def test_one_shot_isolates_latest_session_and_sums_credits(
     assert "800,000" in html  # net credits = bounty + trade, digit-grouped
     assert "Sol" in html  # the latest session's system
     assert "Lave" not in html  # the older session is excluded
+    # Activity icons reach the page: the bounty shows the combat swords and the
+    # sale shows the trade glyph, not a ship, proving rows show the activity.
+    assert "⚔️" in html
+    assert "\U0001f4b1" in html
 
 
 def test_one_shot_persists_a_rank_snapshot(

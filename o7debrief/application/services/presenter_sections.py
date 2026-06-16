@@ -152,13 +152,18 @@ def _moment_system(moment) -> str | None:
 
 
 def _timeline_entry(moment, fmt, resolver) -> TimelineEntry:
-    """Build one formatted timeline entry from a single moment."""
+    """Build one formatted timeline entry from a single moment.
+
+    The row's icon is the moment's activity (domain) glyph, so it shows what
+    was done; the control mode rides along as the compact tag and full label.
+    """
     mode = mode_string_from_name(moment.mode.name)
     return TimelineEntry(
         time_display=fmt.time(moment.occurred_at.iso_utc),
         mode=mode,
         mode_label=resolver.mode_label(mode),
-        mode_icon=resolver.mode_icon(mode),
+        mode_tag=resolver.mode_tag(mode),
+        icon=resolver.domain_icon(moment.domain.name.lower()),
         text=moment.label,
         system=_moment_system(moment),
     )

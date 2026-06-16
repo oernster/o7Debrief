@@ -24,6 +24,7 @@ def test_defaults_are_derived_from_keys_when_unconfigured() -> None:
     assert resolver.domain_note("travel") is None
     assert resolver.mode_label("foot") == "Foot"
     assert resolver.mode_icon("foot") == "foot"
+    assert resolver.mode_tag("foot") == "foot"
     assert resolver.ladder_title("exobiologist") == "Exobiologist"
     assert resolver.tier_name("combat", 5) == "5"
     assert resolver.headline_label("jumps", "Jumps") == "Jumps"
@@ -38,6 +39,7 @@ def test_configured_labels_override_defaults() -> None:
         ("domain.travel.note", "Long haul."),
         ("mode.ship.label", "Starship"),
         ("mode.ship.icon", "vessel"),
+        ("mode.ship.tag", "S"),
         ("rank.combat.title", "Combat Rank"),
         ("rank.combat.tier.5", "Master"),
         ("headline.jumps.label", "Hyperspace jumps"),
@@ -51,6 +53,7 @@ def test_configured_labels_override_defaults() -> None:
     assert resolver.domain_note("travel") == "Long haul."
     assert resolver.mode_label("ship") == "Starship"
     assert resolver.mode_icon("ship") == "vessel"
+    assert resolver.mode_tag("ship") == "S"
     assert resolver.ladder_title("combat") == "Combat Rank"
     assert resolver.tier_name("combat", 5) == "Master"
     assert resolver.headline_label("jumps", "Jumps") == "Hyperspace jumps"

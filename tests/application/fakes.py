@@ -105,6 +105,16 @@ class FakeJournalSource:
         return (), since_offset
 
 
+class FakeReleaseSource:
+    """A ReleaseSource returning a preset latest version (or None)."""
+
+    def __init__(self, latest: str | None = None) -> None:
+        self._latest = latest
+
+    def latest_version(self) -> str | None:
+        return self._latest
+
+
 class FakeConfigProvider:
     """A ConfigProvider returning a preset spec and expected version."""
 

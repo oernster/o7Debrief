@@ -112,12 +112,19 @@ class DomainSection:
 
 @dataclass(frozen=True, slots=True)
 class TimelineEntry:
-    """One chronological moment rendered for the timeline."""
+    """One chronological moment rendered for the timeline.
+
+    ``icon`` is the activity (domain) glyph token for the row, so a moment
+    reads as what was done rather than which control mode held it. The
+    control context rides along as ``mode_tag`` (the compact S/R/F marker)
+    and ``mode_label`` (its full label).
+    """
 
     time_display: str
     mode: str
     mode_label: str
-    mode_icon: str
+    mode_tag: str
+    icon: str
     text: str
     system: str | None
 
@@ -127,7 +134,8 @@ class TimelineEntry:
             "time_display": self.time_display,
             "mode": self.mode,
             "mode_label": self.mode_label,
-            "mode_icon": self.mode_icon,
+            "mode_tag": self.mode_tag,
+            "icon": self.icon,
             "text": self.text,
             "system": self.system,
         }

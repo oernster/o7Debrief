@@ -44,6 +44,7 @@ _KEY = "key"
 _TITLE = "title"
 _ICON = "icon"
 _LABEL = "label"
+_TAG = "tag"
 _TIERS = "tiers"
 _EVENT = "event"
 _KIND = "kind"
@@ -68,6 +69,7 @@ _DOMAIN_TITLE_KEY = "domain.{key}.title"
 _DOMAIN_ICON_KEY = "domain.{key}.icon"
 _MODE_LABEL_KEY = "mode.{mode}.label"
 _MODE_ICON_KEY = "mode.{mode}.icon"
+_MODE_TAG_KEY = "mode.{mode}.tag"
 _LADDER_TITLE_KEY = "rank.{key}.title"
 _TIER_NAME_KEY = "rank.{key}.tier.{index}"
 # Footer values are read by the presenter via the generic label namespace.
@@ -185,12 +187,13 @@ def _domain_labels(data: dict[str, Any]) -> list[tuple[str, str]]:
 
 
 def _mode_labels(data: dict[str, Any]) -> list[tuple[str, str]]:
-    """Return label and icon pairs for every ``[modes.*]`` table."""
+    """Return label, icon and tag pairs for every ``[modes.*]`` table."""
     pairs: list[tuple[str, str]] = []
     modes = data.get(_MODES, {})
     for mode_key, mode in modes.items():
         pairs.append((_MODE_LABEL_KEY.format(mode=mode_key), mode[_LABEL]))
         pairs.append((_MODE_ICON_KEY.format(mode=mode_key), mode[_ICON]))
+        pairs.append((_MODE_TAG_KEY.format(mode=mode_key), mode[_TAG]))
     return pairs
 
 

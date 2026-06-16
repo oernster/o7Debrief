@@ -210,6 +210,8 @@
         "Self-contained HTML report plus a text version ready to paste onto Discord or Reddit",
         "Honest Commander rank progress reporting",
         "Ship swaps and purchases recorded as session events, naming the ship moved from and to",
+        "Clearer session log icons that show the activity in each row rather than the control mode",
+        "Optional check for updates that points you to a newer release and never downloads or runs anything",
         "Local-first with no cloud, no account and no telemetry"
       ],
       "author": {
@@ -297,6 +299,14 @@
         },
         {
           "@type": "Question",
+          "name": "Does o7 Debrief check for updates?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, optionally. The tray menu has a Check for updates entry that asks GitHub whether a newer release exists and opens the releases page in your browser when one does. It is the only network call the app makes, it runs only when you click it and nothing is ever downloaded or installed for you."
+          }
+        },
+        {
+          "@type": "Question",
           "name": "Which Windows versions does o7 Debrief support?",
           "acceptedAnswer": {
             "@type": "Answer",
@@ -363,6 +373,11 @@
           <p>The header names your current ship and its type. Every swap or purchase is also logged as a session event, from the ship you left to the one you boarded.</p>
         </div>
         <div class="card">
+          <div class="icon">&#128260;</div>
+          <h3>Check for updates</h3>
+          <p>An optional tray entry asks GitHub whether a newer release exists and opens the releases page when one does. It never downloads or runs anything for you.</p>
+        </div>
+        <div class="card">
           <div class="icon">&#128274;</div>
           <h3>Local-first</h3>
           <p>No cloud, no account, no telemetry. Your journal never leaves your machine and the app needs no administrator rights to install.</p>
@@ -420,6 +435,10 @@
         <div class="card">
           <h3>Does o7 Debrief record ship changes?</h3>
           <p>Yes. Swapping ship or buying a new one is logged as a session event naming the ship you moved from and the one you boarded; the header also names your current ship and its type.</p>
+        </div>
+        <div class="card">
+          <h3>Does o7 Debrief check for updates?</h3>
+          <p>Yes, optionally. The tray menu has a Check for updates entry that asks GitHub whether a newer release exists and opens the releases page in your browser when one does. It is the only network call the app makes, it runs only when you click it and nothing is ever downloaded or installed for you.</p>
         </div>
         <div class="card">
           <h3>Which Windows versions does o7 Debrief support?</h3>

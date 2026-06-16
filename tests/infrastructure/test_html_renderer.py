@@ -146,6 +146,14 @@ def test_render_includes_category_tabs_for_the_session_log() -> None:
     assert "<script" not in html.lower()
 
 
+def test_timeline_rows_carry_activity_icon_and_mode_tag() -> None:
+    html = HtmlDebriefExporter().render(_populated_view()).decode("utf-8")
+
+    # The row has a dedicated activity-icon cell and a compact mode tag span.
+    assert 'class="ico"' in html
+    assert 'class="mode"' in html
+
+
 def test_rank_progress_and_milestones_precede_the_session_log() -> None:
     html = HtmlDebriefExporter().render(_populated_view()).decode("utf-8")
 

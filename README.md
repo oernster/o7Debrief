@@ -30,6 +30,8 @@ o7 Debrief currently supports Windows only. It is built and tested as a standalo
 - Rank reporting that is honest about journal timing: tier-ups (a `Promotion`) are reported immediately and fractional rank percentages are finalised at the next launch because the journal only snapshots rank progress at startup. Only ranks that actually changed are shown.
 - A single self-contained HTML report (inlined CSS, zero JavaScript) as the canonical output, plus a Markdown rendering for pasting elsewhere. A default export format is configurable and can be overridden per export.
 - A configuration-driven event taxonomy held in TOML, so the mapping from raw events to moments has no magic numbers buried in code.
+- Clearer session-log icons: each timeline row shows the activity it records (a trade, a bounty, a scan) rather than which control mode you were in, so the log reads as what you did.
+- A Check for updates entry in the tray menu: it asks GitHub whether a newer release exists, tells you when one does and opens the releases page in your browser. This is the only network call the app makes, it runs only when you click it and nothing is ever downloaded or run for you; a failed check is silent.
 
 ## Stack
 

@@ -355,6 +355,9 @@ def test_timeline_categories_group_by_domain_in_canonical_order() -> None:
     assert by_key["combat"]["count"] == 1
     assert by_key["combat"]["entries"][0]["text"] == "BOUNTY"
     assert by_key["combat"]["entries"][0]["mode"] == "ship"
+    # The row's icon is the activity (domain), not the control mode.
+    assert by_key["combat"]["entries"][0]["icon"] == "combat"
+    assert by_key["combat"]["entries"][0]["mode_tag"] == "ship"
 
 
 def test_ship_changes_form_a_shipyard_timeline_category() -> None:

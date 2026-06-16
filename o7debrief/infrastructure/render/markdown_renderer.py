@@ -97,7 +97,8 @@ def _timeline(lines: list[str], timeline: list[dict]) -> None:
         system = f" ({entry['system']})" if entry["system"] else _BLANK
         lines.append(
             f"{_BULLET}`{entry['time_display']}` "
-            f"[{entry['mode_label']}] {entry['text']}{system}"
+            f"{emoji_for(entry['icon'])} [{entry['mode_label']}] "
+            f"{entry['text']}{system}"
         )
     lines.append(_BLANK)
 

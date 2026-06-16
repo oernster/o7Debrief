@@ -32,8 +32,10 @@ _EMOJI_FILTER = "emoji"
 _TEMPLATE = """{% macro timeline_row(entry) -%}
       <li>
         <span class="t">{{ entry.time_display }}</span>
-        <span title="{{ entry.mode_label }}">{{ entry.mode_icon | emoji }}</span>
-        <span>{{ entry.text }}{% if entry.system %}
+        <span class="ico">{{ entry.icon | emoji }}</span>
+        <span>
+          <span class="mode" title="{{ entry.mode_label }}">{{ entry.mode_tag }}</span>
+          {{ entry.text }}{% if entry.system %}
           <span class="sys">{{ entry.system }}</span>{% endif %}</span>
       </li>
 {%- endmacro -%}
@@ -86,6 +88,7 @@ h2 { color: var(--accent-soft); font-size: 1.05rem; text-transform: uppercase;
 .timeline li { display: grid; grid-template-columns: 5.5rem 2rem 1fr; gap: 0.5rem;
   padding: 0.3rem 0; border-bottom: 1px solid var(--edge); }
 .timeline .t { color: var(--muted); }
+.timeline .mode { color: var(--muted); font-size: 0.78rem; }
 .timeline .sys { color: var(--accent-soft); }
 .logtabs-radio { position: absolute; left: -9999px; opacity: 0; }
 .logtabs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.8rem; }

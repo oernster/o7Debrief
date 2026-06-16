@@ -52,12 +52,14 @@ from o7debrief.application.services.one_shot_debrief_service import (
 )
 from o7debrief.application.services.rank_analyzer import RankAnalyzer
 from o7debrief.application.services.session_recorder import SessionRecorder
+from o7debrief.application.services.update_service import UpdateService
 
 # The composition root alone reaches into infrastructure.
 from o7debrief.infrastructure import (
     FileJournalSource,
     FilesystemDebriefArchive,
     FilesystemSink,
+    GitHubReleaseSource,
     HtmlDebriefExporter,
     JsonPreferencesStore,
     JsonRankSnapshotStore,
@@ -122,6 +124,13 @@ _LICENCE_FILE_NAME = "LICENSE"
 _LICENCE_FALLBACK = (
     "Licence text not found. See https://www.gnu.org/licenses/lgpl-3.0.html"
 )
+
+# GitHub endpoints for the opt-in update check. The API endpoint returns the
+# latest release as JSON (the one network call the app makes); the page URL is
+# opened in the browser when a newer release exists. Nothing is downloaded or
+# run by the check itself.
+_RELEASES_API_URL = "https://api.github.com/repos/oernster/o7Debrief/releases/latest"
+_RELEASES_PAGE_URL = "https://github.com/oernster/o7Debrief/releases/latest"
 
 # The taxonomy table and keys that populate the display NumberFormat.
 _FORMAT_TABLE = "format"
@@ -469,6 +478,9 @@ def main() -> int:
 
         session = SessionViewModel(recorder, AutoDebriefTrigger())
         archive = FilesystemDebriefArchive(export_dir, preferences_store)
+        update_service = UpdateService(
+            GitHubReleaseSource(_RELEASES_API_URL), __version__
+        )
         controller = TrayController(
             one_shot=one_shot,
             session=session,
@@ -478,6 +490,8 @@ def main() -> int:
             on_about=_open_about(icon),
             on_licence=_open_licence(_load_licence_text()),
             on_quit=app.quit,
+            update_service=update_service,
+            releases_url=_RELEASES_PAGE_URL,
         )
         controller.show()
 

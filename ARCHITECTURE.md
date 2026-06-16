@@ -57,8 +57,9 @@ The domain reads no clock, opens no file and logs nothing. Time comes in as data
 The domain plus stdlib only; it never imports infrastructure or UI. It defines the ports (Protocols) that infrastructure implements and the use cases that orchestrate a debrief:
 
 - A journal source port (path discovery, incremental byte-offset tail, parse) and a clock port for the few places that legitimately need wall-clock time (the crash-timeout safety net), kept out of the domain.
-- An exporter port and a configuration port.
+- An exporter port, a configuration port and a release-source port that supplies the latest published version for the opt-in update check.
 - The use cases: a live watch loop that debriefs the session at shutdown, a one-shot debrief of the last session and a one-shot debrief of the full history to date. Every path calls the same domain reducer.
+- An update service that compares the running version against the latest release through a pure version comparison and reports whether a newer one exists, so the ui can point the player at the download. It is the only application service that touches the network, and only through the injected release-source port.
 
 A use case may itself be an immutable object holding its injected dependencies.
 
@@ -68,7 +69,8 @@ Implements the application's ports against the real world; it is never imported 
 
 - Journal IO: Journal directory discovery, the incremental byte-offset tail that reads only new bytes and the parse skeleton. This IO is reused from the author's EDColonisationAsst, which already solves Journal path discovery and incremental tailing.
 - Configuration loading from TOML via stdlib `tomllib`, supplying the event taxonomy and any tunable values so the domain stays free of magic numbers.
-- Exporters: the Jinja2 HTML renderer (inlined CSS, zero JavaScript) and the Markdown renderer, plus file writing.
+- Exporters: the Jinja2 HTML renderer (inlined CSS, zero JavaScript) and the Markdown renderer, plus file writing. Each timeline row renders its activity (domain) glyph with the control mode shown as a compact tag, so a row reads as what the Commander did rather than which control mode held it.
+- A GitHub release source for the update check: a single short, best-effort HTTPS GET built on the standard-library `urllib` (no third-party HTTP dependency), returning the latest release tag or None on any failure.
 
 ### ui
 
@@ -120,7 +122,7 @@ Rank handling reflects what the journal can actually tell us. A `Promotion` (a t
 
 | Decision | Why | What it rules out |
 | --- | --- | --- |
-| A desktop executable, not a local server. | The tool reads a local file and writes a local report; a server adds ports, lifecycle and attack surface for no user benefit. Local-first keeps the player's data on the player's machine. | A background HTTP service, a browser-based UI talking to localhost, any networked component. |
+| A desktop executable, not a local server. | The tool reads a local file and writes a local report; a server adds ports, lifecycle and attack surface for no user benefit. Local-first keeps the player's data on the player's machine. | A background HTTP service, a browser-based UI talking to localhost, any inbound network surface. The one exception is the opt-in update check: a single outbound GET the player triggers by hand, which never downloads or runs anything and fails silently. |
 | Batch reporting, not live. | The value is reflective: a coherent end-of-session summary. A live feed is a different product (an overlay) with different constraints. | Real-time on-screen updates, an in-game overlay, continuous streaming of partial state. |
 | TOML configuration for the event taxonomy. | The mapping from raw events to moments is data, not code; holding it in TOML (read with stdlib `tomllib`) keeps magic numbers and domain-specific mappings out of the logic and makes the taxonomy reviewable. | Hardcoded event-to-moment mappings and tuning constants scattered through the codebase. |
 | Session isolation by last-`LoadGame` slice. | A session is unambiguously "the last `LoadGame` to the end of the stream". Defining it structurally means a previous session can never bleed into the current debrief. | Heuristic session boundaries, time-window guesses or accidental inclusion of a prior session's events. |

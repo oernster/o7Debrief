@@ -31,11 +31,15 @@ from o7debrief.infrastructure.rank.json_rank_snapshot_store import (
 from o7debrief.infrastructure.render.html_renderer import HtmlDebriefExporter
 from o7debrief.infrastructure.render.markdown_renderer import MarkdownDebriefExporter
 from o7debrief.infrastructure.sink.filesystem_sink import FilesystemSink
+from o7debrief.infrastructure.update.github_release_source import (
+    GitHubReleaseSource,
+)
 
 __all__ = [
     "FileJournalSource",
     "FilesystemDebriefArchive",
     "FilesystemSink",
+    "GitHubReleaseSource",
     "HtmlDebriefExporter",
     "JsonPreferencesStore",
     "JsonRankSnapshotStore",

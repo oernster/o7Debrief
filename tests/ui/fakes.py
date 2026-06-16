@@ -12,6 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from o7debrief.application.dto.export_result import ExportResult
+from o7debrief.application.dto.update_status import UpdateStatus
 
 # Headlines mirroring the recorder's own wording, used by the fake recorder.
 _IDLE_HEADLINE = "No session recorded yet."
@@ -97,6 +98,18 @@ class FakeOneShot:
         if self._error is not None:
             raise self._error
         return self._result
+
+
+class FakeUpdateService:
+    """An UpdateService stand-in returning a preset UpdateStatus."""
+
+    def __init__(self, status: UpdateStatus) -> None:
+        self._status = status
+        self.calls = 0
+
+    def check(self) -> UpdateStatus:
+        self.calls += 1
+        return self._status
 
 
 class RecordingOpener:

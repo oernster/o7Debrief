@@ -37,7 +37,15 @@ _HEADER_KEYS = {
 _HEADLINE_KEYS = {"label", "value_display", "delta_display", "delta_class"}
 _DOMAIN_KEYS = {"key", "title", "icon", "stats", "note"}
 _STAT_KEYS = {"label", "value_display"}
-_TIMELINE_KEYS = {"time_display", "mode", "mode_label", "mode_icon", "text", "system"}
+_TIMELINE_KEYS = {
+    "time_display",
+    "mode",
+    "mode_label",
+    "mode_tag",
+    "icon",
+    "text",
+    "system",
+}
 _TIMELINE_CATEGORY_KEYS = {"key", "label", "icon", "count", "entries"}
 _RANK_KEYS = {
     "ladder_title",
@@ -93,7 +101,8 @@ def _sample_view() -> DebriefView:
                 time_display="10:00:00",
                 mode="ship",
                 mode_label="Ship",
-                mode_icon="ship",
+                mode_tag="S",
+                icon="rocket",
                 text="Jumped.",
                 system="Sol",
             ),
@@ -128,7 +137,8 @@ def _sample_view() -> DebriefView:
                         time_display="10:00:00",
                         mode="ship",
                         mode_label="Ship",
-                        mode_icon="ship",
+                        mode_tag="S",
+                        icon="rocket",
                         text="Jumped.",
                         system="Sol",
                     ),

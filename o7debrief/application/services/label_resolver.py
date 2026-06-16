@@ -29,6 +29,7 @@ _DOMAIN_ICON_KEY = "domain.{key}.icon"
 _DOMAIN_NOTE_KEY = "domain.{key}.note"
 _MODE_LABEL_KEY = "mode.{mode}.label"
 _MODE_ICON_KEY = "mode.{mode}.icon"
+_MODE_TAG_KEY = "mode.{mode}.tag"
 _LADDER_TITLE_KEY = "rank.{key}.title"
 _TIER_NAME_KEY = "rank.{key}.tier.{index}"
 _HEADLINE_LABEL_KEY = "headline.{key}.label"
@@ -91,6 +92,10 @@ class LabelResolver:
     def mode_icon(self, mode: str) -> str:
         """Return the icon token for a control-mode string."""
         return self._lookup(_MODE_ICON_KEY.format(mode=mode), mode)
+
+    def mode_tag(self, mode: str) -> str:
+        """Return the compact control-context tag for a mode string."""
+        return self._lookup(_MODE_TAG_KEY.format(mode=mode), mode)
 
     def ladder_title(self, key: str) -> str:
         """Return the display title for a rank-ladder key."""

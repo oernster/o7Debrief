@@ -21,8 +21,8 @@ _FALLBACK = "•"
 _EMOJI_BY_TOKEN: dict[str, str] = {
     "rocket": "\U0001f680",
     "telescope": "\U0001f52d",
-    "crosshair": "\U0001f3af",
-    "scales": "⚖️",
+    "swords": "⚔️",
+    "exchange": "\U0001f4b1",
     "pickaxe": "⛏️",
     "clipboard": "\U0001f4cb",
     "wrench": "\U0001f527",
@@ -31,6 +31,7 @@ _EMOJI_BY_TOKEN: dict[str, str] = {
     "boot": "\U0001f97e",
     "leaf": "\U0001f343",
     "ship": "\U0001f6f8",
+    "shipyard": "\U0001f3d7️",
     "medal": "\U0001f3c5",
     "star": "⭐",
     "money": "\U0001f4b0",
