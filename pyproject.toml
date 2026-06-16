@@ -53,6 +53,16 @@ omit = [
     "o7debrief/infrastructure/*",
     "o7debrief/ui/*",
     "o7debrief/main.py",
+    # The test suite is not production surface. Its only uncovered lines are the
+    # structural checks' failure branches, which fire solely on a dirty tree, so
+    # measuring it would gate coverage on negative paths a clean codebase cannot
+    # reach. A bare "pytest --cov" would otherwise pull the whole suite in.
+    "tests/*",
+    # PySide6 injects these virtual modules into the import path at runtime; they
+    # have no on-disk source, so coverage cannot parse them.
+    "shibokensupport/*",
+    "signature_bootstrap.py",
+    "pyscript",
 ]
 
 [tool.coverage.report]
