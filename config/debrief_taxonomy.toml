@@ -295,20 +295,6 @@ mode = "ship"
 kind = "promotion"
 text = "Earned a rank promotion."
 
-[[moment]]
-event = "ShipyardSwap"
-domain = "shipyard"
-mode = "ship"
-kind = "ship_swap"
-text = "Swapped to {{ ShipType_Localised }}."
-
-[[moment]]
-event = "ShipyardNew"
-domain = "shipyard"
-mode = "ship"
-kind = "ship_purchase"
-text = "Bought a {{ ShipType_Localised }}."
-
 # ---------------------------------------------------------------------------
 # Aggregates: rollup rules producing the headline metrics. domain matches a
 # [[domain]] key; op is one of count, sum, sum_distinct, max; event matches the

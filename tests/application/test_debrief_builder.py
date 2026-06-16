@@ -206,3 +206,43 @@ def test_build_matches_the_ship_symbol_case_insensitively() -> None:
 
     assert result.ship == "Imperial Cutter"
     assert result.ship_name == "EMPEROR'S SOLACE"
+
+
+def test_build_records_ship_changes_as_timeline_moments() -> None:
+    """A swap appears as a rich, time-ordered moment naming both ships."""
+    events = (
+        event(
+            "LoadGame",
+            0,
+            Ship="cobramkiii",
+            Ship_Localised="Cobra Mk III",
+            ShipID=1,
+            ShipName="STARDUST",
+        ),
+        event(
+            "ShipyardSwap",
+            10,
+            ShipType="federation_corvette",
+            ShipType_Localised="Federal Corvette",
+            ShipID=2,
+            StoreShipID=1,
+            StoreOldShip="CobraMkIII",
+        ),
+        event(
+            "Loadout",
+            11,
+            Ship="federation_corvette",
+            ShipID=2,
+            ShipName="BIG BERTHA",
+        ),
+        event("Shutdown", 30),
+    )
+    builder = DebriefBuilder(spec())
+
+    result = builder.build(commander(), events, ())
+
+    swaps = [moment for moment in result.moments if moment.kind.name == "SHIP_SWAP"]
+    assert len(swaps) == 1
+    assert swaps[0].label == (
+        "Swapped from Cobra Mk III (STARDUST) to Federal Corvette (BIG BERTHA)."
+    )

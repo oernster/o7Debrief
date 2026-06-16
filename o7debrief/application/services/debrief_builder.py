@@ -11,6 +11,8 @@ from __future__ import annotations
 from o7debrief.domain.aggregation.moment_factory import build_moments
 from o7debrief.domain.aggregation.debrief_assembler import assemble
 from o7debrief.domain.aggregation.session_bracketer import window_of
+from o7debrief.domain.aggregation.ship_changes import ship_change_moments
+from o7debrief.domain.model.conceptual_moment import ConceptualMoment
 from o7debrief.domain.model.rank_delta import RankDelta
 from o7debrief.domain.model.raw_event import RawEvent
 from o7debrief.domain.model.session_debrief import SessionDebrief
@@ -78,6 +80,13 @@ def _ship_type_and_name(events: tuple[RawEvent, ...]) -> tuple[str, str]:
     return ship_type, ship_name
 
 
+def _ordered_by_time(
+    moments: tuple[ConceptualMoment, ...],
+) -> tuple[ConceptualMoment, ...]:
+    """Return the moments in non-decreasing event-time order (stable)."""
+    return tuple(sorted(moments, key=lambda moment: moment.occurred_at.epoch_s))
+
+
 class DebriefBuilder:
     """Builds a SessionDebrief from a single session's events and ranks."""
 
@@ -97,7 +106,9 @@ class DebriefBuilder:
         chains the three aggregation steps in order.
         """
         window = window_of(events)
-        moments = build_moments(events, self._spec)
+        moments = _ordered_by_time(
+            build_moments(events, self._spec) + ship_change_moments(events)
+        )
         ship_type, ship_name = _ship_type_and_name(events)
         return assemble(
             commander,

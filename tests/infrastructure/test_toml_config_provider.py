@@ -18,7 +18,7 @@ from o7debrief.domain.value_objects.enums import (
 from o7debrief.infrastructure.config.toml_config_provider import TomlConfigProvider
 
 # Number of [[moment]] rules defined in the shipped taxonomy.
-_EXPECTED_RULES = 22
+_EXPECTED_RULES = 20
 # Threshold magnitudes declared in the taxonomy [thresholds] table.
 _LONG_JUMP_LY = 50.0
 _BIG_PAYOUT = 1000000
@@ -49,20 +49,6 @@ def test_rules_carry_kind_domain_and_mode() -> None:
     assert jump.kind is MomentKind.JUMP
     assert jump.domain is ActivityDomain.TRAVEL
     assert jump.mode is ActivityMode.SHIP
-
-
-def test_ship_change_events_map_to_shipyard_moments() -> None:
-    spec = _provider().load()
-
-    swap = spec.rule_for("ShipyardSwap")
-    assert swap is not None
-    assert swap.kind is MomentKind.SHIP_SWAP
-    assert swap.domain is ActivityDomain.SHIPYARD
-
-    purchase = spec.rule_for("ShipyardNew")
-    assert purchase is not None
-    assert purchase.kind is MomentKind.SHIP_PURCHASE
-    assert purchase.domain is ActivityDomain.SHIPYARD
 
 
 def test_foot_mode_maps_to_on_foot() -> None:
