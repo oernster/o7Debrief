@@ -20,8 +20,8 @@ def test_build_returns_session_debrief_with_window_and_commander() -> None:
     assert result.window.start.epoch_s == events[0].event_time.epoch_s
     assert result.window.end.epoch_s == events[1].event_time.epoch_s
     assert result.window.clean_shutdown is True
-    # An empty-rules spec produces no beats, which is a valid debrief.
-    assert result.beats == ()
+    # An empty-rules spec produces no moments, which is a valid debrief.
+    assert result.moments == ()
     assert result.config_schema_version == spec().schema_version
 
 

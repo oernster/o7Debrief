@@ -6,14 +6,14 @@ from o7debrief.domain.aggregation.debrief_assembler import (
     STAR_SYSTEM_FIELD,
     assemble,
 )
-from o7debrief.domain.model.conceptual_beat import ConceptualBeat
+from o7debrief.domain.model.conceptual_moment import ConceptualMoment
 from o7debrief.domain.rules.rollup_spec import RollupSpec, ThresholdSet
 from o7debrief.domain.value_objects.commander_id import CommanderId
 from o7debrief.domain.value_objects.credits import Credits
 from o7debrief.domain.value_objects.enums import (
     ActivityDomain,
     ActivityMode,
-    BeatKind,
+    MomentKind,
 )
 from o7debrief.domain.value_objects.event_time import EventTime
 from o7debrief.domain.value_objects.session_window import SessionWindow
@@ -25,8 +25,8 @@ def _at(sec: int) -> EventTime:
     return EventTime.parse(f"2024-01-01T10:00:{sec:02d}Z")
 
 
-def _beat(
-    kind: BeatKind,
+def _moment(
+    kind: MomentKind,
     domain: ActivityDomain,
     sec: int,
     *,
@@ -34,8 +34,8 @@ def _beat(
     magnitude: int = 0,
     credits: int = 0,
     detail: tuple = (),
-) -> ConceptualBeat:
-    return ConceptualBeat(
+) -> ConceptualMoment:
+    return ConceptualMoment(
         kind=kind,
         domain=domain,
         mode=mode,
@@ -85,58 +85,58 @@ def test_schema_version_taken_from_spec() -> None:
 
 
 def test_full_session_populates_every_rollup() -> None:
-    beats = (
-        _beat(BeatKind.JUMP, ActivityDomain.TRAVEL, 0, magnitude=8),
-        _beat(BeatKind.JUMP, ActivityDomain.TRAVEL, 1, magnitude=12),
-        _beat(BeatKind.SCAN_BODY, ActivityDomain.EXPLORATION, 2),
-        _beat(BeatKind.MAP_BODY, ActivityDomain.EXPLORATION, 3),
-        _beat(BeatKind.HONK, ActivityDomain.EXPLORATION, 4),
-        _beat(
-            BeatKind.SELL_EXPLORATION,
+    moments = (
+        _moment(MomentKind.JUMP, ActivityDomain.TRAVEL, 0, magnitude=8),
+        _moment(MomentKind.JUMP, ActivityDomain.TRAVEL, 1, magnitude=12),
+        _moment(MomentKind.SCAN_BODY, ActivityDomain.EXPLORATION, 2),
+        _moment(MomentKind.MAP_BODY, ActivityDomain.EXPLORATION, 3),
+        _moment(MomentKind.HONK, ActivityDomain.EXPLORATION, 4),
+        _moment(
+            MomentKind.SELL_EXPLORATION,
             ActivityDomain.EXPLORATION,
             5,
             credits=30000,
         ),
-        _beat(BeatKind.BOUNTY, ActivityDomain.COMBAT, 6, credits=50000),
-        _beat(BeatKind.BOND, ActivityDomain.COMBAT, 7, credits=20000),
-        _beat(BeatKind.MARKET_BUY, ActivityDomain.TRADE, 8, credits=1000),
-        _beat(BeatKind.MARKET_SELL, ActivityDomain.TRADE, 9, credits=4000),
-        _beat(BeatKind.REFINE, ActivityDomain.MINING, 10),
-        _beat(
-            BeatKind.MISSION_COMPLETE,
+        _moment(MomentKind.BOUNTY, ActivityDomain.COMBAT, 6, credits=50000),
+        _moment(MomentKind.BOND, ActivityDomain.COMBAT, 7, credits=20000),
+        _moment(MomentKind.MARKET_BUY, ActivityDomain.TRADE, 8, credits=1000),
+        _moment(MomentKind.MARKET_SELL, ActivityDomain.TRADE, 9, credits=4000),
+        _moment(MomentKind.REFINE, ActivityDomain.MINING, 10),
+        _moment(
+            MomentKind.MISSION_COMPLETE,
             ActivityDomain.MISSIONS,
             11,
             credits=15000,
         ),
-        _beat(BeatKind.ENGINEER_CRAFT, ActivityDomain.ENGINEERING, 12),
-        _beat(BeatKind.CARRIER_JUMP, ActivityDomain.CARRIER, 13),
-        _beat(BeatKind.EXOBIO_SAMPLE, ActivityDomain.EXOBIOLOGY, 14),
-        _beat(
-            BeatKind.EXOBIO_SELL,
+        _moment(MomentKind.ENGINEER_CRAFT, ActivityDomain.ENGINEERING, 12),
+        _moment(MomentKind.CARRIER_JUMP, ActivityDomain.CARRIER, 13),
+        _moment(MomentKind.EXOBIO_SAMPLE, ActivityDomain.EXOBIOLOGY, 14),
+        _moment(
+            MomentKind.EXOBIO_SELL,
             ActivityDomain.EXOBIOLOGY,
             15,
             credits=9000,
         ),
-        _beat(
-            BeatKind.SRV_DEPLOY,
+        _moment(
+            MomentKind.SRV_DEPLOY,
             ActivityDomain.SRV,
             16,
             mode=ActivityMode.SRV,
         ),
-        _beat(
-            BeatKind.DISEMBARK,
+        _moment(
+            MomentKind.DISEMBARK,
             ActivityDomain.ON_FOOT,
             17,
             mode=ActivityMode.ON_FOOT,
         ),
-        _beat(
-            BeatKind.SETTLEMENT_VISIT,
+        _moment(
+            MomentKind.SETTLEMENT_VISIT,
             ActivityDomain.ON_FOOT,
             18,
             mode=ActivityMode.ON_FOOT,
         ),
     )
-    debrief = assemble(_commander(), _window(), beats, (), _spec())
+    debrief = assemble(_commander(), _window(), moments, (), _spec())
     activity = debrief.activity
 
     assert activity.flight.jumps == 2
@@ -186,8 +186,8 @@ def test_full_session_populates_every_rollup() -> None:
 
 
 def test_partial_session_leaves_unused_rollups_none() -> None:
-    beats = (_beat(BeatKind.JUMP, ActivityDomain.TRAVEL, 0, magnitude=5),)
-    debrief = assemble(_commander(), _window(), beats, (), _spec())
+    moments = (_moment(MomentKind.JUMP, ActivityDomain.TRAVEL, 0, magnitude=5),)
+    debrief = assemble(_commander(), _window(), moments, (), _spec())
     activity = debrief.activity
     assert activity.flight is not None
     assert activity.exploration is None
@@ -203,82 +203,82 @@ def test_partial_session_leaves_unused_rollups_none() -> None:
     assert activity.active_domains == (ActivityDomain.TRAVEL,)
 
 
-def test_start_and_end_systems_from_first_and_last_located_beats() -> None:
-    beats = (
-        _beat(
-            BeatKind.JUMP,
+def test_start_and_end_systems_from_first_and_last_located_moments() -> None:
+    moments = (
+        _moment(
+            MomentKind.JUMP,
             ActivityDomain.TRAVEL,
             0,
             detail=((STAR_SYSTEM_FIELD, "Sol"),),
         ),
-        _beat(BeatKind.SCAN_BODY, ActivityDomain.EXPLORATION, 1),
-        _beat(
-            BeatKind.JUMP,
+        _moment(MomentKind.SCAN_BODY, ActivityDomain.EXPLORATION, 1),
+        _moment(
+            MomentKind.JUMP,
             ActivityDomain.TRAVEL,
             2,
             detail=((STAR_SYSTEM_FIELD, "Lave"),),
         ),
-        _beat(
-            BeatKind.JUMP,
+        _moment(
+            MomentKind.JUMP,
             ActivityDomain.TRAVEL,
             3,
             detail=((STAR_SYSTEM_FIELD, "Diso"),),
         ),
     )
-    debrief = assemble(_commander(), _window(), beats, (), _spec())
+    debrief = assemble(_commander(), _window(), moments, (), _spec())
     assert str(debrief.start_system) == "Sol"
     assert str(debrief.end_system) == "Diso"
 
 
 def test_system_field_non_string_is_ignored() -> None:
-    beats = (
-        _beat(
-            BeatKind.JUMP,
+    moments = (
+        _moment(
+            MomentKind.JUMP,
             ActivityDomain.TRAVEL,
             0,
             detail=((STAR_SYSTEM_FIELD, 1234),),
         ),
     )
-    debrief = assemble(_commander(), _window(), beats, (), _spec())
+    debrief = assemble(_commander(), _window(), moments, (), _spec())
     assert debrief.start_system is None
     assert debrief.end_system is None
 
 
 def test_system_field_empty_string_is_ignored() -> None:
-    beats = (
-        _beat(
-            BeatKind.JUMP,
+    moments = (
+        _moment(
+            MomentKind.JUMP,
             ActivityDomain.TRAVEL,
             0,
             detail=((STAR_SYSTEM_FIELD, "   "),),
         ),
     )
-    debrief = assemble(_commander(), _window(), beats, (), _spec())
+    debrief = assemble(_commander(), _window(), moments, (), _spec())
     assert debrief.start_system is None
 
 
-def test_beat_detail_without_system_field_is_ignored() -> None:
-    beats = (
-        _beat(
-            BeatKind.JUMP,
+def test_moment_detail_without_system_field_is_ignored() -> None:
+    moments = (
+        _moment(
+            MomentKind.JUMP,
             ActivityDomain.TRAVEL,
             0,
             detail=(("Other", "value"),),
         ),
     )
-    debrief = assemble(_commander(), _window(), beats, (), _spec())
+    debrief = assemble(_commander(), _window(), moments, (), _spec())
     assert debrief.start_system is None
 
 
-def test_single_located_beat_is_both_start_and_end() -> None:
-    beats = (
-        _beat(
-            BeatKind.JUMP,
+def test_single_located_moment_is_both_start_and_end() -> None:
+    moments = (
+        _moment(
+            MomentKind.JUMP,
             ActivityDomain.TRAVEL,
             0,
             detail=((STAR_SYSTEM_FIELD, "Sol"),),
         ),
     )
-    debrief = assemble(_commander(), _window(), beats, (), _spec())
+    debrief = assemble(_commander(), _window(), moments, (), _spec())
     assert str(debrief.start_system) == "Sol"
     assert str(debrief.end_system) == "Sol"

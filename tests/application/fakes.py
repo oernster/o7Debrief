@@ -63,8 +63,8 @@ def number_format() -> NumberFormat:
 def spec(labels: tuple[tuple[str, str], ...] = ()) -> RollupSpec:
     """Return a RollupSpec with the taxonomy thresholds and given labels.
 
-    Rules are empty by default; tests that build beats do so directly rather
-    than through the beat factory, so no event-to-beat rules are needed here.
+    Rules are empty by default; tests that build moments do so directly rather
+    than through the moment factory, so no event-to-moment rules are needed here.
     """
     return RollupSpec(
         schema_version=SCHEMA_VERSION,

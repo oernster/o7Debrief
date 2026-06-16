@@ -9,7 +9,7 @@ from __future__ import annotations
 from o7debrief.domain.value_objects.enums import (
     ActivityDomain,
     ActivityMode,
-    BeatKind,
+    MomentKind,
     RankLadder,
 )
 
@@ -35,7 +35,7 @@ def test_activity_domain_members() -> None:
     assert {d.name for d in ActivityDomain} == expected
 
 
-def test_beat_kind_members() -> None:
+def test_moment_kind_members() -> None:
     expected = {
         "JUMP",
         "SCAN_BODY",
@@ -59,7 +59,7 @@ def test_beat_kind_members() -> None:
         "PROMOTION",
         "MILESTONE",
     }
-    assert {b.name for b in BeatKind} == expected
+    assert {b.name for b in MomentKind} == expected
 
 
 def test_rank_ladder_members() -> None:

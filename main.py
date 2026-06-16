@@ -459,7 +459,7 @@ def main() -> int:
         icon = QIcon(str(_icon_path()))
         app.setWindowIcon(icon)
 
-        # Keep a reference to the heartbeat timer for the life of the app so it
+        # Keep a reference to the heartmoment timer for the life of the app so it
         # is not garbage-collected; it is what lets Ctrl+C quit the app.
         interrupt_timer = _install_interrupt_handling(app)
 

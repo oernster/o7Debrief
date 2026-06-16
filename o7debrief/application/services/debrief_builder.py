@@ -1,14 +1,14 @@
 """DebriefBuilder: fold a session's raw events into a SessionDebrief.
 
 The builder is the application-side composition of three domain steps: it
-derives the session window, turns events into conceptual beats under the
+derives the session window, turns events into conceptual moments under the
 configured spec, and assembles the final debrief. It holds the spec so the
 caller passes only the per-session inputs.
 """
 
 from __future__ import annotations
 
-from o7debrief.domain.aggregation.beat_factory import build_beats
+from o7debrief.domain.aggregation.moment_factory import build_moments
 from o7debrief.domain.aggregation.debrief_assembler import assemble
 from o7debrief.domain.aggregation.session_bracketer import window_of
 from o7debrief.domain.model.rank_delta import RankDelta
@@ -67,19 +67,19 @@ class DebriefBuilder:
         events: tuple[RawEvent, ...],
         rank_progression: tuple[RankDelta, ...],
     ) -> SessionDebrief:
-        """Derive the window, build beats and assemble the debrief.
+        """Derive the window, build moments and assemble the debrief.
 
         ``events`` are the already-isolated events of one session. The
         domain validates emptiness and ordering, so the builder simply
         chains the three aggregation steps in order.
         """
         window = window_of(events)
-        beats = build_beats(events, self._spec)
+        moments = build_moments(events, self._spec)
         ship_type, ship_name = _ship_type_and_name(events)
         return assemble(
             commander,
             window,
-            beats,
+            moments,
             rank_progression,
             self._spec,
             ship_type,

@@ -1,6 +1,6 @@
 """Builders for real domain objects used as presenter inputs.
 
-These assemble genuine ConceptualBeat, ActivityRollup, RankDelta and
+These assemble genuine ConceptualMoment, ActivityRollup, RankDelta and
 SessionDebrief instances so the presenter formats true domain data. Keeping
 them here keeps the test modules focused on assertions.
 """
@@ -10,7 +10,7 @@ from __future__ import annotations
 from tests.application.fakes import at, commander
 
 from o7debrief.domain.aggregation.debrief_assembler import STAR_SYSTEM_FIELD
-from o7debrief.domain.model.conceptual_beat import ConceptualBeat
+from o7debrief.domain.model.conceptual_moment import ConceptualMoment
 from o7debrief.domain.model.rank_delta import RankDelta
 from o7debrief.domain.model.rollups import (
     ActivityRollup,
@@ -31,7 +31,7 @@ from o7debrief.domain.value_objects.credits import Credits
 from o7debrief.domain.value_objects.enums import (
     ActivityDomain,
     ActivityMode,
-    BeatKind,
+    MomentKind,
     RankLadder,
 )
 from o7debrief.domain.value_objects.session_window import SessionWindow
@@ -42,8 +42,8 @@ _START_SECOND = 0
 _END_SECOND = 59
 
 
-def beat(
-    kind: BeatKind,
+def moment(
+    kind: MomentKind,
     domain: ActivityDomain,
     second: int,
     *,
@@ -51,12 +51,12 @@ def beat(
     magnitude: int = 0,
     credits: int = 0,
     system: str | None = None,
-) -> ConceptualBeat:
-    """Build a single ConceptualBeat, optionally tagged with a star system."""
+) -> ConceptualMoment:
+    """Build a single ConceptualMoment, optionally tagged with a star system."""
     detail: tuple[tuple[str, object], ...] = ()
     if system is not None:
         detail = ((STAR_SYSTEM_FIELD, system),)
-    return ConceptualBeat(
+    return ConceptualMoment(
         kind=kind,
         domain=domain,
         mode=mode,
@@ -124,7 +124,7 @@ def rank_delta(
 
 def debrief(
     *,
-    beats: tuple[ConceptualBeat, ...],
+    moments: tuple[ConceptualMoment, ...],
     activity: ActivityRollup,
     ranks: tuple[RankDelta, ...] = (),
     start_system: str | None = "Sol",
@@ -143,7 +143,7 @@ def debrief(
         start_system=start,
         end_system=end,
         net_credits_delta=Credits(net_credits),
-        beats=beats,
+        moments=moments,
         activity=activity,
         rank_progression=ranks,
         config_schema_version=schema_version,

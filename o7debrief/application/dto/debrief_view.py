@@ -112,7 +112,7 @@ class DomainSection:
 
 @dataclass(frozen=True, slots=True)
 class TimelineEntry:
-    """One chronological beat rendered for the timeline."""
+    """One chronological moment rendered for the timeline."""
 
     time_display: str
     mode: str

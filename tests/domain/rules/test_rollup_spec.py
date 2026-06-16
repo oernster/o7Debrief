@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from o7debrief.domain.rules.rollup_spec import BeatRule, RollupSpec, ThresholdSet
+from o7debrief.domain.rules.rollup_spec import MomentRule, RollupSpec, ThresholdSet
 from o7debrief.domain.value_objects.enums import (
     ActivityDomain,
     ActivityMode,
-    BeatKind,
+    MomentKind,
 )
 
 
@@ -14,17 +14,17 @@ def _spec() -> RollupSpec:
     return RollupSpec(
         schema_version="2.0.0",
         rules=(
-            BeatRule(
+            MomentRule(
                 event_type="FSDJump",
-                kind=BeatKind.JUMP,
+                kind=MomentKind.JUMP,
                 domain=ActivityDomain.TRAVEL,
                 mode=ActivityMode.SHIP,
                 magnitude_field="JumpDist",
                 credits_field=None,
             ),
-            BeatRule(
+            MomentRule(
                 event_type="Bounty",
-                kind=BeatKind.BOUNTY,
+                kind=MomentKind.BOUNTY,
                 domain=ActivityDomain.COMBAT,
                 mode=ActivityMode.SHIP,
                 magnitude_field=None,
@@ -43,7 +43,7 @@ def _spec() -> RollupSpec:
 def test_rule_for_hit() -> None:
     rule = _spec().rule_for("Bounty")
     assert rule is not None
-    assert rule.kind is BeatKind.BOUNTY
+    assert rule.kind is MomentKind.BOUNTY
 
 
 def test_rule_for_miss_returns_none() -> None:

@@ -1,28 +1,28 @@
-"""Beat factory: turn matching raw events into conceptual beats.
+"""Moment factory: turn matching raw events into conceptual moments.
 
-Each raw event whose type has a ``BeatRule`` in the spec becomes one
-``ConceptualBeat``. The beat's control mode comes from the phase tracker
+Each raw event whose type has a ``MomentRule`` in the spec becomes one
+``ConceptualMoment``. The moment's control mode comes from the phase tracker
 (aligned by index), its magnitude and credit delta are read from the
 rule's named fields, and its label is resolved through the spec (falling
-back to the event type so a beat is never unlabelled).
+back to the event type so a moment is never unlabelled).
 """
 
 from __future__ import annotations
 
 from o7debrief.domain.aggregation.phase_tracker import mode_at_each
-from o7debrief.domain.model.conceptual_beat import ConceptualBeat
+from o7debrief.domain.model.conceptual_moment import ConceptualMoment
 from o7debrief.domain.model.raw_event import RawEvent
-from o7debrief.domain.rules.rollup_spec import BeatRule, RollupSpec
+from o7debrief.domain.rules.rollup_spec import MomentRule, RollupSpec
 from o7debrief.domain.value_objects.credits import Credits
 from o7debrief.domain.value_objects.enums import ActivityMode
 
-__all__ = ["build_beats"]
+__all__ = ["build_moments"]
 
 # Magnitude used when a rule names no magnitude field or the field is absent.
 _DEFAULT_MAGNITUDE = 0
 
 
-def _magnitude_from(event: RawEvent, rule: BeatRule) -> int:
+def _magnitude_from(event: RawEvent, rule: MomentRule) -> int:
     """Read the integer magnitude named by the rule, or the default."""
     if rule.magnitude_field is None:
         return _DEFAULT_MAGNITUDE
@@ -32,7 +32,7 @@ def _magnitude_from(event: RawEvent, rule: BeatRule) -> int:
     return _DEFAULT_MAGNITUDE
 
 
-def _credits_from(event: RawEvent, rule: BeatRule) -> Credits:
+def _credits_from(event: RawEvent, rule: MomentRule) -> Credits:
     """Read the credit delta named by the rule, or zero.
 
     A rule names either a single scalar credit field or, for events whose
@@ -49,7 +49,7 @@ def _credits_from(event: RawEvent, rule: BeatRule) -> Credits:
     return Credits.zero()
 
 
-def _credits_from_array(event: RawEvent, rule: BeatRule) -> Credits:
+def _credits_from_array(event: RawEvent, rule: MomentRule) -> Credits:
     """Sum the rule's named item fields across its credit array, or zero.
 
     The array field and the item fields both come from the rule (taxonomy),
@@ -70,12 +70,12 @@ def _credits_from_array(event: RawEvent, rule: BeatRule) -> Credits:
     return total
 
 
-def _beat_from(
-    event: RawEvent, rule: BeatRule, mode: ActivityMode, spec: RollupSpec
-) -> ConceptualBeat:
-    """Construct a single beat from an event and its matching rule."""
+def _moment_from(
+    event: RawEvent, rule: MomentRule, mode: ActivityMode, spec: RollupSpec
+) -> ConceptualMoment:
+    """Construct a single moment from an event and its matching rule."""
     label = spec.label_for(event.event_type, event.event_type)
-    return ConceptualBeat(
+    return ConceptualMoment(
         kind=rule.kind,
         domain=rule.domain,
         mode=mode,
@@ -87,19 +87,19 @@ def _beat_from(
     )
 
 
-def build_beats(
+def build_moments(
     events: tuple[RawEvent, ...], spec: RollupSpec
-) -> tuple[ConceptualBeat, ...]:
-    """Map every event with a matching rule to a ConceptualBeat.
+) -> tuple[ConceptualMoment, ...]:
+    """Map every event with a matching rule to a ConceptualMoment.
 
     Events without a matching rule are skipped. The control mode for each
-    beat is taken from the phase tracker, aligned by the event's index.
+    moment is taken from the phase tracker, aligned by the event's index.
     """
     modes = mode_at_each(events)
-    beats: list[ConceptualBeat] = []
+    moments: list[ConceptualMoment] = []
     for index, event in enumerate(events):
         rule = spec.rule_for(event.event_type)
         if rule is None:
             continue
-        beats.append(_beat_from(event, rule, modes[index], spec))
-    return tuple(beats)
+        moments.append(_moment_from(event, rule, modes[index], spec))
+    return tuple(moments)

@@ -62,6 +62,6 @@ class DebriefPresenter:
             timeline=build_timeline(debrief, fmt, resolver),
             timeline_categories=build_timeline_categories(debrief, fmt, resolver),
             ranks=build_ranks(debrief, resolver),
-            milestones=build_milestones(debrief.beats, self._spec, resolver),
+            milestones=build_milestones(debrief.moments, self._spec, resolver),
             footer=build_footer(debrief, fmt, resolver),
         )

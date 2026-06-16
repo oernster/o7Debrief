@@ -80,13 +80,13 @@ python buildinstaller.py
 
 ```
 o7debrief/
-  domain/          Pure stdlib: journal value objects, conceptual-beat model,
+  domain/          Pure stdlib: journal value objects, session-moment model,
                    the deterministic reducer, the SessionDebrief aggregate.
   application/     Use cases and ports (Protocols); domain + stdlib only.
   infrastructure/  Journal IO (discovery, byte-offset tail, parse), TOML config
                    loading, HTML (Jinja2) and Markdown exporters.
   ui/              PySide6 system tray and minimal windows; application layer only.
-config/            TOML taxonomy mapping raw events to conceptual beats.
+config/            TOML taxonomy mapping raw events to moments.
 tests/
   ...              Unit, integration and structural tests mirroring the source.
   structural/      AST and source-scan boundary checks (layering, domain purity,

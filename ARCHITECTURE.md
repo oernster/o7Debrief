@@ -46,8 +46,8 @@ The package is `o7debrief`, split into four layers plus a single composition roo
 
 Pure Python on the standard library. Frozen dataclasses with `slots`, `tuple` collections and validation on construction. The domain holds:
 
-- The journal-event value objects and the conceptual-beat model that raw events roll up into.
-- The deterministic reducer that folds a sequence of parsed events into the conceptual beats for one session, working entirely in event-time read from journal timestamps.
+- The journal-event value objects and the session-moment model that raw events roll up into.
+- The deterministic reducer that folds a sequence of parsed events into the moments for one session, working entirely in event-time read from journal timestamps.
 - The `SessionDebrief` aggregate: the finished, render-ready view of a session, including rank changes (tier-ups now, percentages deferred), built only from real journal fields.
 
 The domain reads no clock, opens no file and logs nothing. Time comes in as data on the events. This is what makes a debrief reproducible.
@@ -112,7 +112,7 @@ Rank handling reflects what the journal can actually tell us. A `Promotion` (a t
 | 1 | Ship both capture paths in v1 (live tray watcher and cold one-shot). | The two paths cover the two real situations: app running during play and app not running but you still want a debrief. One shared reducer keeps them consistent. | A v1 that only worked if you remembered to start the app first or only worked as a manual after-the-fact tool. |
 | 2 | HTML and Markdown in v1, with a configurable default format overridable per export. | HTML is the canonical, self-contained, portable artefact; Markdown is what you paste into Discord or Reddit. A default keeps the common case one click; per-export override keeps it flexible. | Locking users into a single format or forcing a format choice on every single export. |
 | 3 | Real data only: every number traces to a journal field. | Trust is the product. A debrief that estimates or guesses is worse than no debrief because the reader cannot tell which figures are real. | Derived or interpolated statistics that look authoritative but cannot be verified against the journal. |
-| 4 | Pure-Python Windows executable now; Linux Flatpak later. | The audience is on Windows; a Nuitka standalone exe ships without asking users to install Python. Pure Python keeps the Linux port a packaging exercise, not a rewrite. | A cross-platform v1 that delays the Windows release the audience actually wants or a native rewrite per platform. |
+| 4 | Pure-Python Windows executable now; a Linux port later if there is demand. | The audience is on Windows; a Nuitka standalone exe ships without asking users to install Python. Pure Python keeps the Linux port a packaging exercise, not a rewrite. | A cross-platform v1 that delays the Windows release the audience actually wants or a native rewrite per platform. |
 | 5 | Strict UI boundary: the UI imports the application layer only. | It keeps the UI swappable (tray today, more later) and keeps domain logic out of widgets, which is where logic goes to become untestable. | A UI that reaches into the domain or infrastructure and quietly becomes the place business rules live. |
 | 6 | Ranks as tier-ups-now plus percentages-next-launch, showing only changed ranks. | It matches what the journal records: promotions are events but progress percentages are only snapshotted at startup. Reporting them this way is honest rather than fabricated. | Inventing a mid-session percentage the journal never recorded or padding the report with unchanged ranks. |
 
@@ -122,7 +122,7 @@ Rank handling reflects what the journal can actually tell us. A `Promotion` (a t
 | --- | --- | --- |
 | A desktop executable, not a local server. | The tool reads a local file and writes a local report; a server adds ports, lifecycle and attack surface for no user benefit. Local-first keeps the player's data on the player's machine. | A background HTTP service, a browser-based UI talking to localhost, any networked component. |
 | Batch reporting, not live. | The value is reflective: a coherent end-of-session summary. A live feed is a different product (an overlay) with different constraints. | Real-time on-screen updates, an in-game overlay, continuous streaming of partial state. |
-| TOML configuration for the event taxonomy. | The mapping from raw events to conceptual beats is data, not code; holding it in TOML (read with stdlib `tomllib`) keeps magic numbers and domain-specific mappings out of the logic and makes the taxonomy reviewable. | Hardcoded event-to-beat mappings and tuning constants scattered through the codebase. |
+| TOML configuration for the event taxonomy. | The mapping from raw events to moments is data, not code; holding it in TOML (read with stdlib `tomllib`) keeps magic numbers and domain-specific mappings out of the logic and makes the taxonomy reviewable. | Hardcoded event-to-moment mappings and tuning constants scattered through the codebase. |
 | Session isolation by last-`LoadGame` slice. | A session is unambiguously "the last `LoadGame` to the end of the stream". Defining it structurally means a previous session can never bleed into the current debrief. | Heuristic session boundaries, time-window guesses or accidental inclusion of a prior session's events. |
 
 ## Quality enforcement

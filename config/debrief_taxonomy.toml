@@ -1,7 +1,7 @@
 # o7Debrief conceptual-event taxonomy.
 #
 # This file is the single source of truth for every label, icon, threshold and
-# event-to-beat mapping used when turning an Elite Dangerous journal into a
+# event-to-moment mapping used when turning an Elite Dangerous journal into a
 # Commander debrief. No magic numbers or domain strings live in code: the domain
 # and application layers read everything they need from here. British spelling
 # is used in comments. No em dashes appear anywhere.
@@ -32,11 +32,11 @@ schema_version = "1"
 # the others mark a resumed game; any of them opens a new debrief window.
 session_start_events = ["LoadGame", "Fileheader"]
 session_resume_events = ["Resurrect", "Continued"]
-# When true, a domain with no recorded beats is omitted from the report.
+# When true, a domain with no recorded moments is omitted from the report.
 hide_empty_domains = true
 
 # ---------------------------------------------------------------------------
-# Domains: the broad gameplay areas a beat can belong to. The key matches the
+# Domains: the broad gameplay areas a moment can belong to. The key matches the
 # ActivityDomain enum member name in lower case. icon is a token resolved by the
 # ui theme layer; default_mode names the usual control context for the domain.
 # ---------------------------------------------------------------------------
@@ -109,7 +109,7 @@ default_mode = "foot"
 
 # ---------------------------------------------------------------------------
 # Modes: the physical control context. label and icon drive the report; tag is
-# the short Markdown ASCII marker placed beside a beat to show its context.
+# the short Markdown ASCII marker placed beside a moment to show its context.
 # ---------------------------------------------------------------------------
 
 [modes.ship]
@@ -128,16 +128,16 @@ icon = "boot"
 tag = "F"
 
 # ---------------------------------------------------------------------------
-# Beats: event-to-beat rules. Each rule maps a journal event type to a single
-# conceptual beat. domain matches a [[domain]] key; mode matches a [modes.*]
-# key; kind matches the BeatKind enum member name in lower case. text is a
+# Moments: event-to-moment rules. Each rule maps a journal event type to a single
+# conceptual moment. domain matches a [[domain]] key; mode matches a [modes.*]
+# key; kind matches the MomentKind enum member name in lower case. text is a
 # Jinja2 template rendered against the event payload. credits_field and
 # magnitude_field are optional; each names the journal payload key the rollups
-# read for that beat's credit delta or numeric magnitude (income events only,
+# read for that moment's credit delta or numeric magnitude (income events only,
 # so net credits is not inflated by spending).
 # ---------------------------------------------------------------------------
 
-[[beat]]
+[[moment]]
 event = "FSDJump"
 domain = "travel"
 mode = "ship"
@@ -145,28 +145,28 @@ kind = "jump"
 magnitude_field = "JumpDist"
 text = "Jumped to {{ StarSystem }} ({{ JumpDist }} ly)."
 
-[[beat]]
+[[moment]]
 event = "Scan"
 domain = "exploration"
 mode = "ship"
 kind = "scan_body"
 text = "Scanned {{ BodyName }}."
 
-[[beat]]
+[[moment]]
 event = "SAAScanComplete"
 domain = "exploration"
 mode = "ship"
 kind = "map_body"
 text = "Mapped {{ BodyName }} in full."
 
-[[beat]]
+[[moment]]
 event = "FSSDiscoveryScan"
 domain = "exploration"
 mode = "ship"
 kind = "honk"
 text = "Ran a discovery scan of {{ SystemName }}."
 
-[[beat]]
+[[moment]]
 event = "MultiSellExplorationData"
 domain = "exploration"
 mode = "ship"
@@ -174,7 +174,7 @@ kind = "sell_exploration"
 credits_field = "TotalEarnings"
 text = "Sold exploration data for {{ TotalEarnings }} Cr."
 
-[[beat]]
+[[moment]]
 event = "Bounty"
 domain = "combat"
 mode = "ship"
@@ -182,7 +182,7 @@ kind = "bounty"
 credits_field = "TotalReward"
 text = "Claimed a bounty on a {{ Target }} worth {{ TotalReward }} Cr."
 
-[[beat]]
+[[moment]]
 event = "FactionKillBond"
 domain = "combat"
 mode = "ship"
@@ -190,21 +190,21 @@ kind = "bond"
 credits_field = "Reward"
 text = "Earned a combat bond worth {{ Reward }} Cr."
 
-[[beat]]
+[[moment]]
 event = "Died"
 domain = "combat"
 mode = "ship"
 kind = "death"
 text = "Was destroyed and rebought the ship."
 
-[[beat]]
+[[moment]]
 event = "MarketBuy"
 domain = "trade"
 mode = "ship"
 kind = "market_buy"
 text = "Bought {{ Count }} t of {{ Type }} at {{ BuyPrice }} Cr each."
 
-[[beat]]
+[[moment]]
 event = "MarketSell"
 domain = "trade"
 mode = "ship"
@@ -212,14 +212,14 @@ kind = "market_sell"
 credits_field = "TotalSale"
 text = "Sold {{ Count }} t of {{ Type }} for {{ TotalSale }} Cr."
 
-[[beat]]
+[[moment]]
 event = "MiningRefined"
 domain = "mining"
 mode = "ship"
 kind = "refine"
 text = "Refined a tonne of {{ Type }}."
 
-[[beat]]
+[[moment]]
 event = "MissionCompleted"
 domain = "missions"
 mode = "ship"
@@ -227,42 +227,42 @@ kind = "mission_complete"
 credits_field = "Reward"
 text = "Completed mission for {{ Faction }} ({{ Reward }} Cr)."
 
-[[beat]]
+[[moment]]
 event = "EngineerCraft"
 domain = "engineering"
 mode = "ship"
 kind = "engineer_craft"
 text = "Applied {{ BlueprintName }} grade {{ Level }} to {{ Module }}."
 
-[[beat]]
+[[moment]]
 event = "CarrierJump"
 domain = "carrier"
 mode = "ship"
 kind = "carrier_jump"
 text = "Jumped the fleet carrier to {{ StarSystem }}."
 
-[[beat]]
+[[moment]]
 event = "LaunchSRV"
 domain = "srv"
 mode = "srv"
 kind = "srv_deploy"
 text = "Deployed the SRV onto the surface."
 
-[[beat]]
+[[moment]]
 event = "Disembark"
 domain = "on_foot"
 mode = "foot"
 kind = "disembark"
 text = "Disembarked on foot."
 
-[[beat]]
+[[moment]]
 event = "ScanOrganic"
 domain = "exobiology"
 mode = "foot"
 kind = "exobio_sample"
 text = "Sampled {{ Species }} ({{ ScanType }})."
 
-[[beat]]
+[[moment]]
 event = "SellOrganicData"
 domain = "exobiology"
 mode = "foot"
@@ -274,14 +274,14 @@ credits_array_field = "BioData"
 credits_item_fields = ["Value", "Bonus"]
 text = "Sold organic data."
 
-[[beat]]
+[[moment]]
 event = "ApproachSettlement"
 domain = "on_foot"
 mode = "foot"
 kind = "settlement_visit"
 text = "Arrived at {{ Name }}."
 
-[[beat]]
+[[moment]]
 event = "Promotion"
 domain = "missions"
 mode = "ship"

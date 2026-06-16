@@ -1,6 +1,6 @@
-"""ConceptualBeat: one meaningful, classified moment within a session.
+"""ConceptualMoment: one meaningful, classified moment within a session.
 
-A beat is the unit the debrief is built from. It abstracts away from the
+A moment is the unit the debrief is built from. It abstracts away from the
 raw journal event into a domain-classified happening: its kind, the domain
 and mode it belongs to, when it occurred, a human label, a magnitude, any
 credit delta and a tuple of supporting detail pairs.
@@ -15,18 +15,18 @@ from o7debrief.domain.value_objects.credits import Credits
 from o7debrief.domain.value_objects.enums import (
     ActivityDomain,
     ActivityMode,
-    BeatKind,
+    MomentKind,
 )
 from o7debrief.domain.value_objects.event_time import EventTime
 
-__all__ = ["ConceptualBeat"]
+__all__ = ["ConceptualMoment"]
 
 
 @dataclass(frozen=True, slots=True)
-class ConceptualBeat:
+class ConceptualMoment:
     """A single classified happening that contributes to the debrief."""
 
-    kind: BeatKind
+    kind: MomentKind
     domain: ActivityDomain
     mode: ActivityMode
     occurred_at: EventTime
@@ -37,4 +37,4 @@ class ConceptualBeat:
 
     def __post_init__(self) -> None:
         if not self.label:
-            raise InvalidRawEventError("Beat label must not be empty.")
+            raise InvalidRawEventError("Moment label must not be empty.")

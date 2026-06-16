@@ -2,7 +2,7 @@
 
 Every function here consumes event-time only and performs no I/O. They
 form the pipeline: isolate the latest session, track control mode, build
-beats, compute rank deltas and assemble the final debrief.
+moments, compute rank deltas and assemble the final debrief.
 """
 
 from __future__ import annotations

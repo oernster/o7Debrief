@@ -153,9 +153,10 @@ def test_only_main_wires_infrastructure() -> None:
         if INFRASTRUCTURE in _imported_layers(tree):
             violations.append(f"{relative} imports o7debrief.infrastructure")
 
-    assert not violations, (
-        "Infrastructure wiring leaked outside the composition root:\n"
-        + "\n".join(violations)
+    assert (
+        not violations
+    ), "Infrastructure wiring leaked outside the composition root:\n" + "\n".join(
+        violations
     )
 
 

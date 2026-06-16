@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from o7debrief.domain.errors import AggregationError
-from o7debrief.domain.model.conceptual_beat import ConceptualBeat
+from o7debrief.domain.model.conceptual_moment import ConceptualMoment
 from o7debrief.domain.model.rollups import ActivityRollup
 from o7debrief.domain.model.session_debrief import SessionDebrief
 from o7debrief.domain.value_objects.commander_id import CommanderId
@@ -13,7 +13,7 @@ from o7debrief.domain.value_objects.credits import Credits
 from o7debrief.domain.value_objects.enums import (
     ActivityDomain,
     ActivityMode,
-    BeatKind,
+    MomentKind,
 )
 from o7debrief.domain.value_objects.event_time import EventTime
 from o7debrief.domain.value_objects.session_window import SessionWindow
@@ -25,9 +25,9 @@ def _at(sec: int) -> EventTime:
     return EventTime.parse(f"2024-01-01T10:00:{sec:02d}Z")
 
 
-def _beat(sec: int) -> ConceptualBeat:
-    return ConceptualBeat(
-        kind=BeatKind.JUMP,
+def _moment(sec: int) -> ConceptualMoment:
+    return ConceptualMoment(
+        kind=MomentKind.JUMP,
         domain=ActivityDomain.TRAVEL,
         mode=ActivityMode.SHIP,
         occurred_at=_at(sec),
@@ -46,37 +46,37 @@ def _commander() -> CommanderId:
     return CommanderId(fid="F1", name="Jameson")
 
 
-def test_sorted_beats_accepted() -> None:
+def test_sorted_moments_accepted() -> None:
     debrief = SessionDebrief(
         commander=_commander(),
         window=_window(),
         start_system=None,
         end_system=None,
         net_credits_delta=Credits.zero(),
-        beats=(_beat(0), _beat(5), _beat(5), _beat(10)),
+        moments=(_moment(0), _moment(5), _moment(5), _moment(10)),
         activity=ActivityRollup(),
         rank_progression=(),
         config_schema_version=_SCHEMA,
     )
-    assert len(debrief.beats) == 4
+    assert len(debrief.moments) == 4
 
 
-def test_empty_beats_accepted() -> None:
+def test_empty_moments_accepted() -> None:
     debrief = SessionDebrief(
         commander=_commander(),
         window=_window(),
         start_system=None,
         end_system=None,
         net_credits_delta=Credits.zero(),
-        beats=(),
+        moments=(),
         activity=ActivityRollup(),
         rank_progression=(),
         config_schema_version=_SCHEMA,
     )
-    assert debrief.beats == ()
+    assert debrief.moments == ()
 
 
-def test_out_of_order_beats_raise() -> None:
+def test_out_of_order_moments_raise() -> None:
     with pytest.raises(AggregationError):
         SessionDebrief(
             commander=_commander(),
@@ -84,7 +84,7 @@ def test_out_of_order_beats_raise() -> None:
             start_system=None,
             end_system=None,
             net_credits_delta=Credits.zero(),
-            beats=(_beat(10), _beat(5)),
+            moments=(_moment(10), _moment(5)),
             activity=ActivityRollup(),
             rank_progression=(),
             config_schema_version=_SCHEMA,

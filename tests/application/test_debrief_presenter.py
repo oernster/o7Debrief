@@ -11,7 +11,7 @@ from o7debrief.domain.model.rollups import ActivityRollup
 from o7debrief.domain.value_objects.enums import (
     ActivityDomain,
     ActivityMode,
-    BeatKind,
+    MomentKind,
     RankLadder,
 )
 
@@ -20,42 +20,42 @@ def _presenter(labels: tuple[tuple[str, str], ...] = ()) -> DebriefPresenter:
     return DebriefPresenter(spec(labels), number_format())
 
 
-def _full_beats():
-    """Beats covering all three modes, a long jump, a promotion, big payout."""
+def _full_moments():
+    """Moments covering all three modes, a long jump, a promotion, big payout."""
     return (
-        build.beat(
-            BeatKind.JUMP,
+        build.moment(
+            MomentKind.JUMP,
             ActivityDomain.TRAVEL,
             1,
             magnitude=60,
             system="Sol",
         ),
-        build.beat(
-            BeatKind.BOUNTY,
+        build.moment(
+            MomentKind.BOUNTY,
             ActivityDomain.COMBAT,
             2,
-            credits=BIG_PAYOUT_BEAT,
+            credits=BIG_PAYOUT_MOMENT,
             system="Sol",
         ),
-        build.beat(
-            BeatKind.SRV_DEPLOY,
+        build.moment(
+            MomentKind.SRV_DEPLOY,
             ActivityDomain.SRV,
             3,
             mode=ActivityMode.SRV,
         ),
-        build.beat(
-            BeatKind.DISEMBARK,
+        build.moment(
+            MomentKind.DISEMBARK,
             ActivityDomain.ON_FOOT,
             4,
             mode=ActivityMode.ON_FOOT,
             system="Achenar",
         ),
-        build.beat(BeatKind.PROMOTION, ActivityDomain.MISSIONS, 5),
+        build.moment(MomentKind.PROMOTION, ActivityDomain.MISSIONS, 5),
     )
 
 
-# A beat credit value above the taxonomy big-payout threshold.
-BIG_PAYOUT_BEAT = 2000000
+# A moment credit value above the taxonomy big-payout threshold.
+BIG_PAYOUT_MOMENT = 2000000
 
 
 def _full_ranks():
@@ -86,10 +86,10 @@ def _full_ranks():
 
 def test_present_full_debrief_yields_contract_shape() -> None:
     debrief = build.debrief(
-        beats=_full_beats(),
+        moments=_full_moments(),
         activity=build.full_activity(),
         ranks=_full_ranks(),
-        net_credits=BIG_PAYOUT_BEAT,
+        net_credits=BIG_PAYOUT_MOMENT,
     )
 
     context = _presenter().present(debrief).to_context()
@@ -103,7 +103,7 @@ def test_present_full_debrief_yields_contract_shape() -> None:
     # All eleven domains are present, in canonical order starting with travel.
     assert len(context["domains"]) == 11
     assert context["domains"][0]["key"] == "travel"
-    # Timeline has one entry per beat with resolved mode strings.
+    # Timeline has one entry per moment with resolved mode strings.
     modes = [entry["mode"] for entry in context["timeline"]]
     assert modes == ["ship", "ship", "srv", "foot", "ship"]
     # Both ladders appear; the promoted one carries no steady note.
@@ -120,7 +120,7 @@ def test_headline_uses_zero_when_domains_absent() -> None:
     # An activity with no flight/exploration/combat exercises the else paths.
     activity = ActivityRollup(modes_used=())
     debrief = build.debrief(
-        beats=(),
+        moments=(),
         activity=activity,
         net_credits=0,
     )
@@ -143,7 +143,7 @@ def test_delta_class_covers_all_three_directions() -> None:
 
 def test_headline_neutral_class_when_net_is_zero() -> None:
     debrief = build.debrief(
-        beats=(),
+        moments=(),
         activity=ActivityRollup(modes_used=()),
         net_credits=0,
     )
@@ -156,7 +156,7 @@ def test_headline_neutral_class_when_net_is_zero() -> None:
 
 def test_headline_positive_class_when_net_is_positive() -> None:
     debrief = build.debrief(
-        beats=(),
+        moments=(),
         activity=build.full_activity(),
         net_credits=750,
     )
@@ -170,7 +170,7 @@ def test_headline_positive_class_when_net_is_positive() -> None:
 
 def test_unknown_systems_use_default_when_absent() -> None:
     debrief = build.debrief(
-        beats=(),
+        moments=(),
         activity=ActivityRollup(modes_used=()),
         start_system=None,
         end_system=None,
@@ -185,7 +185,7 @@ def test_unknown_systems_use_default_when_absent() -> None:
 
 def test_timeline_entry_without_system_is_none() -> None:
     debrief = build.debrief(
-        beats=(build.beat(BeatKind.HONK, ActivityDomain.EXPLORATION, 1),),
+        moments=(build.moment(MomentKind.HONK, ActivityDomain.EXPLORATION, 1),),
         activity=ActivityRollup(modes_used=()),
     )
 
@@ -195,14 +195,14 @@ def test_timeline_entry_without_system_is_none() -> None:
 
 
 def test_timeline_skips_non_system_detail_pairs() -> None:
-    # A beat whose detail holds only a non-system field makes _beat_system
+    # A moment whose detail holds only a non-system field makes _moment_system
     # iterate past a non-matching pair and fall through to None.
-    from o7debrief.domain.model.conceptual_beat import ConceptualBeat
+    from o7debrief.domain.model.conceptual_moment import ConceptualMoment
     from o7debrief.domain.value_objects.credits import Credits
     from tests.application.fakes import at
 
-    beat = ConceptualBeat(
-        kind=BeatKind.SCAN_BODY,
+    moment = ConceptualMoment(
+        kind=MomentKind.SCAN_BODY,
         domain=ActivityDomain.EXPLORATION,
         mode=ActivityMode.SHIP,
         occurred_at=at(1),
@@ -212,7 +212,7 @@ def test_timeline_skips_non_system_detail_pairs() -> None:
         detail=(("BodyName", "Earth"),),
     )
     debrief = build.debrief(
-        beats=(beat,),
+        moments=(moment,),
         activity=ActivityRollup(modes_used=()),
     )
 
@@ -223,11 +223,11 @@ def test_timeline_skips_non_system_detail_pairs() -> None:
 
 def test_no_milestones_when_nothing_notable() -> None:
     # A short jump, a small payout and no promotion produce no milestones.
-    beats = (
-        build.beat(BeatKind.JUMP, ActivityDomain.TRAVEL, 1, magnitude=5),
-        build.beat(BeatKind.BOUNTY, ActivityDomain.COMBAT, 2, credits=10),
+    moments = (
+        build.moment(MomentKind.JUMP, ActivityDomain.TRAVEL, 1, magnitude=5),
+        build.moment(MomentKind.BOUNTY, ActivityDomain.COMBAT, 2, credits=10),
     )
-    debrief = build.debrief(beats=beats, activity=build.full_activity())
+    debrief = build.debrief(moments=moments, activity=build.full_activity())
 
     context = _presenter().present(debrief).to_context()
 
@@ -243,7 +243,7 @@ def test_rank_change_renders_tier_names_and_steady_note() -> None:
         ("rank.trade.tier.2", "Peddler"),
     )
     debrief = build.debrief(
-        beats=(),
+        moments=(),
         activity=ActivityRollup(modes_used=()),
         ranks=_full_ranks(),
     )
@@ -278,7 +278,7 @@ def test_rank_progress_pct_defaults_to_zero_without_closing_pct() -> None:
         tier_ups=0,
     )
     debrief = build.debrief(
-        beats=(), activity=ActivityRollup(modes_used=()), ranks=(delta,)
+        moments=(), activity=ActivityRollup(modes_used=()), ranks=(delta,)
     )
 
     context = _presenter().present(debrief).to_context()
@@ -288,7 +288,7 @@ def test_rank_progress_pct_defaults_to_zero_without_closing_pct() -> None:
 
 def test_header_shows_the_ship_when_known() -> None:
     debrief = build.debrief(
-        beats=(),
+        moments=(),
         activity=ActivityRollup(modes_used=()),
         ship="Panther Clipper Mk II",
     )
@@ -300,7 +300,7 @@ def test_header_shows_the_ship_when_known() -> None:
 
 def test_header_shows_the_ship_name_when_present() -> None:
     debrief = build.debrief(
-        beats=(),
+        moments=(),
         activity=ActivityRollup(modes_used=()),
         ship="Panther Clipper Mk II",
         ship_name="STARDUST",
@@ -312,7 +312,7 @@ def test_header_shows_the_ship_name_when_present() -> None:
 
 
 def test_header_falls_back_to_unknown_ship_when_absent() -> None:
-    debrief = build.debrief(beats=(), activity=ActivityRollup(modes_used=()))
+    debrief = build.debrief(moments=(), activity=ActivityRollup(modes_used=()))
 
     context = _presenter().present(debrief).to_context()
 
@@ -325,7 +325,7 @@ def test_domain_sections_omit_absent_domains() -> None:
         flight=build.full_activity().flight,
         modes_used=(),
     )
-    debrief = build.debrief(beats=(), activity=activity)
+    debrief = build.debrief(moments=(), activity=activity)
 
     context = _presenter().present(debrief).to_context()
 
@@ -336,12 +336,12 @@ def test_domain_sections_omit_absent_domains() -> None:
 
 
 def test_timeline_categories_group_by_domain_in_canonical_order() -> None:
-    debrief = build.debrief(beats=_full_beats(), activity=build.full_activity())
+    debrief = build.debrief(moments=_full_moments(), activity=build.full_activity())
 
     context = _presenter().present(debrief).to_context()
     categories = context["timeline_categories"]
 
-    # Only domains with beats appear, in the canonical domain order.
+    # Only domains with moments appear, in the canonical domain order.
     assert [category["key"] for category in categories] == [
         "travel",
         "combat",
@@ -349,7 +349,7 @@ def test_timeline_categories_group_by_domain_in_canonical_order() -> None:
         "srv",
         "on_foot",
     ]
-    # Every beat lands in exactly one category, so counts sum to the flat log.
+    # Every moment lands in exactly one category, so counts sum to the flat log.
     assert sum(category["count"] for category in categories) == len(context["timeline"])
     by_key = {category["key"]: category for category in categories}
     assert by_key["combat"]["count"] == 1
@@ -357,8 +357,8 @@ def test_timeline_categories_group_by_domain_in_canonical_order() -> None:
     assert by_key["combat"]["entries"][0]["mode"] == "ship"
 
 
-def test_timeline_categories_empty_when_no_beats() -> None:
-    debrief = build.debrief(beats=(), activity=ActivityRollup(modes_used=()))
+def test_timeline_categories_empty_when_no_moments() -> None:
+    debrief = build.debrief(moments=(), activity=ActivityRollup(modes_used=()))
 
     context = _presenter().present(debrief).to_context()
 

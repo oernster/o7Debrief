@@ -1,4 +1,4 @@
-"""Data-only rollup specification: how raw events become conceptual beats.
+"""Data-only rollup specification: how raw events become conceptual moments.
 
 A ``RollupSpec`` is a pure configuration object (no behaviour beyond
 lookups). It is supplied by an outer layer so the aggregation functions
@@ -12,18 +12,18 @@ from dataclasses import dataclass
 from o7debrief.domain.value_objects.enums import (
     ActivityDomain,
     ActivityMode,
-    BeatKind,
+    MomentKind,
 )
 
-__all__ = ["BeatRule", "ThresholdSet", "RollupSpec"]
+__all__ = ["MomentRule", "ThresholdSet", "RollupSpec"]
 
 
 @dataclass(frozen=True, slots=True)
-class BeatRule:
-    """Maps one journal event type to a classified beat.
+class MomentRule:
+    """Maps one journal event type to a classified moment.
 
     ``magnitude_field`` and ``credits_field`` name the raw-event fields to
-    read for the beat's magnitude and scalar credit delta; either may be
+    read for the moment's magnitude and scalar credit delta; either may be
     ``None`` when the event carries no such value.
 
     Some events spread their credit value across a nested array rather than a
@@ -34,7 +34,7 @@ class BeatRule:
     """
 
     event_type: str
-    kind: BeatKind
+    kind: MomentKind
     domain: ActivityDomain
     mode: ActivityMode
     magnitude_field: str | None
@@ -45,7 +45,7 @@ class BeatRule:
 
 @dataclass(frozen=True, slots=True)
 class ThresholdSet:
-    """Named thresholds that distinguish notable beats from routine ones."""
+    """Named thresholds that distinguish notable moments from routine ones."""
 
     long_jump_ly: float
     big_payout_credits: int
@@ -54,14 +54,14 @@ class ThresholdSet:
 
 @dataclass(frozen=True, slots=True)
 class RollupSpec:
-    """The full event-to-beat specification for one schema version."""
+    """The full event-to-moment specification for one schema version."""
 
     schema_version: str
-    rules: tuple[BeatRule, ...]
+    rules: tuple[MomentRule, ...]
     thresholds: ThresholdSet
     labels: tuple[tuple[str, str], ...]
 
-    def rule_for(self, event_type: str) -> BeatRule | None:
+    def rule_for(self, event_type: str) -> MomentRule | None:
         """Return the rule matching ``event_type``, or ``None`` if absent."""
         for rule in self.rules:
             if rule.event_type == event_type:

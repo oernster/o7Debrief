@@ -48,8 +48,66 @@ h2 { color: var(--accent-soft); font-size: 1.05rem; text-transform: uppercase;
   padding: 0.3rem 0; border-bottom: 1px solid var(--edge); }
 .timeline .t { color: var(--muted); }
 .timeline .sys { color: var(--accent-soft); }
+.logtabs-radio { position: absolute; left: -9999px; opacity: 0; }
+.logtabs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.8rem; }
+.logtabs label { cursor: pointer; padding: 0.3rem 0.7rem;
+  border: 1px solid var(--edge); border-radius: 4px; color: var(--muted);
+  font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.03em; }
+.logtabs label:hover { color: var(--text); border-color: var(--accent-soft); }
+.logpanel { display: none; }
+
+#logtab-all:checked ~ #panel-all { display: block; }
+#logtab-all:checked ~ .logtabs label[for="logtab-all"] {
+  background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+#logtab-travel:checked ~ #panel-travel { display: block; }
+#logtab-travel:checked ~ .logtabs label[for="logtab-travel"] {
+  background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+#logtab-exploration:checked ~ #panel-exploration { display: block; }
+#logtab-exploration:checked ~ .logtabs label[for="logtab-exploration"] {
+  background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+#logtab-combat:checked ~ #panel-combat { display: block; }
+#logtab-combat:checked ~ .logtabs label[for="logtab-combat"] {
+  background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+#logtab-trade:checked ~ #panel-trade { display: block; }
+#logtab-trade:checked ~ .logtabs label[for="logtab-trade"] {
+  background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+#logtab-mining:checked ~ #panel-mining { display: block; }
+#logtab-mining:checked ~ .logtabs label[for="logtab-mining"] {
+  background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+#logtab-missions:checked ~ #panel-missions { display: block; }
+#logtab-missions:checked ~ .logtabs label[for="logtab-missions"] {
+  background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+#logtab-engineering:checked ~ #panel-engineering { display: block; }
+#logtab-engineering:checked ~ .logtabs label[for="logtab-engineering"] {
+  background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+#logtab-exobiology:checked ~ #panel-exobiology { display: block; }
+#logtab-exobiology:checked ~ .logtabs label[for="logtab-exobiology"] {
+  background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+#logtab-srv:checked ~ #panel-srv { display: block; }
+#logtab-srv:checked ~ .logtabs label[for="logtab-srv"] {
+  background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+#logtab-on_foot:checked ~ #panel-on_foot { display: block; }
+#logtab-on_foot:checked ~ .logtabs label[for="logtab-on_foot"] {
+  background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+
 .ranks, .milestones { list-style: none; margin: 0; padding: 0; }
 .ranks li, .milestones li { padding: 0.35rem 0; border-bottom: 1px solid var(--edge); }
+.ranks li { display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem; }
+.rank-bar { flex: 0 0 8rem; height: 0.55rem; background: var(--edge);
+  border-radius: 3px; overflow: hidden; }
+.rank-fill { display: block; height: 100%; background: var(--accent); }
 .promoted { color: var(--accent); }
 footer { color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem;
   border-top: 1px solid var(--edge); padding-top: 1rem; }
@@ -232,165 +290,28 @@ footer { color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem;
   
 
   
-  <h2>Session log</h2>
-  <div class="panel">
-    <ul class="timeline">
-      
-      <li>
-        <span class="t">19:02:10</span>
-        <span title="Ship">🛸</span>
-        <span>Jump
-          <span class="sys">LHS 3447</span></span>
-      </li>
-      
-      <li>
-        <span class="t">19:05:30</span>
-        <span title="Ship">🛸</span>
-        <span>Jump
-          <span class="sys">Diaguandri</span></span>
-      </li>
-      
-      <li>
-        <span class="t">19:08:00</span>
-        <span title="Ship">🛸</span>
-        <span>Honk</span>
-      </li>
-      
-      <li>
-        <span class="t">19:10:00</span>
-        <span title="Ship">🛸</span>
-        <span>Scan Body</span>
-      </li>
-      
-      <li>
-        <span class="t">19:12:00</span>
-        <span title="Ship">🛸</span>
-        <span>Scan Body</span>
-      </li>
-      
-      <li>
-        <span class="t">19:14:00</span>
-        <span title="Ship">🛸</span>
-        <span>Map Body</span>
-      </li>
-      
-      <li>
-        <span class="t">19:20:00</span>
-        <span title="Ship">🛸</span>
-        <span>Bounty</span>
-      </li>
-      
-      <li>
-        <span class="t">19:22:00</span>
-        <span title="Ship">🛸</span>
-        <span>Bounty</span>
-      </li>
-      
-      <li>
-        <span class="t">19:25:00</span>
-        <span title="Ship">🛸</span>
-        <span>Bond</span>
-      </li>
-      
-      <li>
-        <span class="t">19:30:00</span>
-        <span title="Ship">🛸</span>
-        <span>Market Buy</span>
-      </li>
-      
-      <li>
-        <span class="t">19:45:00</span>
-        <span title="Ship">🛸</span>
-        <span>Market Sell</span>
-      </li>
-      
-      <li>
-        <span class="t">19:50:00</span>
-        <span title="Ship">🛸</span>
-        <span>Sell Exploration</span>
-      </li>
-      
-      <li>
-        <span class="t">20:00:00</span>
-        <span title="On Foot">🥾</span>
-        <span>Disembark</span>
-      </li>
-      
-      <li>
-        <span class="t">20:02:00</span>
-        <span title="On Foot">🥾</span>
-        <span>Exobio Sample</span>
-      </li>
-      
-      <li>
-        <span class="t">20:20:00</span>
-        <span title="On Foot">🥾</span>
-        <span>Exobio Sell</span>
-      </li>
-      
-      <li>
-        <span class="t">20:25:00</span>
-        <span title="On Foot">🥾</span>
-        <span>Refine</span>
-      </li>
-      
-      <li>
-        <span class="t">20:30:00</span>
-        <span title="On Foot">🥾</span>
-        <span>Engineer Craft</span>
-      </li>
-      
-      <li>
-        <span class="t">20:35:00</span>
-        <span title="On Foot">🥾</span>
-        <span>Mission Complete</span>
-      </li>
-      
-      <li>
-        <span class="t">20:40:00</span>
-        <span title="On Foot">🥾</span>
-        <span>Promotion</span>
-      </li>
-      
-      <li>
-        <span class="t">20:40:05</span>
-        <span title="On Foot">🥾</span>
-        <span>Promotion</span>
-      </li>
-      
-      <li>
-        <span class="t">20:45:00</span>
-        <span title="SRV">🚙</span>
-        <span>Srv Deploy</span>
-      </li>
-      
-      <li>
-        <span class="t">20:50:00</span>
-        <span title="SRV">🚙</span>
-        <span>Settlement Visit</span>
-      </li>
-      
-    </ul>
-  </div>
-  
-
-  
   <h2>Rank progress</h2>
   <div class="panel">
     <ul class="ranks">
       
       <li>
+        <span class="rank-text">
         <strong class="promoted">
           Combat</strong>:
         Harmless &rarr; Master
-        
+        </span>
+        <span class="rank-bar" title="35%">
+        <span class="rank-fill" style="width: 35%"></span></span>
       </li>
       
       <li>
+        <span class="rank-text">
         <strong class="promoted">
           Exploration</strong>:
-        Aimless &rarr; Trailblazer
-        
+        Mostly Aimless &rarr; Surveyor
+        </span>
+        <span class="rank-bar" title="20%">
+        <span class="rank-fill" style="width: 20%"></span></span>
       </li>
       
     </ul>
@@ -408,6 +329,306 @@ footer { color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem;
       
     </ul>
   </div>
+  
+
+  
+  <h2>Session log</h2>
+  <input type="radio" name="logtab" id="logtab-all" class="logtabs-radio" checked>
+  
+  <input type="radio" name="logtab" id="logtab-travel" class="logtabs-radio">
+  
+  <input type="radio" name="logtab" id="logtab-exploration" class="logtabs-radio">
+  
+  <input type="radio" name="logtab" id="logtab-combat" class="logtabs-radio">
+  
+  <input type="radio" name="logtab" id="logtab-trade" class="logtabs-radio">
+  
+  <input type="radio" name="logtab" id="logtab-mining" class="logtabs-radio">
+  
+  <input type="radio" name="logtab" id="logtab-missions" class="logtabs-radio">
+  
+  <input type="radio" name="logtab" id="logtab-engineering" class="logtabs-radio">
+  
+  <input type="radio" name="logtab" id="logtab-exobiology" class="logtabs-radio">
+  
+  <input type="radio" name="logtab" id="logtab-srv" class="logtabs-radio">
+  
+  <input type="radio" name="logtab" id="logtab-on_foot" class="logtabs-radio">
+  
+  <div class="logtabs">
+    <label for="logtab-all">All (21)</label>
+    
+    <label for="logtab-travel">
+      🚀 Travel (2)</label>
+    
+    <label for="logtab-exploration">
+      🔭 Exploration (5)</label>
+    
+    <label for="logtab-combat">
+      🎯 Combat (4)</label>
+    
+    <label for="logtab-trade">
+      ⚖️ Trade (2)</label>
+    
+    <label for="logtab-mining">
+      ⛏️ Mining (1)</label>
+    
+    <label for="logtab-missions">
+      📋 Missions (1)</label>
+    
+    <label for="logtab-engineering">
+      🔧 Engineering (1)</label>
+    
+    <label for="logtab-exobiology">
+      🍃 Exobiology (2)</label>
+    
+    <label for="logtab-srv">
+      🚙 SRV (1)</label>
+    
+    <label for="logtab-on_foot">
+      🥾 On Foot (2)</label>
+    
+  </div>
+  <div class="panel logpanel" id="panel-all">
+    <ul class="timeline">
+      <li>
+        <span class="t">19:02:10</span>
+        <span title="Ship">🛸</span>
+        <span>Jumped to
+          <span class="sys">LHS 3447</span></span>
+      </li><li>
+        <span class="t">19:05:30</span>
+        <span title="Ship">🛸</span>
+        <span>Jumped to
+          <span class="sys">Diaguandri</span></span>
+      </li><li>
+        <span class="t">19:08:00</span>
+        <span title="Ship">🛸</span>
+        <span>Discovery scan
+          <span class="sys">Diaguandri</span></span>
+      </li><li>
+        <span class="t">19:10:00</span>
+        <span title="Ship">🛸</span>
+        <span>Scanned a body</span>
+      </li><li>
+        <span class="t">19:12:00</span>
+        <span title="Ship">🛸</span>
+        <span>Scanned a body</span>
+      </li><li>
+        <span class="t">19:14:00</span>
+        <span title="Ship">🛸</span>
+        <span>Mapped a body</span>
+      </li><li>
+        <span class="t">19:20:00</span>
+        <span title="Ship">🛸</span>
+        <span>Collected a bounty</span>
+      </li><li>
+        <span class="t">19:22:00</span>
+        <span title="Ship">🛸</span>
+        <span>Collected a bounty</span>
+      </li><li>
+        <span class="t">19:25:00</span>
+        <span title="Ship">🛸</span>
+        <span>Earned a combat bond</span>
+      </li><li>
+        <span class="t">19:30:00</span>
+        <span title="Ship">🛸</span>
+        <span>Bought cargo</span>
+      </li><li>
+        <span class="t">19:45:00</span>
+        <span title="Ship">🛸</span>
+        <span>Sold cargo</span>
+      </li><li>
+        <span class="t">19:50:00</span>
+        <span title="Ship">🛸</span>
+        <span>Sold data</span>
+      </li><li>
+        <span class="t">20:00:00</span>
+        <span title="On Foot">🥾</span>
+        <span>Disembarked</span>
+      </li><li>
+        <span class="t">20:02:00</span>
+        <span title="On Foot">🥾</span>
+        <span>Took a sample</span>
+      </li><li>
+        <span class="t">20:20:00</span>
+        <span title="On Foot">🥾</span>
+        <span>Sold organic data</span>
+      </li><li>
+        <span class="t">20:25:00</span>
+        <span title="Ship">🛸</span>
+        <span>Refined a commodity</span>
+      </li><li>
+        <span class="t">20:30:00</span>
+        <span title="Ship">🛸</span>
+        <span>Applied a modification</span>
+      </li><li>
+        <span class="t">20:35:00</span>
+        <span title="Ship">🛸</span>
+        <span>Completed a mission</span>
+      </li><li>
+        <span class="t">20:40:00</span>
+        <span title="Ship">🛸</span>
+        <span>Promoted in Combat</span>
+      </li><li>
+        <span class="t">20:45:00</span>
+        <span title="SRV">🚙</span>
+        <span>Deployed the SRV</span>
+      </li><li>
+        <span class="t">20:50:00</span>
+        <span title="On Foot">🥾</span>
+        <span>Visited a settlement</span>
+      </li>
+    </ul>
+  </div>
+  
+  <div class="panel logpanel" id="panel-travel">
+    <ul class="timeline">
+      <li>
+        <span class="t">19:02:10</span>
+        <span title="Ship">🛸</span>
+        <span>Jumped to
+          <span class="sys">LHS 3447</span></span>
+      </li><li>
+        <span class="t">19:05:30</span>
+        <span title="Ship">🛸</span>
+        <span>Jumped to
+          <span class="sys">Diaguandri</span></span>
+      </li>
+    </ul>
+  </div>
+  
+  <div class="panel logpanel" id="panel-exploration">
+    <ul class="timeline">
+      <li>
+        <span class="t">19:08:00</span>
+        <span title="Ship">🛸</span>
+        <span>Discovery scan
+          <span class="sys">Diaguandri</span></span>
+      </li><li>
+        <span class="t">19:10:00</span>
+        <span title="Ship">🛸</span>
+        <span>Scanned a body</span>
+      </li><li>
+        <span class="t">19:12:00</span>
+        <span title="Ship">🛸</span>
+        <span>Scanned a body</span>
+      </li><li>
+        <span class="t">19:14:00</span>
+        <span title="Ship">🛸</span>
+        <span>Mapped a body</span>
+      </li><li>
+        <span class="t">19:50:00</span>
+        <span title="Ship">🛸</span>
+        <span>Sold data</span>
+      </li>
+    </ul>
+  </div>
+  
+  <div class="panel logpanel" id="panel-combat">
+    <ul class="timeline">
+      <li>
+        <span class="t">19:20:00</span>
+        <span title="Ship">🛸</span>
+        <span>Collected a bounty</span>
+      </li><li>
+        <span class="t">19:22:00</span>
+        <span title="Ship">🛸</span>
+        <span>Collected a bounty</span>
+      </li><li>
+        <span class="t">19:25:00</span>
+        <span title="Ship">🛸</span>
+        <span>Earned a combat bond</span>
+      </li><li>
+        <span class="t">20:40:00</span>
+        <span title="Ship">🛸</span>
+        <span>Promoted in Combat</span>
+      </li>
+    </ul>
+  </div>
+  
+  <div class="panel logpanel" id="panel-trade">
+    <ul class="timeline">
+      <li>
+        <span class="t">19:30:00</span>
+        <span title="Ship">🛸</span>
+        <span>Bought cargo</span>
+      </li><li>
+        <span class="t">19:45:00</span>
+        <span title="Ship">🛸</span>
+        <span>Sold cargo</span>
+      </li>
+    </ul>
+  </div>
+  
+  <div class="panel logpanel" id="panel-mining">
+    <ul class="timeline">
+      <li>
+        <span class="t">20:25:00</span>
+        <span title="Ship">🛸</span>
+        <span>Refined a commodity</span>
+      </li>
+    </ul>
+  </div>
+  
+  <div class="panel logpanel" id="panel-missions">
+    <ul class="timeline">
+      <li>
+        <span class="t">20:35:00</span>
+        <span title="Ship">🛸</span>
+        <span>Completed a mission</span>
+      </li>
+    </ul>
+  </div>
+  
+  <div class="panel logpanel" id="panel-engineering">
+    <ul class="timeline">
+      <li>
+        <span class="t">20:30:00</span>
+        <span title="Ship">🛸</span>
+        <span>Applied a modification</span>
+      </li>
+    </ul>
+  </div>
+  
+  <div class="panel logpanel" id="panel-exobiology">
+    <ul class="timeline">
+      <li>
+        <span class="t">20:02:00</span>
+        <span title="On Foot">🥾</span>
+        <span>Took a sample</span>
+      </li><li>
+        <span class="t">20:20:00</span>
+        <span title="On Foot">🥾</span>
+        <span>Sold organic data</span>
+      </li>
+    </ul>
+  </div>
+  
+  <div class="panel logpanel" id="panel-srv">
+    <ul class="timeline">
+      <li>
+        <span class="t">20:45:00</span>
+        <span title="SRV">🚙</span>
+        <span>Deployed the SRV</span>
+      </li>
+    </ul>
+  </div>
+  
+  <div class="panel logpanel" id="panel-on_foot">
+    <ul class="timeline">
+      <li>
+        <span class="t">20:00:00</span>
+        <span title="On Foot">🥾</span>
+        <span>Disembarked</span>
+      </li><li>
+        <span class="t">20:50:00</span>
+        <span title="On Foot">🥾</span>
+        <span>Visited a settlement</span>
+      </li>
+    </ul>
+  </div>
+  
   
 
   <footer>

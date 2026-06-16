@@ -4,7 +4,7 @@
 
 A local-first Windows desktop application that reads the Elite Dangerous player Journal and produces a single self-contained Commander Mission Debrief report at the end of a play session.
 
-o7 Debrief watches the Journal while you play, brackets each session by its `LoadGame` and `Shutdown` events, aggregates the raw journal stream into high-level conceptual beats and renders a debrief when the session ends or whenever you ask for one. Every figure in the report traces back to a real journal field. Nothing is estimated, inferred or padded.
+o7 Debrief watches the Journal while you play, brackets each session by its `LoadGame` and `Shutdown` events, aggregates the raw journal stream into high-level moments and renders a debrief when the session ends or whenever you ask for one. Every figure in the report traces back to a real journal field. Nothing is estimated, inferred or padded.
 
 ## Who it is for
 
@@ -19,7 +19,7 @@ o7 Debrief watches the Journal while you play, brackets each session by its `Loa
 
 ## Platform support
 
-o7 Debrief currently supports Windows only. It is built and tested as a standalone Windows executable. macOS and Linux are not supported at this time and a port is not planned at present.
+o7 Debrief currently supports Windows only. It is built and tested as a standalone Windows executable. A Linux port may follow if there is enough demand, though it is not available yet.
 
 ## Capabilities
 
@@ -29,7 +29,7 @@ o7 Debrief currently supports Windows only. It is built and tested as a standalo
 - Session isolation: the latest session is the slice of the journal from the last `LoadGame` to the end of the stream, so a previous session never bleeds into the current one.
 - Rank reporting that is honest about journal timing: tier-ups (a `Promotion`) are reported immediately and fractional rank percentages are finalised at the next launch because the journal only snapshots rank progress at startup. Only ranks that actually changed are shown.
 - A single self-contained HTML report (inlined CSS, zero JavaScript) as the canonical output, plus a Markdown rendering for pasting elsewhere. A default export format is configurable and can be overridden per export.
-- A configuration-driven event taxonomy held in TOML, so the mapping from raw events to conceptual beats has no magic numbers buried in code.
+- A configuration-driven event taxonomy held in TOML, so the mapping from raw events to moments has no magic numbers buried in code.
 
 ## Stack
 

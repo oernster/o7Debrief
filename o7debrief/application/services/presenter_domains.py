@@ -1,15 +1,15 @@
 """Domain-section and milestone builders for the presenter.
 
 Each builder turns one domain rollup into a formatted ``DomainSection`` with
-its labelled stats. The milestone builder scans the beats for the notable
+its labelled stats. The milestone builder scans the moments for the notable
 moments worth surfacing (promotions, big payouts, long jumps), comparing
 against the spec's thresholds so no threshold literal lives in code.
 
 This module belongs to the application layer and imports only application
-symbols. It reads the domain rollup, beat and spec objects by attribute
+symbols. It reads the domain rollup, moment and spec objects by attribute
 (duck typing) and refers to their types as forward references, so it never
-imports the domain layer. Beat kinds are matched by their member name string
-to avoid importing the BeatKind enum.
+imports the domain layer. Moment kinds are matched by their member name string
+to avoid importing the MomentKind enum.
 """
 
 from __future__ import annotations
@@ -49,7 +49,7 @@ _DISEMBARKS = ("on_foot.disembarks", "Disembarks")
 _SETTLEMENTS = ("on_foot.settlements", "Settlements")
 
 # Milestone label keys, default text and icon for each notable kind, plus the
-# BeatKind member names matched by string so no enum import is needed.
+# MomentKind member names matched by string so no enum import is needed.
 _PROMOTION_MILESTONE = ("promotion", "Earned a rank promotion.", "medal")
 _LONG_JUMP_MILESTONE = ("long_jump", "Made an exceptionally long jump.", "star")
 _BIG_PAYOUT_MILESTONE = ("big_payout", "Banked a major payout.", "money")
@@ -186,22 +186,23 @@ def _milestone(resolver, spec, parts: tuple[str, str, str]) -> Milestone:
     return Milestone(icon=icon, text=text)
 
 
-def build_milestones(beats, spec, resolver) -> tuple[Milestone, ...]:
+def build_milestones(moments, spec, resolver) -> tuple[Milestone, ...]:
     """Surface notable moments: promotions, big payouts and long jumps.
 
     Thresholds come from the spec so the notability rule has no hardcoded
     numbers. Each kind contributes at most one milestone, in a fixed order.
-    Beat kinds are matched by member-name string to avoid a domain import.
+    Moment kinds are matched by member-name string to avoid a domain import.
     """
     milestones: list[Milestone] = []
-    if any(beat.kind.name == _PROMOTION_KIND for beat in beats):
+    if any(moment.kind.name == _PROMOTION_KIND for moment in moments):
         milestones.append(_milestone(resolver, spec, _PROMOTION_MILESTONE))
     payout_floor = spec.thresholds.big_payout_credits
-    if any(beat.credits_delta.value >= payout_floor for beat in beats):
+    if any(moment.credits_delta.value >= payout_floor for moment in moments):
         milestones.append(_milestone(resolver, spec, _BIG_PAYOUT_MILESTONE))
     long_jump = spec.thresholds.long_jump_ly
     if any(
-        beat.kind.name == _JUMP_KIND and beat.magnitude >= long_jump for beat in beats
+        moment.kind.name == _JUMP_KIND and moment.magnitude >= long_jump
+        for moment in moments
     ):
         milestones.append(_milestone(resolver, spec, _LONG_JUMP_MILESTONE))
     return tuple(milestones)

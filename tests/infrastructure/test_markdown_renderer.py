@@ -9,13 +9,13 @@ from o7debrief.application.services.debrief_presenter import DebriefPresenter
 from o7debrief.domain.model.rollups import ActivityRollup
 from o7debrief.domain.value_objects.enums import (
     ActivityDomain,
-    BeatKind,
+    MomentKind,
     RankLadder,
 )
 from o7debrief.infrastructure.render.markdown_renderer import MarkdownDebriefExporter
 
-# A beat credit value above the taxonomy big-payout threshold.
-_BIG_PAYOUT_BEAT = 2000000
+# A moment credit value above the taxonomy big-payout threshold.
+_BIG_PAYOUT_MOMENT = 2000000
 
 
 def _present(debrief):
@@ -23,13 +23,15 @@ def _present(debrief):
 
 
 def _populated_view():
-    beats = (
-        build.beat(BeatKind.JUMP, ActivityDomain.TRAVEL, 1, magnitude=60, system="Sol"),
-        build.beat(
-            BeatKind.BOUNTY,
+    moments = (
+        build.moment(
+            MomentKind.JUMP, ActivityDomain.TRAVEL, 1, magnitude=60, system="Sol"
+        ),
+        build.moment(
+            MomentKind.BOUNTY,
             ActivityDomain.COMBAT,
             2,
-            credits=_BIG_PAYOUT_BEAT,
+            credits=_BIG_PAYOUT_MOMENT,
             system="Sol",
         ),
     )
@@ -47,10 +49,10 @@ def _populated_view():
     )
     return _present(
         build.debrief(
-            beats=beats,
+            moments=moments,
             activity=build.full_activity(),
             ranks=ranks,
-            net_credits=_BIG_PAYOUT_BEAT,
+            net_credits=_BIG_PAYOUT_MOMENT,
         )
     )
 
@@ -71,7 +73,7 @@ def test_render_has_headings_and_fenced_headline() -> None:
 
 def test_render_includes_the_ship_type_and_name() -> None:
     debrief = build.debrief(
-        beats=(),
+        moments=(),
         activity=ActivityRollup(modes_used=()),
         ship="Krait Mk II",
         ship_name="Stardust",
@@ -87,7 +89,7 @@ def test_render_tags_timeline_with_mode_label() -> None:
     md = MarkdownDebriefExporter().render(_populated_view()).decode("utf-8")
 
     assert "## Session Log" in md
-    assert "[Ship]" in md  # control-mode label tag on a beat
+    assert "[Ship]" in md  # control-mode label tag on a moment
 
 
 def test_render_includes_rank_progress_when_present() -> None:
@@ -116,7 +118,7 @@ def test_render_shows_no_change_note_for_a_steady_rank() -> None:
         growth_pct=None,
         tier_ups=0,
     )
-    debrief = build.debrief(beats=(), activity=build.full_activity(), ranks=(steady,))
+    debrief = build.debrief(moments=(), activity=build.full_activity(), ranks=(steady,))
 
     md = MarkdownDebriefExporter().render(_present(debrief)).decode("utf-8")
 
@@ -130,7 +132,9 @@ def test_render_includes_rank_progress_percentage() -> None:
 
 
 def test_render_omits_optional_sections_when_empty() -> None:
-    debrief = build.debrief(beats=(), activity=ActivityRollup(modes_used=()), ranks=())
+    debrief = build.debrief(
+        moments=(), activity=ActivityRollup(modes_used=()), ranks=()
+    )
 
     md = MarkdownDebriefExporter().render(_present(debrief)).decode("utf-8")
 

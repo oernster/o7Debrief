@@ -9,13 +9,13 @@ from o7debrief.application.services.debrief_presenter import DebriefPresenter
 from o7debrief.domain.model.rollups import ActivityRollup
 from o7debrief.domain.value_objects.enums import (
     ActivityDomain,
-    BeatKind,
+    MomentKind,
     RankLadder,
 )
 from o7debrief.infrastructure.render.html_renderer import HtmlDebriefExporter
 
-# A beat credit value above the taxonomy big-payout threshold.
-_BIG_PAYOUT_BEAT = 2000000
+# A moment credit value above the taxonomy big-payout threshold.
+_BIG_PAYOUT_MOMENT = 2000000
 # A jump magnitude above the long-jump threshold.
 _LONG_JUMP = 60
 
@@ -25,18 +25,22 @@ def _present(debrief):
 
 
 def _populated_view():
-    beats = (
-        build.beat(
-            BeatKind.JUMP, ActivityDomain.TRAVEL, 1, magnitude=_LONG_JUMP, system="Sol"
-        ),
-        build.beat(
-            BeatKind.BOUNTY,
-            ActivityDomain.COMBAT,
-            2,
-            credits=_BIG_PAYOUT_BEAT,
+    moments = (
+        build.moment(
+            MomentKind.JUMP,
+            ActivityDomain.TRAVEL,
+            1,
+            magnitude=_LONG_JUMP,
             system="Sol",
         ),
-        build.beat(BeatKind.PROMOTION, ActivityDomain.MISSIONS, 3),
+        build.moment(
+            MomentKind.BOUNTY,
+            ActivityDomain.COMBAT,
+            2,
+            credits=_BIG_PAYOUT_MOMENT,
+            system="Sol",
+        ),
+        build.moment(MomentKind.PROMOTION, ActivityDomain.MISSIONS, 3),
     )
     ranks = (
         build.rank_delta(
@@ -52,10 +56,10 @@ def _populated_view():
     )
     return _present(
         build.debrief(
-            beats=beats,
+            moments=moments,
             activity=build.full_activity(),
             ranks=ranks,
-            net_credits=_BIG_PAYOUT_BEAT,
+            net_credits=_BIG_PAYOUT_MOMENT,
         )
     )
 
@@ -89,7 +93,7 @@ def test_render_includes_commander_metrics_and_sections() -> None:
 
 def test_render_includes_the_ship_type_and_name() -> None:
     debrief = build.debrief(
-        beats=(),
+        moments=(),
         activity=ActivityRollup(modes_used=()),
         ship="Krait Mk II",
         ship_name="Stardust",
@@ -102,11 +106,11 @@ def test_render_includes_the_ship_type_and_name() -> None:
 
 
 def test_render_escapes_html_in_journal_values() -> None:
-    beats = (
-        build.beat(BeatKind.SCAN_BODY, ActivityDomain.EXPLORATION, 1, system="<x>"),
+    moments = (
+        build.moment(MomentKind.SCAN_BODY, ActivityDomain.EXPLORATION, 1, system="<x>"),
     )
     debrief = build.debrief(
-        beats=beats,
+        moments=moments,
         activity=build.full_activity(),
         start_system="<x>",
         end_system="<x>",
@@ -119,7 +123,9 @@ def test_render_escapes_html_in_journal_values() -> None:
 
 
 def test_render_omits_optional_sections_when_empty() -> None:
-    debrief = build.debrief(beats=(), activity=ActivityRollup(modes_used=()), ranks=())
+    debrief = build.debrief(
+        moments=(), activity=ActivityRollup(modes_used=()), ranks=()
+    )
 
     html = HtmlDebriefExporter().render(_present(debrief)).decode("utf-8")
 
@@ -160,7 +166,7 @@ def test_render_shows_no_change_note_for_a_steady_rank() -> None:
         growth_pct=None,
         tier_ups=0,
     )
-    debrief = build.debrief(beats=(), activity=build.full_activity(), ranks=(steady,))
+    debrief = build.debrief(moments=(), activity=build.full_activity(), ranks=(steady,))
 
     html = HtmlDebriefExporter().render(_present(debrief)).decode("utf-8")
 

@@ -1,7 +1,7 @@
 """Tests for TomlConfigProvider against the real taxonomy file.
 
 These prove the shipped ``config/debrief_taxonomy.toml`` parses into a spec the
-application can consume: the beat rules carry the credit and magnitude fields the
+application can consume: the moment rules carry the credit and magnitude fields the
 rollups read, the mode mapping bridges ``foot`` to ON_FOOT, and the flat label
 map uses exactly the keys the LabelResolver looks up.
 """
@@ -13,11 +13,11 @@ from pathlib import Path
 from o7debrief.domain.value_objects.enums import (
     ActivityDomain,
     ActivityMode,
-    BeatKind,
+    MomentKind,
 )
 from o7debrief.infrastructure.config.toml_config_provider import TomlConfigProvider
 
-# Number of [[beat]] rules defined in the shipped taxonomy.
+# Number of [[moment]] rules defined in the shipped taxonomy.
 _EXPECTED_RULES = 20
 # Threshold magnitudes declared in the taxonomy [thresholds] table.
 _LONG_JUMP_LY = 50.0
@@ -46,7 +46,7 @@ def test_rules_carry_kind_domain_and_mode() -> None:
 
     jump = spec.rule_for("FSDJump")
     assert jump is not None
-    assert jump.kind is BeatKind.JUMP
+    assert jump.kind is MomentKind.JUMP
     assert jump.domain is ActivityDomain.TRAVEL
     assert jump.mode is ActivityMode.SHIP
 
@@ -69,7 +69,7 @@ def test_rules_carry_credit_and_magnitude_fields() -> None:
     assert exobio.credits_field is None
     assert exobio.credits_array_field == "BioData"
     assert exobio.credits_item_fields == ("Value", "Bonus")
-    # A beat with no income or magnitude has neither field.
+    # A moment with no income or magnitude has neither field.
     assert spec.rule_for("Disembark").credits_field is None
     assert spec.rule_for("Disembark").magnitude_field is None
 
@@ -93,9 +93,9 @@ def test_labels_use_the_resolver_key_convention() -> None:
     assert spec.label_for(f"rank.combat.tier.{_COMBAT_ELITE_INDEX}", miss) == "Elite"
 
 
-def test_beat_label_is_the_titleised_kind() -> None:
+def test_moment_label_is_the_titleised_kind() -> None:
     spec = _provider().load()
-    # The timeline label is the beat kind titleised, not the raw event name.
+    # The timeline label is the moment kind titleised, not the raw event name.
     assert spec.label_for("FSDJump", "MISS") == "Jump"
     assert spec.label_for("Scan", "MISS") == "Scan Body"
 

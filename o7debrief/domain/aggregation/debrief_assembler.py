@@ -1,14 +1,14 @@
-"""Debrief assembler: fold beats into the final SessionDebrief.
+"""Debrief assembler: fold moments into the final SessionDebrief.
 
-Given the isolated session's beats (already chronological) plus the
-commander, window, rank progression and spec, this groups beats by domain
+Given the isolated session's moments (already chronological) plus the
+commander, window, rank progression and spec, this groups moments by domain
 into the eleven rollups, sums the net credit change, and reads the start
-and end systems from the first and last location-bearing beats.
+and end systems from the first and last location-bearing moments.
 """
 
 from __future__ import annotations
 
-from o7debrief.domain.model.conceptual_beat import ConceptualBeat
+from o7debrief.domain.model.conceptual_moment import ConceptualMoment
 from o7debrief.domain.model.rank_delta import RankDelta
 from o7debrief.domain.model.rollups import (
     ActivityRollup,
@@ -31,16 +31,16 @@ from o7debrief.domain.value_objects.credits import Credits
 from o7debrief.domain.value_objects.enums import (
     ActivityDomain,
     ActivityMode,
-    BeatKind,
+    MomentKind,
 )
 from o7debrief.domain.value_objects.session_window import SessionWindow
 from o7debrief.domain.value_objects.system_name import SystemName
 
 __all__ = ["assemble", "STAR_SYSTEM_FIELD"]
 
-# Raw-event/detail field naming the star system a beat occurred in.
+# Raw-event/detail field naming the star system a moment occurred in.
 STAR_SYSTEM_FIELD = "StarSystem"
-# Count contributed by a single beat occurrence.
+# Count contributed by a single moment occurrence.
 _ONE_OCCURRENCE = 1
 # Canonical order in which control modes are reported.
 _MODE_ORDER: tuple[ActivityMode, ...] = (
@@ -50,142 +50,144 @@ _MODE_ORDER: tuple[ActivityMode, ...] = (
 )
 
 
-def _count(beats: tuple[ConceptualBeat, ...], kind: BeatKind) -> int:
-    """Count beats of a given kind."""
-    return sum(_ONE_OCCURRENCE for beat in beats if beat.kind == kind)
+def _count(moments: tuple[ConceptualMoment, ...], kind: MomentKind) -> int:
+    """Count moments of a given kind."""
+    return sum(_ONE_OCCURRENCE for moment in moments if moment.kind == kind)
 
 
-def _sum_magnitude(beats: tuple[ConceptualBeat, ...], kind: BeatKind) -> int:
-    """Sum the magnitude of beats of a given kind."""
-    return sum(beat.magnitude for beat in beats if beat.kind == kind)
+def _sum_magnitude(moments: tuple[ConceptualMoment, ...], kind: MomentKind) -> int:
+    """Sum the magnitude of moments of a given kind."""
+    return sum(moment.magnitude for moment in moments if moment.kind == kind)
 
 
-def _sum_credits(beats: tuple[ConceptualBeat, ...], kind: BeatKind) -> Credits:
-    """Sum the credit deltas of beats of a given kind."""
+def _sum_credits(moments: tuple[ConceptualMoment, ...], kind: MomentKind) -> Credits:
+    """Sum the credit deltas of moments of a given kind."""
     total = Credits.zero()
-    for beat in beats:
-        if beat.kind == kind:
-            total = total + beat.credits_delta
+    for moment in moments:
+        if moment.kind == kind:
+            total = total + moment.credits_delta
     return total
 
 
 def _by_domain(
-    beats: tuple[ConceptualBeat, ...], domain: ActivityDomain
-) -> tuple[ConceptualBeat, ...]:
-    """Return only the beats belonging to a domain."""
-    return tuple(beat for beat in beats if beat.domain == domain)
+    moments: tuple[ConceptualMoment, ...], domain: ActivityDomain
+) -> tuple[ConceptualMoment, ...]:
+    """Return only the moments belonging to a domain."""
+    return tuple(moment for moment in moments if moment.domain == domain)
 
 
-def _flight(beats: tuple[ConceptualBeat, ...]) -> FlightRollup:
+def _flight(moments: tuple[ConceptualMoment, ...]) -> FlightRollup:
     return FlightRollup(
-        jumps=_count(beats, BeatKind.JUMP),
-        distance_ly=_sum_magnitude(beats, BeatKind.JUMP),
+        jumps=_count(moments, MomentKind.JUMP),
+        distance_ly=_sum_magnitude(moments, MomentKind.JUMP),
     )
 
 
-def _exploration(beats: tuple[ConceptualBeat, ...]) -> ExplorationRollup:
+def _exploration(moments: tuple[ConceptualMoment, ...]) -> ExplorationRollup:
     return ExplorationRollup(
-        bodies_scanned=_count(beats, BeatKind.SCAN_BODY),
-        bodies_mapped=_count(beats, BeatKind.MAP_BODY),
-        honks=_count(beats, BeatKind.HONK),
-        data_sold=_sum_credits(beats, BeatKind.SELL_EXPLORATION),
+        bodies_scanned=_count(moments, MomentKind.SCAN_BODY),
+        bodies_mapped=_count(moments, MomentKind.MAP_BODY),
+        honks=_count(moments, MomentKind.HONK),
+        data_sold=_sum_credits(moments, MomentKind.SELL_EXPLORATION),
     )
 
 
-def _combat(beats: tuple[ConceptualBeat, ...]) -> CombatRollup:
+def _combat(moments: tuple[ConceptualMoment, ...]) -> CombatRollup:
     return CombatRollup(
-        kills=_count(beats, BeatKind.BOUNTY) + _count(beats, BeatKind.BOND),
-        bounties=_sum_credits(beats, BeatKind.BOUNTY),
-        bonds=_sum_credits(beats, BeatKind.BOND),
+        kills=_count(moments, MomentKind.BOUNTY) + _count(moments, MomentKind.BOND),
+        bounties=_sum_credits(moments, MomentKind.BOUNTY),
+        bonds=_sum_credits(moments, MomentKind.BOND),
     )
 
 
-def _trade(beats: tuple[ConceptualBeat, ...]) -> TradeRollup:
+def _trade(moments: tuple[ConceptualMoment, ...]) -> TradeRollup:
     return TradeRollup(
-        buys=_count(beats, BeatKind.MARKET_BUY),
-        sells=_count(beats, BeatKind.MARKET_SELL),
-        spent=_sum_credits(beats, BeatKind.MARKET_BUY),
-        earned=_sum_credits(beats, BeatKind.MARKET_SELL),
+        buys=_count(moments, MomentKind.MARKET_BUY),
+        sells=_count(moments, MomentKind.MARKET_SELL),
+        spent=_sum_credits(moments, MomentKind.MARKET_BUY),
+        earned=_sum_credits(moments, MomentKind.MARKET_SELL),
     )
 
 
-def _mining(beats: tuple[ConceptualBeat, ...]) -> MiningRollup:
-    return MiningRollup(refined=_count(beats, BeatKind.REFINE))
+def _mining(moments: tuple[ConceptualMoment, ...]) -> MiningRollup:
+    return MiningRollup(refined=_count(moments, MomentKind.REFINE))
 
 
-def _missions(beats: tuple[ConceptualBeat, ...]) -> MissionRollup:
+def _missions(moments: tuple[ConceptualMoment, ...]) -> MissionRollup:
     return MissionRollup(
-        completed=_count(beats, BeatKind.MISSION_COMPLETE),
-        rewards=_sum_credits(beats, BeatKind.MISSION_COMPLETE),
+        completed=_count(moments, MomentKind.MISSION_COMPLETE),
+        rewards=_sum_credits(moments, MomentKind.MISSION_COMPLETE),
     )
 
 
-def _engineering(beats: tuple[ConceptualBeat, ...]) -> EngineeringRollup:
-    return EngineeringRollup(crafted=_count(beats, BeatKind.ENGINEER_CRAFT))
+def _engineering(moments: tuple[ConceptualMoment, ...]) -> EngineeringRollup:
+    return EngineeringRollup(crafted=_count(moments, MomentKind.ENGINEER_CRAFT))
 
 
-def _carrier(beats: tuple[ConceptualBeat, ...]) -> CarrierRollup:
-    return CarrierRollup(jumps=_count(beats, BeatKind.CARRIER_JUMP))
+def _carrier(moments: tuple[ConceptualMoment, ...]) -> CarrierRollup:
+    return CarrierRollup(jumps=_count(moments, MomentKind.CARRIER_JUMP))
 
 
-def _exobiology(beats: tuple[ConceptualBeat, ...]) -> ExobiologyRollup:
+def _exobiology(moments: tuple[ConceptualMoment, ...]) -> ExobiologyRollup:
     return ExobiologyRollup(
-        samples=_count(beats, BeatKind.EXOBIO_SAMPLE),
-        sold=_sum_credits(beats, BeatKind.EXOBIO_SELL),
+        samples=_count(moments, MomentKind.EXOBIO_SAMPLE),
+        sold=_sum_credits(moments, MomentKind.EXOBIO_SELL),
     )
 
 
-def _srv(beats: tuple[ConceptualBeat, ...]) -> SrvRollup:
-    return SrvRollup(deployments=_count(beats, BeatKind.SRV_DEPLOY))
+def _srv(moments: tuple[ConceptualMoment, ...]) -> SrvRollup:
+    return SrvRollup(deployments=_count(moments, MomentKind.SRV_DEPLOY))
 
 
-def _on_foot(beats: tuple[ConceptualBeat, ...]) -> OnFootRollup:
+def _on_foot(moments: tuple[ConceptualMoment, ...]) -> OnFootRollup:
     return OnFootRollup(
-        disembarks=_count(beats, BeatKind.DISEMBARK),
-        settlements=_count(beats, BeatKind.SETTLEMENT_VISIT),
+        disembarks=_count(moments, MomentKind.DISEMBARK),
+        settlements=_count(moments, MomentKind.SETTLEMENT_VISIT),
     )
 
 
-def _net_credits(beats: tuple[ConceptualBeat, ...]) -> Credits:
-    """Sum the credit delta across every beat."""
+def _net_credits(moments: tuple[ConceptualMoment, ...]) -> Credits:
+    """Sum the credit delta across every moment."""
     total = Credits.zero()
-    for beat in beats:
-        total = total + beat.credits_delta
+    for moment in moments:
+        total = total + moment.credits_delta
     return total
 
 
-def _system_at(beat: ConceptualBeat) -> SystemName | None:
-    """Return the star system named in a beat's detail, if any."""
-    for key, value in beat.detail:
+def _system_at(moment: ConceptualMoment) -> SystemName | None:
+    """Return the star system named in a moment's detail, if any."""
+    for key, value in moment.detail:
         if key == STAR_SYSTEM_FIELD and isinstance(value, str) and value.strip():
             return SystemName(value)
     return None
 
 
 def _endpoints(
-    beats: tuple[ConceptualBeat, ...],
+    moments: tuple[ConceptualMoment, ...],
 ) -> tuple[SystemName | None, SystemName | None]:
     """Return the first and last location-bearing systems in order."""
     located = tuple(
-        system for system in (_system_at(beat) for beat in beats) if system is not None
+        system
+        for system in (_system_at(moment) for moment in moments)
+        if system is not None
     )
     if not located:
         return None, None
     return located[0], located[-_ONE_OCCURRENCE]
 
 
-def _modes_used(beats: tuple[ConceptualBeat, ...]) -> tuple[ActivityMode, ...]:
-    """Return the distinct control modes across beats in canonical order."""
-    present = {beat.mode for beat in beats}
+def _modes_used(moments: tuple[ConceptualMoment, ...]) -> tuple[ActivityMode, ...]:
+    """Return the distinct control modes across moments in canonical order."""
+    present = {moment.mode for moment in moments}
     return tuple(mode for mode in _MODE_ORDER if mode in present)
 
 
-def _activity(beats: tuple[ConceptualBeat, ...]) -> ActivityRollup:
-    """Build the ActivityRollup, including a domain only when it has beats."""
+def _activity(moments: tuple[ConceptualMoment, ...]) -> ActivityRollup:
+    """Build the ActivityRollup, including a domain only when it has moments."""
 
     def rollup(domain: ActivityDomain, builder):
-        domain_beats = _by_domain(beats, domain)
-        return builder(domain_beats) if domain_beats else None
+        domain_moments = _by_domain(moments, domain)
+        return builder(domain_moments) if domain_moments else None
 
     return ActivityRollup(
         flight=rollup(ActivityDomain.TRAVEL, _flight),
@@ -199,29 +201,29 @@ def _activity(beats: tuple[ConceptualBeat, ...]) -> ActivityRollup:
         exobiology=rollup(ActivityDomain.EXOBIOLOGY, _exobiology),
         srv=rollup(ActivityDomain.SRV, _srv),
         on_foot=rollup(ActivityDomain.ON_FOOT, _on_foot),
-        modes_used=_modes_used(beats),
+        modes_used=_modes_used(moments),
     )
 
 
 def assemble(
     commander: CommanderId,
     window: SessionWindow,
-    beats: tuple[ConceptualBeat, ...],
+    moments: tuple[ConceptualMoment, ...],
     rank_progression: tuple[RankDelta, ...],
     spec: RollupSpec,
     ship: str = "",
     ship_name: str = "",
 ) -> SessionDebrief:
-    """Fold the session's beats into a complete SessionDebrief."""
-    start_system, end_system = _endpoints(beats)
+    """Fold the session's moments into a complete SessionDebrief."""
+    start_system, end_system = _endpoints(moments)
     return SessionDebrief(
         commander=commander,
         window=window,
         start_system=start_system,
         end_system=end_system,
-        net_credits_delta=_net_credits(beats),
-        beats=beats,
-        activity=_activity(beats),
+        net_credits_delta=_net_credits(moments),
+        moments=moments,
+        activity=_activity(moments),
         rank_progression=rank_progression,
         config_schema_version=spec.schema_version,
         ship=ship,

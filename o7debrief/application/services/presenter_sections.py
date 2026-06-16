@@ -6,7 +6,7 @@ numbers and times through the value formatter, so nothing here hardcodes a
 display literal or reads a clock.
 
 This module is application-layer and imports only application symbols. It
-reads the domain debrief, beat and rank objects by attribute (duck typing)
+reads the domain debrief, moment and rank objects by attribute (duck typing)
 and names their types as forward references, so it never imports the domain.
 The star-system field name is the journal's own vocabulary, declared locally
 as a named constant rather than imported from the domain.
@@ -63,11 +63,11 @@ _NEUTRAL_CLASS = "neutral"
 _ZERO = 0
 
 
-def _distinct_systems(beats) -> int:
-    """Count the distinct star systems named across the beats' detail."""
+def _distinct_systems(moments) -> int:
+    """Count the distinct star systems named across the moments' detail."""
     seen: set[str] = set()
-    for beat in beats:
-        for key, value in beat.detail:
+    for moment in moments:
+        for key, value in moment.detail:
             if key == _STAR_SYSTEM_FIELD and isinstance(value, str) and value.strip():
                 seen.add(value)
     return len(seen)
@@ -91,7 +91,7 @@ def build_header(debrief, fmt, resolver) -> HeaderView:
         duration=fmt.duration(debrief.window.duration_s),
         start_system=_system_text(debrief.start_system, resolver),
         end_system=_system_text(debrief.end_system, resolver),
-        systems_visited=fmt.integer(_distinct_systems(debrief.beats)),
+        systems_visited=fmt.integer(_distinct_systems(debrief.moments)),
     )
 
 
@@ -143,43 +143,43 @@ def build_headline(debrief, fmt, resolver) -> tuple[HeadlineItem, ...]:
     )
 
 
-def _beat_system(beat) -> str | None:
-    """Return the star system named in a beat's detail, if any."""
-    for key, value in beat.detail:
+def _moment_system(moment) -> str | None:
+    """Return the star system named in a moment's detail, if any."""
+    for key, value in moment.detail:
         if key == _STAR_SYSTEM_FIELD and isinstance(value, str) and value.strip():
             return value
     return None
 
 
-def _timeline_entry(beat, fmt, resolver) -> TimelineEntry:
-    """Build one formatted timeline entry from a single beat."""
-    mode = mode_string_from_name(beat.mode.name)
+def _timeline_entry(moment, fmt, resolver) -> TimelineEntry:
+    """Build one formatted timeline entry from a single moment."""
+    mode = mode_string_from_name(moment.mode.name)
     return TimelineEntry(
-        time_display=fmt.time(beat.occurred_at.iso_utc),
+        time_display=fmt.time(moment.occurred_at.iso_utc),
         mode=mode,
         mode_label=resolver.mode_label(mode),
         mode_icon=resolver.mode_icon(mode),
-        text=beat.label,
-        system=_beat_system(beat),
+        text=moment.label,
+        system=_moment_system(moment),
     )
 
 
 def build_timeline(debrief, fmt, resolver) -> tuple[TimelineEntry, ...]:
-    """Build one timeline entry per beat, in chronological order."""
-    return tuple(_timeline_entry(beat, fmt, resolver) for beat in debrief.beats)
+    """Build one timeline entry per moment, in chronological order."""
+    return tuple(_timeline_entry(moment, fmt, resolver) for moment in debrief.moments)
 
 
 def build_timeline_categories(debrief, fmt, resolver) -> tuple[TimelineCategory, ...]:
     """Group the timeline by activity domain, in the canonical domain order.
 
-    Each category carries only its own beats, still chronological, so the
+    Each category carries only its own moments, still chronological, so the
     report can offer per-category views beside the full time-ordered log.
-    Domains with no beats this session are omitted.
+    Domains with no moments this session are omitted.
     """
     grouped: dict[str, list[TimelineEntry]] = {}
-    for beat in debrief.beats:
-        key = beat.domain.name.lower()
-        grouped.setdefault(key, []).append(_timeline_entry(beat, fmt, resolver))
+    for moment in debrief.moments:
+        key = moment.domain.name.lower()
+        grouped.setdefault(key, []).append(_timeline_entry(moment, fmt, resolver))
     categories: list[TimelineCategory] = []
     for key in DOMAIN_ORDER:
         entries = grouped.get(key)

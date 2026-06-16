@@ -15,7 +15,7 @@ __all__ = ["ConfigProvider"]
 
 
 class ConfigProvider(Protocol):
-    """A source of the event-to-beat rollup specification."""
+    """A source of the event-to-moment rollup specification."""
 
     def load(self) -> RollupSpec:
         """Build and return the rollup specification."""

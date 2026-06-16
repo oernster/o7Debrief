@@ -2,7 +2,7 @@
 
 This adapter implements the application ``ConfigProvider`` port. It reads the
 ``debrief_taxonomy.toml`` file with the standard-library ``tomllib`` and maps it
-into a domain ``RollupSpec``: a ``BeatRule`` per ``[[beat]]``, a ``ThresholdSet``
+into a domain ``RollupSpec``: a ``MomentRule`` per ``[[moment]]``, a ``ThresholdSet``
 from ``[thresholds]`` and a flat label map assembled from the domain, mode and
 rank tables. The label keys produced here match exactly the key convention the
 application ``LabelResolver`` looks up, so titles, icons and rank-tier names
@@ -10,7 +10,7 @@ resolve from the taxonomy with no display string hardcoded in code.
 
 The TOML uses lower-case keys (for example ``on_foot``) while the domain enums
 use upper-case member names (``ON_FOOT``); the mappings below bridge the two.
-Beat labels are derived from each beat's ``kind`` (titleised) so the timeline
+Moment labels are derived from each moment's ``kind`` (titleised) so the timeline
 shows a readable, brace-free label rather than the raw Jinja text template.
 
 British spelling is used in comments. No em dashes appear anywhere.
@@ -22,11 +22,11 @@ import tomllib
 from pathlib import Path
 from typing import Any
 
-from o7debrief.domain.rules.rollup_spec import BeatRule, RollupSpec, ThresholdSet
+from o7debrief.domain.rules.rollup_spec import MomentRule, RollupSpec, ThresholdSet
 from o7debrief.domain.value_objects.enums import (
     ActivityDomain,
     ActivityMode,
-    BeatKind,
+    MomentKind,
 )
 
 __all__ = ["TomlConfigProvider"]
@@ -35,7 +35,7 @@ __all__ = ["TomlConfigProvider"]
 _META = "meta"
 _DOMAIN = "domain"
 _MODES = "modes"
-_BEAT = "beat"
+_MOMENT = "moment"
 _THRESHOLDS = "thresholds"
 _RANK = "rank"
 
@@ -82,7 +82,7 @@ _MODE_TO_ENUM_NAME = {
     "foot": "ON_FOOT",
 }
 
-# Tokens for deriving a readable beat label from a kind name.
+# Tokens for deriving a readable moment label from a kind name.
 _KEY_DELIM = "_"
 _SPACE = " "
 
@@ -100,9 +100,9 @@ def _domain_from(name: str) -> ActivityDomain:
     return ActivityDomain[name.upper()]
 
 
-def _kind_from(name: str) -> BeatKind:
-    """Return the BeatKind for a lower-case taxonomy kind key."""
-    return BeatKind[name.upper()]
+def _kind_from(name: str) -> MomentKind:
+    """Return the MomentKind for a lower-case taxonomy kind key."""
+    return MomentKind[name.upper()]
 
 
 def _mode_from(name: str) -> ActivityMode:
@@ -145,20 +145,20 @@ class TomlConfigProvider:
         )
 
 
-def _build_rules(data: dict[str, Any]) -> tuple[BeatRule, ...]:
-    """Build a BeatRule for each ``[[beat]]`` entry in the taxonomy."""
-    rules: list[BeatRule] = []
-    for beat in data.get(_BEAT, []):
+def _build_rules(data: dict[str, Any]) -> tuple[MomentRule, ...]:
+    """Build a MomentRule for each ``[[moment]]`` entry in the taxonomy."""
+    rules: list[MomentRule] = []
+    for moment in data.get(_MOMENT, []):
         rules.append(
-            BeatRule(
-                event_type=beat[_EVENT],
-                kind=_kind_from(beat[_KIND]),
-                domain=_domain_from(beat[_DOMAIN_FIELD]),
-                mode=_mode_from(beat[_MODE_FIELD]),
-                magnitude_field=beat.get(_MAGNITUDE_FIELD),
-                credits_field=beat.get(_CREDITS_FIELD),
-                credits_array_field=beat.get(_CREDITS_ARRAY_FIELD),
-                credits_item_fields=tuple(beat.get(_CREDITS_ITEM_FIELDS, ())),
+            MomentRule(
+                event_type=moment[_EVENT],
+                kind=_kind_from(moment[_KIND]),
+                domain=_domain_from(moment[_DOMAIN_FIELD]),
+                mode=_mode_from(moment[_MODE_FIELD]),
+                magnitude_field=moment.get(_MAGNITUDE_FIELD),
+                credits_field=moment.get(_CREDITS_FIELD),
+                credits_array_field=moment.get(_CREDITS_ARRAY_FIELD),
+                credits_item_fields=tuple(moment.get(_CREDITS_ITEM_FIELDS, ())),
             )
         )
     return tuple(rules)
@@ -201,22 +201,20 @@ def _rank_labels(data: dict[str, Any]) -> list[tuple[str, str]]:
         key = rank[_KEY]
         pairs.append((_LADDER_TITLE_KEY.format(key=key), rank[_TITLE]))
         for index, tier_name in enumerate(rank[_TIERS]):
-            pairs.append(
-                (_TIER_NAME_KEY.format(key=key, index=index), tier_name)
-            )
+            pairs.append((_TIER_NAME_KEY.format(key=key, index=index), tier_name))
     return pairs
 
 
-def _beat_labels(data: dict[str, Any]) -> list[tuple[str, str]]:
-    """Return an event-type to readable-label pair for every ``[[beat]]``.
+def _moment_labels(data: dict[str, Any]) -> list[tuple[str, str]]:
+    """Return an event-type to readable-label pair for every ``[[moment]]``.
 
-    The label is the beat's ``kind`` titleised (for example ``scan_body`` to
+    The label is the moment's ``kind`` titleised (for example ``scan_body`` to
     "Scan Body"), giving the timeline a clean, brace-free label derived from
     taxonomy data rather than the raw Jinja text template.
     """
     pairs: list[tuple[str, str]] = []
-    for beat in data.get(_BEAT, []):
-        pairs.append((beat[_EVENT], _titleise(beat[_KIND])))
+    for moment in data.get(_MOMENT, []):
+        pairs.append((moment[_EVENT], _titleise(moment[_KIND])))
     return pairs
 
 
@@ -239,6 +237,6 @@ def _build_labels(data: dict[str, Any]) -> tuple[tuple[str, str], ...]:
     pairs.extend(_domain_labels(data))
     pairs.extend(_mode_labels(data))
     pairs.extend(_rank_labels(data))
-    pairs.extend(_beat_labels(data))
+    pairs.extend(_moment_labels(data))
     pairs.extend(_meta_labels(data))
     return tuple(pairs)

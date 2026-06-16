@@ -1,4 +1,4 @@
-"""Enumerations describing activity modes, domains, beat kinds and ranks.
+"""Enumerations describing activity modes, domains, moment kinds and ranks.
 
 These are pure classification vocabularies shared across the domain. They
 carry no behaviour beyond identity, so plain ``enum.Enum`` members suffice.
@@ -11,7 +11,7 @@ from enum import Enum, auto
 __all__ = [
     "ActivityMode",
     "ActivityDomain",
-    "BeatKind",
+    "MomentKind",
     "RankLadder",
 ]
 
@@ -25,7 +25,7 @@ class ActivityMode(Enum):
 
 
 class ActivityDomain(Enum):
-    """The broad gameplay domain a beat belongs to."""
+    """The broad gameplay domain a moment belongs to."""
 
     TRAVEL = auto()
     EXPLORATION = auto()
@@ -40,7 +40,7 @@ class ActivityDomain(Enum):
     EXOBIOLOGY = auto()
 
 
-class BeatKind(Enum):
+class MomentKind(Enum):
     """A single conceptual thing that happened during the session."""
 
     JUMP = auto()
