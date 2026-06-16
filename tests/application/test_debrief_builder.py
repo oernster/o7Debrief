@@ -94,3 +94,90 @@ def test_build_ship_is_empty_when_the_load_game_names_no_ship() -> None:
 
     assert result.ship == ""
     assert result.ship_name == ""
+
+
+def test_build_tracks_a_ship_swap_to_the_latest_vessel() -> None:
+    """A mid-session ShipyardSwap plus Loadout report the new ship and name."""
+    events = (
+        event(
+            "LoadGame",
+            0,
+            Ship="CobraMkIII",
+            Ship_Localised="Cobra Mk III",
+            ShipName="STARDUST",
+        ),
+        event(
+            "ShipyardSwap",
+            10,
+            ShipType="federation_corvette",
+            ShipType_Localised="Federal Corvette",
+        ),
+        event("Loadout", 11, Ship="federation_corvette", ShipName="BIG BERTHA"),
+        event("Shutdown", 30),
+    )
+    builder = DebriefBuilder(spec())
+
+    result = builder.build(commander(), events, ())
+
+    assert result.ship == "Federal Corvette"
+    assert result.ship_name == "BIG BERTHA"
+
+
+def test_build_falls_back_to_internal_symbol_for_a_swapped_ship() -> None:
+    """A new ship whose localised name was never seen shows its internal symbol."""
+    events = (
+        event("LoadGame", 0, Ship="CobraMkIII", Ship_Localised="Cobra Mk III"),
+        event("Loadout", 11, Ship="federation_corvette", ShipName="BIG BERTHA"),
+        event("Shutdown", 30),
+    )
+    builder = DebriefBuilder(spec())
+
+    result = builder.build(commander(), events, ())
+
+    assert result.ship == "federation_corvette"
+    assert result.ship_name == "BIG BERTHA"
+
+
+def test_build_takes_the_latest_name_for_the_same_ship() -> None:
+    """A later Loadout for the same ship updates to its latest custom name."""
+    events = (
+        event(
+            "LoadGame",
+            0,
+            Ship="CobraMkIII",
+            Ship_Localised="Cobra Mk III",
+            ShipName="STARDUST",
+        ),
+        event("Loadout", 11, Ship="CobraMkIII", ShipName="STARDUST II"),
+        event("Shutdown", 30),
+    )
+    builder = DebriefBuilder(spec())
+
+    result = builder.build(commander(), events, ())
+
+    assert result.ship == "Cobra Mk III"
+    assert result.ship_name == "STARDUST II"
+
+
+def test_build_tracks_a_newly_bought_ship() -> None:
+    """A ShipyardNew plus Loadout report the bought ship and its name."""
+    events = (
+        event(
+            "LoadGame",
+            0,
+            Ship="CobraMkIII",
+            Ship_Localised="Cobra Mk III",
+            ShipName="STARDUST",
+        ),
+        event(
+            "ShipyardNew", 10, ShipType="python_nx", ShipType_Localised="Python Mk II"
+        ),
+        event("Loadout", 11, Ship="python_nx", ShipName="NIGHTSHADE"),
+        event("Shutdown", 30),
+    )
+    builder = DebriefBuilder(spec())
+
+    result = builder.build(commander(), events, ())
+
+    assert result.ship == "Python Mk II"
+    assert result.ship_name == "NIGHTSHADE"

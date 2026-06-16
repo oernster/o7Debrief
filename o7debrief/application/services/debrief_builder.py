@@ -19,39 +19,55 @@ from o7debrief.domain.value_objects.commander_id import CommanderId
 
 __all__ = ["DebriefBuilder"]
 
-# Journal event and fields naming the ship the commander is flying. The
-# localised type name is preferred over the internal symbol; the player's own
-# ship name is a separate field. These are the journal's own vocabulary,
-# declared here so the builder is their reader.
-_LOAD_GAME_EVENT = "LoadGame"
-_SHIP_DISPLAY_FIELD = "Ship_Localised"
-_SHIP_FIELD = "Ship"
-_SHIP_NAME_FIELD = "ShipName"
+# Journal events that establish or change the active ship across a session, and
+# the fields that name it. LoadGame names the ship at login; Loadout names it
+# whenever the commander boards one (including after a swap or purchase);
+# ShipyardSwap and ShipyardNew name the ship swapped or bought into. LoadGame and
+# Loadout use Ship (with Ship_Localised); the shipyard events use ShipType (with
+# ShipType_Localised). ShipName carries the commander's own name for the ship.
+_SHIP_EVENTS = ("LoadGame", "Loadout", "ShipyardSwap", "ShipyardNew")
+_SHIP_INTERNAL_FIELDS = ("Ship", "ShipType")
+_SHIP_DISPLAY_FIELDS = ("Ship_Localised", "ShipType_Localised")
+_SHIP_NAME_FIELDS = ("ShipName",)
+
+
+def _first_str(event: RawEvent, fields: tuple[str, ...]) -> str:
+    """Return the first of ``fields`` that holds a non-empty string, else blank."""
+    for field in fields:
+        value = event.get(field)
+        if isinstance(value, str) and value.strip():
+            return value
+    return ""
 
 
 def _ship_type_and_name(events: tuple[RawEvent, ...]) -> tuple[str, str]:
-    """Return the (type, name) of the ship from the latest LoadGame event.
+    """Return the (type, name) of the latest ship the commander is flying.
 
-    The localised type name (for example "Panther Clipper Mk II") is preferred
-    over the internal symbol, and the player's custom ship name (``ShipName``)
-    is read alongside it. The latest LoadGame wins, so a ship swap across an
-    all-history read reports the most recent vessel. Either part is an empty
-    string when the journal does not carry it.
+    The active ship is tracked across the session rather than frozen at login: a
+    mid-session change (a Loadout on boarding, a ShipyardSwap or a ShipyardNew)
+    moves it on, so a swap is reflected instead of reporting the login vessel.
+    The localised type (for example "Federal Corvette") is preferred over the
+    internal symbol and is paired to the active ship from whichever event in the
+    session carried it, with the internal symbol as the fallback. The custom name
+    resets when the ship changes, so the old name never shows on a new hull.
     """
-    ship_type = ""
+    localised_by_internal: dict[str, str] = {}
+    current_internal = ""
     ship_name = ""
     for event in events:
-        if event.event_type != _LOAD_GAME_EVENT:
+        if event.event_type not in _SHIP_EVENTS:
             continue
-        display = event.get(_SHIP_DISPLAY_FIELD)
-        internal = event.get(_SHIP_FIELD)
-        if isinstance(display, str) and display.strip():
-            ship_type = display
-        elif isinstance(internal, str) and internal.strip():
-            ship_type = internal
-        name = event.get(_SHIP_NAME_FIELD)
-        if isinstance(name, str) and name.strip():
+        internal = _first_str(event, _SHIP_INTERNAL_FIELDS)
+        localised = _first_str(event, _SHIP_DISPLAY_FIELDS)
+        if internal and localised:
+            localised_by_internal[internal] = localised
+        if internal and internal != current_internal:
+            current_internal = internal
+            ship_name = ""
+        name = _first_str(event, _SHIP_NAME_FIELDS)
+        if name:
             ship_name = name
+    ship_type = localised_by_internal.get(current_internal, current_internal)
     return ship_type, ship_name
 
 
