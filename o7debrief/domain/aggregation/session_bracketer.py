@@ -2,10 +2,11 @@
 
 This is the session-isolation keystone. A journal file can contain many
 sessions (the game was started, played, quit, started again). The debrief
-must describe ONLY the most recent session, so we slice from the last
-``LoadGame`` to the matching ``Shutdown`` (or to the end of the log if the
-game crashed without a clean shutdown). Everything before that last
-``LoadGame`` is discarded.
+must describe ONLY the most recent session. A session is one game run,
+bounded by ``Shutdown`` events, so we slice the run ending at the last
+``Shutdown`` (or at the end of the log when the game crashed without one),
+starting just after the previous ``Shutdown``. Every ``LoadGame`` inside
+that run, including the ones a main-menu return fires, stays in the session.
 """
 
 from __future__ import annotations
@@ -32,25 +33,36 @@ def _sorted_by_time(events: tuple[RawEvent, ...]) -> tuple[RawEvent, ...]:
 
 
 def latest_session(events: tuple[RawEvent, ...]) -> tuple[RawEvent, ...]:
-    """Return the slice covering only the most recent session.
+    """Return the slice covering only the most recent game run.
 
-    The slice runs from the last ``LoadGame`` event up to and including the
-    first ``Shutdown`` that follows it; if no such ``Shutdown`` exists the
-    slice runs to the end of the log. Returns an empty tuple when there is
-    no ``LoadGame`` at all.
+    A session is one game run, bounded by ``Shutdown`` events: every
+    ``Shutdown`` ends the run it belongs to. Elite fires a fresh ``LoadGame``
+    whenever the commander drops to the main menu and back (a mode switch, a
+    death to the menu or a relog), so anchoring on ``LoadGame`` would shrink a
+    run that touched the menu down to its final leg. Anchoring on ``Shutdown``
+    instead keeps every ``LoadGame`` of the run in one session.
+
+    The most recent session ends at the last ``Shutdown`` when the log finishes
+    there, otherwise it runs to the end of the log (the game crashed before a
+    clean shutdown or none was recorded). It starts just after the previous
+    ``Shutdown`` (or at the start of the log when there is no earlier one).
+    Returns an empty tuple only when there are no events at all.
     """
     ordered = _sorted_by_time(events)
-    last_load_index: int | None = None
-    for index, event in enumerate(ordered):
-        if event.event_type == LOAD_GAME:
-            last_load_index = index
-    if last_load_index is None:
+    if not ordered:
         return ()
-    session = ordered[last_load_index:]
-    for offset, event in enumerate(session):
-        if event.event_type == SHUTDOWN:
-            return session[: offset + _NEXT]
-    return session
+    shutdowns = tuple(
+        index for index, event in enumerate(ordered) if event.event_type == SHUTDOWN
+    )
+    if not shutdowns:
+        return ordered
+    last_shutdown = shutdowns[-_NEXT]
+    after_last_shutdown = ordered[last_shutdown + _NEXT :]
+    if after_last_shutdown:
+        return after_last_shutdown
+    earlier_shutdowns = shutdowns[:-_NEXT]
+    start = earlier_shutdowns[-_NEXT] + _NEXT if earlier_shutdowns else _FIRST
+    return ordered[start : last_shutdown + _NEXT]
 
 
 def window_of(session_events: tuple[RawEvent, ...]) -> SessionWindow:

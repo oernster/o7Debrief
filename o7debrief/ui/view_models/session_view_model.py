@@ -6,11 +6,16 @@ it simply polls the injected recorder on demand and re-publishes the
 recorder's own headline, emitting a Qt signal so the tray can refresh its
 status line. Timing (how often to poll) lives in the tray's QTimer, not here.
 
-The recorder is injected and used purely by shape (``poll`` and ``status``),
-so a fake recorder drives this model in tests without any real journal or
-infrastructure. The concrete ``SessionRecorder`` type is referenced only
-under ``TYPE_CHECKING`` to keep this module a strict client of the
-application layer with no runtime cross-layer import.
+It also carries an optional auto-debrief trigger. On each poll it asks the
+trigger whether the latest session has just finished; when it has, it emits a
+second signal (``session_completed``) so the tray can generate the debrief
+automatically. With no trigger injected the view model is status-only.
+
+The collaborators are injected and used purely by shape (the recorder's
+``poll`` and ``status``, the trigger's ``debrief_due``), so fakes drive this
+model in tests without any real journal or infrastructure. Their concrete
+types are referenced only under ``TYPE_CHECKING`` to keep this module a strict
+client of the application layer with no runtime cross-layer import.
 """
 
 from __future__ import annotations
@@ -19,7 +24,10 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QObject, Signal
 
-if TYPE_CHECKING:  # pragma: no cover - type-only import, no runtime dependency
+if TYPE_CHECKING:  # pragma: no cover - type-only imports, no runtime dependency
+    from o7debrief.application.services.auto_debrief_trigger import (
+        AutoDebriefTrigger,
+    )
     from o7debrief.application.services.session_recorder import (
         SessionRecorder,
         SessionStatus,
@@ -29,14 +37,22 @@ __all__ = ["SessionViewModel"]
 
 
 class SessionViewModel(QObject):
-    """Adapts a SessionRecorder into a status string and a change signal."""
+    """Adapts a SessionRecorder into a status string and change signals."""
 
     # Emitted with the latest status headline whenever the model refreshes.
     status_changed = Signal(str)
+    # Emitted (no payload) when a refresh first sees the latest session end,
+    # so the tray can generate its debrief automatically.
+    session_completed = Signal()
 
-    def __init__(self, recorder: SessionRecorder) -> None:
+    def __init__(
+        self,
+        recorder: SessionRecorder,
+        trigger: AutoDebriefTrigger | None = None,
+    ) -> None:
         super().__init__()
         self._recorder = recorder
+        self._trigger = trigger
         self._status: SessionStatus = recorder.status()
 
     @property
@@ -59,10 +75,14 @@ class SessionViewModel(QObject):
 
         Returns the fresh headline so a caller can use it directly without
         waiting on the signal. Polling appends only newly written events, so
-        repeated refreshes accumulate the session cheaply.
+        repeated refreshes accumulate the session cheaply. When an auto-debrief
+        trigger is injected and reports that this poll has just finished the
+        latest session, a ``session_completed`` signal is emitted as well.
         """
-        self._recorder.poll()
+        events = self._recorder.poll()
         self._status = self._recorder.status()
         headline = self._status.headline
         self.status_changed.emit(headline)
+        if self._trigger is not None and self._trigger.debrief_due(events):
+            self.session_completed.emit()
         return headline

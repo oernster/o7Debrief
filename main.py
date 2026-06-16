@@ -33,6 +33,9 @@ from PySide6.QtWidgets import QApplication, QSystemTrayIcon
 
 from o7debrief import __version__
 from o7debrief.application.dto.preferences import Preferences
+from o7debrief.application.services.auto_debrief_trigger import (
+    AutoDebriefTrigger,
+)
 from o7debrief.application.services.config_loading_service import (
     ConfigLoadingService,
 )
@@ -464,7 +467,7 @@ def main() -> int:
         # is not garbage-collected; it is what lets Ctrl+C quit the app.
         interrupt_timer = _install_interrupt_handling(app)
 
-        session = SessionViewModel(recorder)
+        session = SessionViewModel(recorder, AutoDebriefTrigger())
         archive = FilesystemDebriefArchive(export_dir, preferences_store)
         controller = TrayController(
             one_shot=one_shot,

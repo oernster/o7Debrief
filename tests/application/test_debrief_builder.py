@@ -181,3 +181,28 @@ def test_build_tracks_a_newly_bought_ship() -> None:
 
     assert result.ship == "Python Mk II"
     assert result.ship_name == "NIGHTSHADE"
+
+
+def test_build_matches_the_ship_symbol_case_insensitively() -> None:
+    """The journal's mixed-case ship symbol still resolves the localised name.
+
+    LoadGame writes "Cutter" while the following Loadout writes "cutter"; the
+    localised name must survive that, rather than degrading to the raw symbol.
+    """
+    events = (
+        event(
+            "LoadGame",
+            0,
+            Ship="Cutter",
+            Ship_Localised="Imperial Cutter",
+            ShipName="EMPEROR'S SOLACE",
+        ),
+        event("Loadout", 11, Ship="cutter", ShipName="EMPEROR'S SOLACE"),
+        event("Shutdown", 30),
+    )
+    builder = DebriefBuilder(spec())
+
+    result = builder.build(commander(), events, ())
+
+    assert result.ship == "Imperial Cutter"
+    assert result.ship_name == "EMPEROR'S SOLACE"

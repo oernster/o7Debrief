@@ -8,7 +8,8 @@ recent debriefs from the output directory, a settings entry and quit.
 Both debrief actions drive the same injected one-shot use case (the app's one
 reducer underlies both capture paths) and then open the produced report in the
 browser through the preview helper. A low-frequency ``QTimer`` refreshes the
-status line; there is no watchdog and no background thread here.
+status line and drives the automatic debrief (through the view model) when a
+session ends; there is no background thread here.
 
 Every collaborator is injected through the constructor: the one-shot debrief
 service, the session view model, an opener (defaulting to the preview helper),
@@ -153,6 +154,7 @@ class TrayController(QObject):
         self._tray.activated.connect(self._on_tray_activated)
 
         self._session.status_changed.connect(self._on_status_changed)
+        self._session.session_completed.connect(self._on_session_completed)
         self._timer = QTimer(self)
         self._timer.setInterval(refresh_interval_ms)
         self._timer.timeout.connect(self._session.refresh)
@@ -250,6 +252,16 @@ class TrayController(QObject):
     def _on_debrief_history(self) -> None:
         """Generate a debrief covering all history to date and open it."""
         self._run(self._one_shot.debrief_all_history)
+
+    def _on_session_completed(self) -> None:
+        """Auto-generate the last-session debrief when a session ends.
+
+        Driven by the view model's ``session_completed`` signal, which fires
+        once when a poll first sees the latest run end with a ``Shutdown``. It
+        runs the same last-session use case as the manual action, so the report
+        opens and is announced exactly as a hand-triggered debrief would be.
+        """
+        self._run(self._one_shot.debrief_last_session)
 
     def _run(self, run_use_case: Callable[[], ExportResult]) -> None:
         """Run a debrief use case, record outputs and open the report.

@@ -32,16 +32,25 @@ class FakeStatus:
 
 
 class FakeRecorder:
-    """A SessionRecorder stand-in whose count grows on each poll."""
+    """A SessionRecorder stand-in whose count grows on each poll.
 
-    def __init__(self) -> None:
+    ``poll`` returns the preset event tuple for each successive call (and an
+    empty tuple once the presets run out), so a test can feed a sequence of
+    journal snapshots through the view model without any real journal.
+    """
+
+    def __init__(self, poll_results: tuple[tuple[object, ...], ...] = ()) -> None:
         self._count = _START_COUNT
         self.poll_calls = 0
+        self._poll_results = poll_results
 
     def poll(self) -> tuple[object, ...]:
         """Pretend to read new events, growing the running count."""
+        index = self.poll_calls
         self.poll_calls += 1
         self._count += _EVENTS_PER_POLL
+        if index < len(self._poll_results):
+            return self._poll_results[index]
         return ()
 
     def status(self) -> FakeStatus:

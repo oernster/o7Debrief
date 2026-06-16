@@ -46,28 +46,35 @@ def _ship_type_and_name(events: tuple[RawEvent, ...]) -> tuple[str, str]:
     The active ship is tracked across the session rather than frozen at login: a
     mid-session change (a Loadout on boarding, a ShipyardSwap or a ShipyardNew)
     moves it on, so a swap is reflected instead of reporting the login vessel.
-    The localised type (for example "Federal Corvette") is preferred over the
+    The localised type (for example "Imperial Cutter") is preferred over the
     internal symbol and is paired to the active ship from whichever event in the
     session carried it, with the internal symbol as the fallback. The custom name
     resets when the ship changes, so the old name never shows on a new hull.
+
+    Internal symbols are matched case-insensitively: the journal writes the same
+    ship as "Cutter" in LoadGame yet "cutter" in Loadout and ShipyardSwap, so a
+    case-sensitive match would lose the localised name on an unswapped ship.
     """
-    localised_by_internal: dict[str, str] = {}
-    current_internal = ""
+    localised_by_key: dict[str, str] = {}
+    current_key = ""
+    current_symbol = ""
     ship_name = ""
     for event in events:
         if event.event_type not in _SHIP_EVENTS:
             continue
-        internal = _first_str(event, _SHIP_INTERNAL_FIELDS)
+        symbol = _first_str(event, _SHIP_INTERNAL_FIELDS)
+        key = symbol.lower()
         localised = _first_str(event, _SHIP_DISPLAY_FIELDS)
-        if internal and localised:
-            localised_by_internal[internal] = localised
-        if internal and internal != current_internal:
-            current_internal = internal
+        if key and localised:
+            localised_by_key[key] = localised
+        if key and key != current_key:
+            current_key = key
+            current_symbol = symbol
             ship_name = ""
         name = _first_str(event, _SHIP_NAME_FIELDS)
         if name:
             ship_name = name
-    ship_type = localised_by_internal.get(current_internal, current_internal)
+    ship_type = localised_by_key.get(current_key, current_symbol)
     return ship_type, ship_name
 
 
