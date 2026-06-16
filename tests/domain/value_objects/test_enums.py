@@ -31,6 +31,7 @@ def test_activity_domain_members() -> None:
         "SRV",
         "ON_FOOT",
         "EXOBIOLOGY",
+        "SHIPYARD",
     }
     assert {d.name for d in ActivityDomain} == expected
 
@@ -57,6 +58,8 @@ def test_moment_kind_members() -> None:
         "DISEMBARK",
         "SETTLEMENT_VISIT",
         "PROMOTION",
+        "SHIP_SWAP",
+        "SHIP_PURCHASE",
         "MILESTONE",
     }
     assert {b.name for b in MomentKind} == expected

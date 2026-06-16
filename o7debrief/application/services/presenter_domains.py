@@ -161,9 +161,12 @@ _BUILDERS: tuple[tuple[str, str, object], ...] = (
     ("on_foot", "on_foot", _on_foot_stats),
 )
 
-# Canonical display order of the activity-domain keys, shared by the domain
-# sections and the timeline categories so both order identically.
-DOMAIN_ORDER: tuple[str, ...] = tuple(key for _, key, _ in _BUILDERS)
+# Display order of the activity-domain keys for the timeline categories. Stat
+# sections come from _BUILDERS; Shipyard is a timeline-only domain (ship swaps
+# and purchases are logged as records with no rollup stat section), so it is
+# appended here without a _BUILDERS entry.
+_SHIPYARD_KEY = "shipyard"
+DOMAIN_ORDER: tuple[str, ...] = tuple(key for _, key, _ in _BUILDERS) + (_SHIPYARD_KEY,)
 
 
 def build_domain_sections(activity, fmt, resolver) -> tuple[DomainSection, ...]:

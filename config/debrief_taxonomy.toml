@@ -22,6 +22,7 @@ section_order = [
     "srv",
     "on_foot",
     "carrier",
+    "shipyard",
 ]
 
 [meta]
@@ -106,6 +107,12 @@ key = "exobiology"
 title = "Exobiology"
 icon = "leaf"
 default_mode = "foot"
+
+[[domain]]
+key = "shipyard"
+title = "Shipyard"
+icon = "ship"
+default_mode = "ship"
 
 # ---------------------------------------------------------------------------
 # Modes: the physical control context. label and icon drive the report; tag is
@@ -287,6 +294,20 @@ domain = "missions"
 mode = "ship"
 kind = "promotion"
 text = "Earned a rank promotion."
+
+[[moment]]
+event = "ShipyardSwap"
+domain = "shipyard"
+mode = "ship"
+kind = "ship_swap"
+text = "Swapped to {{ ShipType_Localised }}."
+
+[[moment]]
+event = "ShipyardNew"
+domain = "shipyard"
+mode = "ship"
+kind = "ship_purchase"
+text = "Bought a {{ ShipType_Localised }}."
 
 # ---------------------------------------------------------------------------
 # Aggregates: rollup rules producing the headline metrics. domain matches a

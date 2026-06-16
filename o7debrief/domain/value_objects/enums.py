@@ -38,6 +38,7 @@ class ActivityDomain(Enum):
     SRV = auto()
     ON_FOOT = auto()
     EXOBIOLOGY = auto()
+    SHIPYARD = auto()
 
 
 class MomentKind(Enum):
@@ -63,6 +64,8 @@ class MomentKind(Enum):
     DISEMBARK = auto()
     SETTLEMENT_VISIT = auto()
     PROMOTION = auto()
+    SHIP_SWAP = auto()
+    SHIP_PURCHASE = auto()
     MILESTONE = auto()
 
 

@@ -357,6 +357,32 @@ def test_timeline_categories_group_by_domain_in_canonical_order() -> None:
     assert by_key["combat"]["entries"][0]["mode"] == "ship"
 
 
+def test_ship_changes_form_a_shipyard_timeline_category() -> None:
+    debrief = build.debrief(
+        moments=(
+            build.moment(MomentKind.SHIP_SWAP, ActivityDomain.SHIPYARD, 1),
+            build.moment(MomentKind.SHIP_PURCHASE, ActivityDomain.SHIPYARD, 2),
+        ),
+        activity=build.full_activity(),
+    )
+
+    context = _presenter().present(debrief).to_context()
+
+    # The ship changes appear in the chronological log.
+    assert [entry["text"] for entry in context["timeline"]] == [
+        "SHIP_SWAP",
+        "SHIP_PURCHASE",
+    ]
+    # They group under a shipyard timeline category...
+    by_key = {category["key"]: category for category in context["timeline_categories"]}
+    assert "shipyard" in by_key
+    assert by_key["shipyard"]["count"] == 2
+    # ...but Shipyard is timeline-only, so it has no stat section.
+    section_keys = [section["key"] for section in context["domains"]]
+    assert "shipyard" not in section_keys
+    assert len(section_keys) == 11
+
+
 def test_timeline_categories_empty_when_no_moments() -> None:
     debrief = build.debrief(moments=(), activity=ActivityRollup(modes_used=()))
 
