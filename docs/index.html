@@ -209,6 +209,7 @@
         "Every credit, jump and scan traced to a real journal entry",
         "Self-contained HTML report plus a text version ready to paste onto Discord or Reddit",
         "Honest Commander rank progress reporting",
+        "Ship swaps and purchases recorded as session events, naming the ship moved from and to",
         "Local-first with no cloud, no account and no telemetry"
       ],
       "author": {
@@ -288,6 +289,14 @@
         },
         {
           "@type": "Question",
+          "name": "Does o7 Debrief record ship changes?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Swapping ship or buying a new one is logged as a session event naming the ship you moved from and the one you boarded; the header also names your current ship and its type."
+          }
+        },
+        {
+          "@type": "Question",
           "name": "Which Windows versions does o7 Debrief support?",
           "acceptedAnswer": {
             "@type": "Answer",
@@ -349,6 +358,11 @@
           <p>Tier-ups show at once and fractional rank percentages settle at the next launch, because the journal only snapshots progress at startup.</p>
         </div>
         <div class="card">
+          <div class="icon">&#128640;</div>
+          <h3>Your ship, tracked</h3>
+          <p>The header names your current ship and its type. Every swap or purchase is also logged as a session event, from the ship you left to the one you boarded.</p>
+        </div>
+        <div class="card">
           <div class="icon">&#128274;</div>
           <h3>Local-first</h3>
           <p>No cloud, no account, no telemetry. Your journal never leaves your machine and the app needs no administrator rights to install.</p>
@@ -402,6 +416,10 @@
         <div class="card">
           <h3>Do I need to keep o7 Debrief running while I play?</h3>
           <p>No. The tray watcher can generate a debrief automatically when you close the game; one-shot mode can also report your last session or your whole history to date after the fact.</p>
+        </div>
+        <div class="card">
+          <h3>Does o7 Debrief record ship changes?</h3>
+          <p>Yes. Swapping ship or buying a new one is logged as a session event naming the ship you moved from and the one you boarded; the header also names your current ship and its type.</p>
         </div>
         <div class="card">
           <h3>Which Windows versions does o7 Debrief support?</h3>
