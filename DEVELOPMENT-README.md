@@ -10,7 +10,7 @@ These instructions target Windows with PowerShell, which is the supported develo
 - Python 3.13, on `PATH` (confirm with `python --version`).
 - Git, to clone the repository.
 
-A working Elite Dangerous installation is useful for end-to-end checks because it produces real Journal files, but it is not required to run the tests: the suite drives the parsers from sample journal fixtures.
+A working Elite Dangerous installation is useful for end-to-end checks because it produces real Journal files but it is not required to run the tests: the suite drives the parsers from sample journal fixtures.
 
 ## Create and activate the virtual environment
 
@@ -66,7 +66,7 @@ The full strategy, taxonomy and coverage configuration are in [TESTING.md](TESTI
 python buildexe.py
 ```
 
-`buildexe.py` drives Nuitka to produce a standalone Windows executable with the console disabled. Nuitka compiles the application ahead of time; the first build is slow, and a C compiler toolchain must be available (Nuitka will report what it needs if anything is missing). The result is a self-contained build that runs without a separate Python install.
+`buildexe.py` drives Nuitka to produce a standalone Windows executable with the console disabled. Nuitka compiles the application ahead of time; the first build is slow and a C compiler toolchain must be available (Nuitka will report what it needs if anything is missing). The result is a self-contained build that runs without a separate Python install.
 
 ## Build the installer
 

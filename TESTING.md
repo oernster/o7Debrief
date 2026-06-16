@@ -33,8 +33,8 @@ Excluding these from the hard gate is a correctness decision, not a shortcut: a 
 
 The structural suite under `tests/structural/` scans the source as an AST or as text and asserts the invariants from [ARCHITECTURE.md](ARCHITECTURE.md):
 
-- `test_layering.py`: the dependency direction `ui -> application -> domain <- infrastructure` holds, and the UI imports the application layer only.
-- `test_domain_purity.py`: the domain imports no I/O, logging, `os`, `pathlib`, `threading` or wall-clock calls (`datetime.now()` / `date.today()`), and works in event-time only. Imports under `if TYPE_CHECKING:` are exempt.
+- `test_layering.py`: the dependency direction `ui -> application -> domain <- infrastructure` holds and the UI imports the application layer only.
+- `test_domain_purity.py`: the domain imports no I/O, logging, `os`, `pathlib`, `threading` or wall-clock calls (`datetime.now()` / `date.today()`) and works in event-time only. Imports under `if TYPE_CHECKING:` are exempt.
 - `test_loc_limits.py`: no module exceeds 400 lines.
 - `test_composition_root.py`: there is exactly one composition root and no module-level singletons or service locators elsewhere.
 - `test_no_magic_numbers.py`: domain-specific values come from the TOML taxonomy or named constants, not inline literals.
