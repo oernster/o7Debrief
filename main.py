@@ -53,6 +53,7 @@ from o7debrief.application.services.session_recorder import SessionRecorder
 # The composition root alone reaches into infrastructure.
 from o7debrief.infrastructure import (
     FileJournalSource,
+    FilesystemDebriefArchive,
     FilesystemSink,
     HtmlDebriefExporter,
     JsonPreferencesStore,
@@ -464,10 +465,12 @@ def main() -> int:
         interrupt_timer = _install_interrupt_handling(app)
 
         session = SessionViewModel(recorder)
+        archive = FilesystemDebriefArchive(export_dir, preferences_store)
         controller = TrayController(
             one_shot=one_shot,
             session=session,
             icon=icon,
+            archive=archive,
             on_settings=_open_settings(preferences_store, autostart, export_dir),
             on_about=_open_about(icon),
             on_licence=_open_licence(_load_licence_text()),

@@ -99,3 +99,20 @@ class RecordingOpener:
     def __call__(self, path: str) -> bool:
         self.opened.append(path)
         return True
+
+
+class FakeArchive:
+    """A DebriefArchive returning a preset list of paths, newest first.
+
+    The list is public so a test can replace it to mimic a debrief landing on
+    disk between calls.
+    """
+
+    def __init__(self, paths: tuple[str, ...] = ()) -> None:
+        self.paths = paths
+
+    def count(self) -> int:
+        return len(self.paths)
+
+    def list_page(self, offset: int, limit: int) -> tuple[str, ...]:
+        return self.paths[offset : offset + limit]

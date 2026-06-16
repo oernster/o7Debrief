@@ -10,6 +10,7 @@ cover the class and signature lines that remain.
 from __future__ import annotations
 
 from tests.application.fakes import (
+    FakeArchive,
     FakeConfigProvider,
     FakeExporter,
     FakeJournalSource,
@@ -22,6 +23,7 @@ from tests.application.fakes import (
 
 from o7debrief.application.ports.clock import Clock
 from o7debrief.application.ports.config_provider import ConfigProvider
+from o7debrief.application.ports.debrief_archive import DebriefArchive
 from o7debrief.application.ports.debrief_exporter import DebriefExporter
 from o7debrief.application.ports.debrief_sink import DebriefSink
 from o7debrief.application.ports.journal_source import JournalSource
@@ -34,6 +36,7 @@ def test_fakes_conform_to_their_ports() -> None:
     config: ConfigProvider = FakeConfigProvider(spec(), spec().schema_version)
     exporter: DebriefExporter = FakeExporter("md", b"")
     sink: DebriefSink = FakeSink()
+    archive: DebriefArchive = FakeArchive()
     store: RankSnapshotStore = FakeRankStore()
     preferences: PreferencesStore = FakePreferencesStore()
     clock: Clock = FixedClock("2026-06-15T00:00:00Z")
@@ -44,6 +47,7 @@ def test_fakes_conform_to_their_ports() -> None:
     assert config.schema_version() == spec().schema_version
     assert exporter.extension == "md"
     assert sink.write("n", b"x", "md") == "n.md"
+    assert archive.count() == 0
     assert store.load(_AnyCommander()) is None
     assert preferences.load().export_format == "html"
     assert clock.now_utc() == "2026-06-15T00:00:00Z"

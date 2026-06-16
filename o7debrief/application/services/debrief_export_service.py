@@ -17,13 +17,10 @@ from o7debrief.application.dto.render_request import RenderRequest
 from o7debrief.application.ports.clock import Clock
 from o7debrief.application.ports.debrief_exporter import DebriefExporter
 from o7debrief.application.ports.debrief_sink import DebriefSink
+from o7debrief.application.services.debrief_naming import NAME_SEPARATOR, NAME_STEM
 
 __all__ = ["DebriefExportService"]
 
-# Filename stem for a generated debrief, before the timestamp is appended.
-_NAME_STEM = "debrief"
-# Separator placed between the stem and the generation timestamp.
-_NAME_SEPARATOR = "_"
 # strftime pattern for the filename timestamp: a short, readable, filesystem-
 # safe form with no colons, sub-seconds or timezone, e.g. 2026-06-15_10-30-00.
 _STAMP_FORMAT = "%Y-%m-%d_%H-%M-%S"
@@ -62,7 +59,7 @@ class DebriefExportService:
     def export(self, view: DebriefView, request: RenderRequest) -> ExportResult:
         """Render and write each requested format; return the paths written."""
         stamp = self._safe_stamp()
-        name = f"{_NAME_STEM}{_NAME_SEPARATOR}{stamp}"
+        name = f"{NAME_STEM}{NAME_SEPARATOR}{stamp}"
         paths: list[str] = []
         for fmt in request.formats:
             exporter = self._exporter_for(fmt)

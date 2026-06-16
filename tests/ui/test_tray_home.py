@@ -15,7 +15,7 @@ from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 from o7debrief.application.dto.export_result import ExportResult
 from o7debrief.ui.tray.tray_controller import TrayController
 
-from tests.ui.fakes import FakeOneShot, FakeRecorder, RecordingOpener
+from tests.ui.fakes import FakeArchive, FakeOneShot, FakeRecorder, RecordingOpener
 
 # Captions and sample report paths shared by the tray-home tests.
 _LAST_SESSION_TEXT = "Debrief my last session"
@@ -77,7 +77,8 @@ class _FakeHome:
         self.callbacks = callbacks
         self.show_calls = 0
         self.bring_to_front_calls = 0
-        self.refreshes: list[tuple[str, object]] = []
+        self.statuses: list[str] = []
+        self.pages: list[tuple[object, int, int]] = []
         self.finished = _FakeSignal()
         _FakeHome.last = self
 
@@ -89,11 +90,17 @@ class _FakeHome:
         """Record a request to surface an already-open dialog."""
         self.bring_to_front_calls += 1
 
-    def refresh(self, status_text: str, recent: object) -> None:
-        """Record an in-place refresh of the status line and recent list."""
+    def set_status(self, status_text: str) -> None:
+        """Record an in-place status caption update."""
         self.status_text = status_text
+        self.statuses.append(status_text)
+
+    def show_recent_page(
+        self, recent: object, page_index: int, page_count: int
+    ) -> None:
+        """Record an in-place recents page replacement."""
         self.recent = recent
-        self.refreshes.append((status_text, recent))
+        self.pages.append((recent, page_index, page_count))
 
     def close(self) -> None:
         """Simulate the user closing the dialog by emitting finished."""
@@ -197,24 +204,56 @@ def test_home_reopens_after_being_closed(qapp: QApplication, view_model) -> None
 
 
 def test_debrief_refreshes_open_home(qapp: QApplication, view_model) -> None:
-    """A debrief generated while home is open refreshes its recent list in place."""
+    """A debrief generated while home is open repaints it from the archive."""
     _FakeHome.last = None
-    one_shot = FakeOneShot(ExportResult(paths=(_HTML_PATH, _MD_PATH)))
+    archive = FakeArchive((_HTML_PATH, _MD_PATH))
     controller = TrayController(
-        one_shot=one_shot,
+        one_shot=FakeOneShot(ExportResult(paths=(_HTML_PATH,))),
         session=view_model,
         opener=RecordingOpener(),
         home_factory=_FakeHome,
+        archive=archive,
     )
 
     controller._tray.activated.emit(QSystemTrayIcon.ActivationReason.Trigger)
     _action_named(_menu_of(controller), _LAST_SESSION_TEXT).trigger()
 
     assert _FakeHome.last is not None
-    assert _FakeHome.last.refreshes  # the open dialog was refreshed
-    status, recent = _FakeHome.last.refreshes[-1]
-    assert status == view_model.status_text
-    assert recent == (_HTML_PATH, _MD_PATH)
+    assert _FakeHome.last.statuses[-1] == view_model.status_text
+    page, page_index, _page_count = _FakeHome.last.pages[-1]
+    assert page == (_HTML_PATH, _MD_PATH)
+    assert page_index == 0
+
+
+def test_home_prev_next_pages_through_the_archive(
+    qapp: QApplication, view_model
+) -> None:
+    """The home pager callbacks page the open dialog through the archive."""
+    _FakeHome.last = None
+    paths = tuple(f"C:/out/debrief_{index:02d}.html" for index in range(25))
+    controller = TrayController(
+        one_shot=FakeOneShot(),
+        session=view_model,
+        opener=RecordingOpener(),
+        home_factory=_FakeHome,
+        archive=FakeArchive(paths),
+    )
+
+    controller._tray.activated.emit(QSystemTrayIcon.ActivationReason.Trigger)
+    home = _FakeHome.last
+    assert home is not None
+    assert home.recent == paths[0:10]  # opened on the first page
+
+    home.callbacks["on_next_page"]()
+    page, page_index, page_count = home.pages[-1]
+    assert page == paths[10:20]
+    assert page_index == 1
+    assert page_count == 3
+
+    home.callbacks["on_prev_page"]()
+    page, page_index, _count = home.pages[-1]
+    assert page == paths[0:10]
+    assert page_index == 0
 
 
 def test_debrief_with_home_closed_refreshes_nothing(

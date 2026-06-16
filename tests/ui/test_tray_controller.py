@@ -14,7 +14,7 @@ from o7debrief.application.dto.export_result import ExportResult
 from o7debrief.application.errors import ApplicationError
 from o7debrief.ui.tray.tray_controller import TrayController
 
-from tests.ui.fakes import FakeOneShot, FakeRecorder, RecordingOpener
+from tests.ui.fakes import FakeArchive, FakeOneShot, FakeRecorder, RecordingOpener
 
 # Captions the menu must expose, matching the controller's constants.
 _LAST_SESSION_TEXT = "Debrief my last session"
@@ -22,6 +22,7 @@ _HISTORY_TEXT = "Debrief my history to date"
 _RECENT_TEXT = "Recent debriefs"
 _SETTINGS_TEXT = "Settings"
 _QUIT_TEXT = "Quit"
+_MORE_TEXT = "More debriefs..."
 
 # Sample produced report paths used by the success-path tests.
 _HTML_PATH = "C:/out/debrief_2026.html"
@@ -98,24 +99,62 @@ def test_debrief_last_action_runs_service(qapp: QApplication, view_model) -> Non
     assert opener.opened == [_HTML_PATH]
 
 
-def test_generated_paths_populate_recent_submenu(
-    qapp: QApplication, view_model
-) -> None:
-    """Produced paths become reopenable entries in the Recent submenu."""
-    one_shot = FakeOneShot(ExportResult(paths=(_HTML_PATH, _MD_PATH)))
+def test_recent_submenu_lists_the_archive_page(qapp: QApplication, view_model) -> None:
+    """The Recent submenu lists the archive's newest page, each reopenable."""
     opener = RecordingOpener()
-    controller = TrayController(one_shot=one_shot, session=view_model, opener=opener)
+    controller = TrayController(
+        one_shot=FakeOneShot(),
+        session=view_model,
+        opener=opener,
+        archive=FakeArchive((_HTML_PATH, _MD_PATH)),
+    )
 
-    _action_named(_menu_of(controller), _LAST_SESSION_TEXT).trigger()
-    recent_action = _action_named(_menu_of(controller), _RECENT_TEXT)
-    submenu = recent_action.menu()
+    submenu = _action_named(_menu_of(controller), _RECENT_TEXT).menu()
     entries = [action.text() for action in submenu.actions()]
-
     assert entries == [_HTML_PATH, _MD_PATH]
 
     # Opening a recent entry re-invokes the opener with that path.
     submenu.actions()[1].trigger()
     assert opener.opened[-1] == _MD_PATH
+
+
+def test_recent_submenu_shows_more_entry_when_paged(
+    qapp: QApplication, view_model
+) -> None:
+    """When the archive holds more than a page, a final More entry appears."""
+    paths = tuple(f"C:/out/debrief_{index:02d}.html" for index in range(12))
+    controller = TrayController(
+        one_shot=FakeOneShot(),
+        session=view_model,
+        opener=RecordingOpener(),
+        archive=FakeArchive(paths),
+    )
+
+    submenu = _action_named(_menu_of(controller), _RECENT_TEXT).menu()
+    entries = [action.text() for action in submenu.actions()]
+    assert entries[:10] == list(paths[:10])
+    assert entries[-1] == _MORE_TEXT
+
+
+def test_generate_refreshes_recent_submenu_from_archive(
+    qapp: QApplication, view_model
+) -> None:
+    """Generating a debrief rebuilds the submenu from the archive's newest page."""
+    archive = FakeArchive(())
+    controller = TrayController(
+        one_shot=FakeOneShot(ExportResult(paths=(_HTML_PATH,))),
+        session=view_model,
+        opener=RecordingOpener(),
+        archive=archive,
+    )
+    # The produced file has now landed on disk, which the archive reports.
+    archive.paths = (_HTML_PATH,)
+
+    _action_named(_menu_of(controller), _LAST_SESSION_TEXT).trigger()
+
+    submenu = _action_named(_menu_of(controller), _RECENT_TEXT).menu()
+    entries = [action.text() for action in submenu.actions()]
+    assert entries == [_HTML_PATH]
 
 
 def test_empty_result_opens_nothing(qapp: QApplication, view_model) -> None:

@@ -15,6 +15,9 @@ British spelling is used in comments. No em dashes appear anywhere.
 
 from __future__ import annotations
 
+from o7debrief.infrastructure.archive.filesystem_debrief_archive import (
+    FilesystemDebriefArchive,
+)
 from o7debrief.infrastructure.autostart.windows_autostart import WindowsAutostart
 from o7debrief.infrastructure.clock.system_clock import SystemClock
 from o7debrief.infrastructure.config.toml_config_provider import TomlConfigProvider
@@ -31,6 +34,7 @@ from o7debrief.infrastructure.sink.filesystem_sink import FilesystemSink
 
 __all__ = [
     "FileJournalSource",
+    "FilesystemDebriefArchive",
     "FilesystemSink",
     "HtmlDebriefExporter",
     "JsonPreferencesStore",

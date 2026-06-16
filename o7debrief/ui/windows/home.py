@@ -2,10 +2,11 @@
 
 A left-click on the tray icon opens this dialog; a right-click still shows the
 full context menu. It presents the live recording status, the two debrief
-actions, any debriefs produced this run and quick links to Settings and About.
-The dialog owns no behaviour of its own: every button reports through an
-injected callable, exactly as the tray menu does, so both entry points drive
-the same use cases and this stays a pure view.
+actions, a page of recent debriefs and quick links to Settings and About. The
+dialog owns no behaviour of its own: every button reports through an injected
+callable, exactly as the tray menu does, so both entry points drive the same use
+cases and this stays a pure view. It renders one page of recents at a time and
+reports previous/next clicks through callbacks; the controller fetches each page.
 
 This module belongs to the ui layer and imports the ui theme helper and PySide6
 only.
@@ -44,7 +45,10 @@ _SETTINGS_TEXT = "Settings"
 _ABOUT_TEXT = "About"
 _CLOSE_TEXT = "Close"
 _RECENT_HEADING = "Recent debriefs"
-_NO_RECENT_TEXT = "No debriefs yet this run."
+_NO_RECENT_TEXT = "No debriefs yet."
+_PREV_TEXT = "Prev"
+_NEXT_TEXT = "Next"
+_PAGE_LABEL = "Page {current} of {total}"
 
 # Dialog geometry and typography, as named layout constants.
 _ICON_PX = 64
@@ -56,10 +60,23 @@ _NO_MARGIN = 0
 # rather than growing the dialog past the bottom of the screen.
 _RECENT_SCROLL_THRESHOLD = 5
 _RECENT_MAX_HEIGHT_PX = 220
+# The scroll panel and its viewport are made transparent so the recents list
+# blends with the dialog. The selectors are scoped to the scroll area and its
+# viewport on purpose: a bare background rule set on the viewport cascades onto
+# the buttons inside and blanks them, leaving dark text on the dark dialog.
+_RECENT_SCROLL_STYLE = (
+    "QScrollArea { background: transparent; }"
+    " QScrollArea > QWidget#qt_scrollarea_viewport { background: transparent; }"
+)
 
 # Title styling, mirroring the heading colour from the shared dialog theme.
 _TITLE_STYLE = f"color: {HEADING_COLOUR}; font-size: 20px; font-weight: bold;"
 _HEADING_STYLE = f"color: {HEADING_COLOUR}; font-weight: bold;"
+
+
+def _noop() -> None:
+    """Do nothing; the default for an unset pager callback."""
+    return None
 
 
 def _heading(text: str) -> QLabel:
@@ -90,6 +107,10 @@ class HomeDialog(QDialog):
         on_settings: Callable[[], None],
         on_about: Callable[[], None],
         on_open_recent: Callable[[str], None],
+        on_prev_page: Callable[[], None] = _noop,
+        on_next_page: Callable[[], None] = _noop,
+        page_index: int = 0,
+        page_count: int = 1,
         icon: QIcon | None = None,
         parent: QWidget | None = None,
     ) -> None:
@@ -100,6 +121,8 @@ class HomeDialog(QDialog):
             self.setWindowIcon(icon)
         apply_dialog_theme(self)
         self._on_open_recent = on_open_recent
+        self._on_prev_page = on_prev_page
+        self._on_next_page = on_next_page
 
         layout = QVBoxLayout(self)
         layout.setSpacing(_SPACING_PX)
@@ -122,19 +145,27 @@ class HomeDialog(QDialog):
         self._recent_holder_layout.setSpacing(_SPACING_PX)
         layout.addWidget(self._recent_holder)
         self._populate_recent(recent)
+        layout.addWidget(self._build_pager())
+        self._update_pager(page_index, page_count)
 
         layout.addWidget(_divider())
         layout.addLayout(self._build_footer(on_settings, on_about))
 
-    def refresh(self, status_text: str, recent: Sequence[str]) -> None:
-        """Update the status line and recent list of an already-open dialog.
-
-        A debrief generated from the tray menu while this dialog is showing
-        would otherwise leave it on the snapshot it was built with; this rebinds
-        the status caption and rebuilds the recent list in place.
-        """
+    def set_status(self, status_text: str) -> None:
+        """Update the live status caption of an already-open dialog."""
         self._status_label.setText(status_text)
+
+    def show_recent_page(
+        self, recent: Sequence[str], page_index: int, page_count: int
+    ) -> None:
+        """Replace the displayed recents page and update the pager controls.
+
+        A debrief generated from the tray menu while this dialog is showing, or a
+        previous/next click, replaces the page in place rather than leaving the
+        dialog on the snapshot it was built with.
+        """
         self._populate_recent(recent)
+        self._update_pager(page_index, page_count)
 
     def showEvent(self, event: QShowEvent) -> None:
         """Bring the dialog to the front when it is first shown.
@@ -223,7 +254,7 @@ class HomeDialog(QDialog):
         scroll.setFrameShape(QFrame.Shape.NoFrame)
         scroll.setFixedHeight(_RECENT_MAX_HEIGHT_PX)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        scroll.viewport().setStyleSheet("background: transparent;")
+        scroll.setStyleSheet(_RECENT_SCROLL_STYLE)
         return scroll
 
     def _recent_button(self, path: str) -> QPushButton:
@@ -234,6 +265,36 @@ class HomeDialog(QDialog):
             lambda _checked=False, target=path: self._on_open_recent(target)
         )
         return button
+
+    def _build_pager(self) -> QWidget:
+        """Build the previous/next pager row shown below the recents list."""
+        self._pager = QWidget()
+        row = QHBoxLayout(self._pager)
+        row.setContentsMargins(_NO_MARGIN, _NO_MARGIN, _NO_MARGIN, _NO_MARGIN)
+        self._prev_button = QPushButton(_PREV_TEXT)
+        self._prev_button.clicked.connect(lambda _checked=False: self._on_prev_page())
+        self._next_button = QPushButton(_NEXT_TEXT)
+        self._next_button.clicked.connect(lambda _checked=False: self._on_next_page())
+        self._page_label = QLabel()
+        self._page_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        row.addWidget(self._prev_button)
+        row.addStretch()
+        row.addWidget(self._page_label)
+        row.addStretch()
+        row.addWidget(self._next_button)
+        return self._pager
+
+    def _update_pager(self, page_index: int, page_count: int) -> None:
+        """Show the pager only for multi-page lists and reflect the position."""
+        multi_page = page_count > 1
+        self._pager.setVisible(multi_page)
+        if not multi_page:
+            return
+        self._page_label.setText(
+            _PAGE_LABEL.format(current=page_index + 1, total=page_count)
+        )
+        self._prev_button.setEnabled(page_index > 0)
+        self._next_button.setEnabled(page_index < page_count - 1)
 
     def _build_footer(
         self, on_settings: Callable[[], None], on_about: Callable[[], None]

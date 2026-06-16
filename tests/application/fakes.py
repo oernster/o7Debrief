@@ -147,6 +147,19 @@ class FakeSink:
         return f"{name}.{suffix}"
 
 
+class FakeArchive:
+    """A DebriefArchive returning a preset list of paths, newest first."""
+
+    def __init__(self, paths: tuple[str, ...] = ()) -> None:
+        self._paths = paths
+
+    def count(self) -> int:
+        return len(self._paths)
+
+    def list_page(self, offset: int, limit: int) -> tuple[str, ...]:
+        return self._paths[offset : offset + limit]
+
+
 class FakeRankStore:
     """A RankSnapshotStore backed by an in-memory dict keyed by fid."""
 

@@ -4,7 +4,7 @@ The controller owns a ``QSystemTrayIcon`` and its ``QMenu``. A right-click
 shows the menu; a left-click opens the home dialog (built through an injected
 factory so tests need no real window). The menu carries a disabled status line
 that mirrors the live recording status, the two debrief actions, a submenu of
-debriefs generated this run, a settings entry and quit.
+recent debriefs from the output directory, a settings entry and quit.
 Both debrief actions drive the same injected one-shot use case (the app's one
 reducer underlies both capture paths) and then open the produced report in the
 browser through the preview helper. A low-frequency ``QTimer`` refreshes the
@@ -29,11 +29,13 @@ from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import QMenu, QSystemTrayIcon
 
 from o7debrief.application.errors import ApplicationError
+from o7debrief.ui.tray.recents_pager import NullArchive, RecentsPager
 from o7debrief.ui.windows.home import HomeDialog
 from o7debrief.ui.windows.preview import open_debrief
 
 if TYPE_CHECKING:  # pragma: no cover - type-only imports, no runtime dependency
     from o7debrief.application.dto.export_result import ExportResult
+    from o7debrief.application.ports.debrief_archive import DebriefArchive
     from o7debrief.application.services.one_shot_debrief_service import (
         OneShotDebriefService,
     )
@@ -55,8 +57,11 @@ _HELP_TEXT = "Help"
 _ABOUT_TEXT = "About o7 Debrief"
 _LICENCE_TEXT = "Licence"
 
-# Caption shown in the Recent debriefs submenu before anything is generated.
+# Caption shown in the Recent debriefs submenu when the directory is empty.
 _NO_RECENT_TEXT = "No debriefs yet"
+# Final submenu entry shown when more debriefs exist than fit on one page; it
+# opens the home dialog, where the full history can be paged through.
+_MORE_TEXT = "More debriefs..."
 
 # Notification titles and bodies for the two outcomes of a generate action.
 _GENERATED_TITLE = "Debrief ready"
@@ -71,6 +76,9 @@ _STATUS_REFRESH_MS = 5000
 
 # Index of the first produced path, used when opening the primary report.
 _PRIMARY_PATH = 0
+
+# How many recent debriefs are shown per page in the submenu and home dialog.
+_RECENT_PAGE_SIZE = 10
 
 # Dark-dossier styling for the tray menu, matching the splash and dialogs so the
 # whole app reads as one piece rather than a native grey menu.
@@ -107,6 +115,7 @@ class TrayController(QObject):
         icon: QIcon | None = None,
         opener: Callable[[str], bool] = open_debrief,
         home_factory: Callable[..., HomeDialog] = HomeDialog,
+        archive: DebriefArchive | None = None,
         on_settings: Callable[[], None] = _noop,
         on_about: Callable[[], None] = _noop,
         on_licence: Callable[[], None] = _noop,
@@ -124,8 +133,10 @@ class TrayController(QObject):
         self._on_about = on_about
         self._on_licence = on_licence
         self._on_quit = on_quit
-        self._recent: list[str] = []
         self._home: HomeDialog | None = None
+        self._pager = RecentsPager(
+            archive if archive is not None else NullArchive(), _RECENT_PAGE_SIZE
+        )
 
         self._tray = QSystemTrayIcon(self)
         if icon is not None:
@@ -189,20 +200,34 @@ class TrayController(QObject):
         return action
 
     def _rebuild_recent_menu(self) -> None:
-        """Repopulate the Recent debriefs submenu from this run's outputs."""
+        """Repopulate the Recent debriefs submenu from the most recent page.
+
+        The submenu always shows the newest page; when more debriefs exist than
+        fit on a page a final entry opens the home dialog, where the full history
+        can be paged through.
+        """
         self._recent_menu.clear()
-        if not self._recent:
+        page = self._pager.first_page()
+        if not page:
             empty = QAction(_NO_RECENT_TEXT, self._recent_menu)
             empty.setEnabled(False)
             self._recent_menu.addAction(empty)
             return
-        for path in self._recent:
+        for path in page:
             self._add_recent_entry(path)
+        if self._pager.has_more():
+            self._add_more_entry()
 
     def _add_recent_entry(self, path: str) -> None:
         """Add a single Recent debriefs entry that reopens its file."""
         action = QAction(path, self._recent_menu)
         action.triggered.connect(lambda _checked=False, p=path: self._opener(p))
+        self._recent_menu.addAction(action)
+
+    def _add_more_entry(self) -> None:
+        """Add a final entry that opens the home dialog to page the history."""
+        action = QAction(_MORE_TEXT, self._recent_menu)
+        action.triggered.connect(lambda _checked=False: self._open_home())
         self._recent_menu.addAction(action)
 
     def _build_help_menu(self) -> QMenu:
@@ -240,21 +265,22 @@ class TrayController(QObject):
         self._handle_result(result)
 
     def _handle_result(self, result: ExportResult) -> None:
-        """Remember produced paths, refresh the menu and open the report.
+        """Refresh the recents views and open the freshly produced report.
 
-        When the home dialog is open its recent list and status are refreshed in
-        place, so a debrief generated from the tray menu while it is showing
-        updates the dialog instead of leaving it on its opening snapshot.
+        The new file is already on disk, so the archive sees it; the submenu and
+        any open home dialog are rebuilt from the newest page. An open home
+        dialog is reset to that first page and its status refreshed, so a debrief
+        generated from the tray menu while it is showing updates the dialog
+        instead of leaving it on its opening snapshot.
         """
         if not result.paths:
             self._notify(_EMPTY_TITLE, _EMPTY_BODY)
             return
-        for path in result.paths:
-            if path not in self._recent:
-                self._recent.append(path)
+        self._pager.reset()
         self._rebuild_recent_menu()
         if self._home is not None:
-            self._home.refresh(self._session.status_text, tuple(self._recent))
+            self._home.set_status(self._session.status_text)
+            self._update_home_recent()
         self._opener(result.paths[_PRIMARY_PATH])
         self._notify(_GENERATED_TITLE, _GENERATED_BODY)
 
@@ -304,14 +330,19 @@ class TrayController(QObject):
         if self._home is not None:
             self._home.bring_to_front()
             return
+        self._pager.reset()
         dialog = self._home_factory(
             self._session.status_text,
-            tuple(self._recent),
+            self._pager.page(),
+            page_index=self._pager.page_index(),
+            page_count=self._pager.page_count(),
             on_debrief_last=self._on_debrief_last,
             on_debrief_history=self._on_debrief_history,
             on_settings=self._on_settings_triggered,
             on_about=self._on_about_triggered,
             on_open_recent=self._opener,
+            on_prev_page=self._on_recent_prev,
+            on_next_page=self._on_recent_next,
             icon=self._icon,
         )
         self._home = dialog
@@ -321,6 +352,25 @@ class TrayController(QObject):
     def _on_home_closed(self, _result: int = 0) -> None:
         """Drop the reference to the home dialog once it has closed."""
         self._home = None
+
+    def _on_recent_prev(self) -> None:
+        """Show the previous page of recents in the open home dialog."""
+        self._pager.to_prev()
+        self._update_home_recent()
+
+    def _on_recent_next(self) -> None:
+        """Show the next page of recents in the open home dialog."""
+        self._pager.to_next()
+        self._update_home_recent()
+
+    def _update_home_recent(self) -> None:
+        """Push the pager's current page to the open home dialog, if any."""
+        if self._home is not None:
+            self._home.show_recent_page(
+                self._pager.page(),
+                self._pager.page_index(),
+                self._pager.page_count(),
+            )
 
     # ------------------------------------------------------------------ status
 
