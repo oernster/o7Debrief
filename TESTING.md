@@ -29,6 +29,8 @@ Excluding these from the hard gate is a correctness decision, not a shortcut: a 
 | ui | Light Qt tests | None | Real `QApplication` under `QT_QPA_PLATFORM=offscreen`; Qt is never mocked. No network. |
 | structural | AST and source scans | File reads | Enforce the architectural invariants as tests so they cannot decay into convention. |
 
+Alongside the per-layer split, a few behavioural guards pin the memory characteristics the app depends on (invariant I9): that a last-session debrief reads back only to the previous `Shutdown` rather than the whole journal, that the all-history debrief streams the journal one file at a time and that the live recorder retains only the current session. These live in the application and infrastructure suites next to the tests above.
+
 ### Structural tests
 
 The structural suite under `tests/structural/` scans the source as an AST or as text and asserts the invariants from [ARCHITECTURE.md](ARCHITECTURE.md):

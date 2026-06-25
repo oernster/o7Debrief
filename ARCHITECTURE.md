@@ -18,8 +18,9 @@ Each invariant below is enforced by a structural test that scans the source as a
 | I6 | No magic numbers in logic. Domain-specific values (thresholds, day numbers, limits, the event taxonomy) come from the TOML configuration or named constants, never from inline literals. | [tests/structural/test_no_magic_numbers.py](tests/structural/test_no_magic_numbers.py) |
 | I7 | Domain types are immutable: frozen dataclasses with `tuple[...]` collections, validated on construction. | [tests/structural/test_domain_purity.py](tests/structural/test_domain_purity.py) (paired with domain unit tests) |
 | I8 | The two capture paths (live tray watcher and cold one-shot) feed one shared reducer, so the same journal bytes yield the same `SessionDebrief` regardless of trigger. | Domain and application unit tests (determinism), supported by I1 and I5 |
+| I9 | Reads are bounded to the session they need, never the whole journal history. A last-session debrief reads back only to the previous `Shutdown`; the all-history debrief streams the journal one file at a time; the long-running tray recorder retains only the session in progress. | Application and infrastructure tests (the backward-scan, streaming and recorder-trim guards) |
 
-Invariants I1 to I6 are the load-bearing structural rules and have dedicated tests. I7 and I8 are properties the structure makes possible and are pinned by the unit-test suite rather than by a single AST scan.
+Invariants I1 to I6 are the load-bearing structural rules and have dedicated tests. I7, I8 and I9 are properties the structure makes possible and are pinned by the test suite rather than by a single AST scan.
 
 ## Layers and components
 
@@ -56,9 +57,9 @@ The domain reads no clock, opens no file and logs nothing. Time comes in as data
 
 The domain plus stdlib only; it never imports infrastructure or UI. It defines the ports (Protocols) that infrastructure implements and the use cases that orchestrate a debrief:
 
-- A journal source port (path discovery, incremental byte-offset tail, parse) and a clock port for the few places that legitimately need wall-clock time (the crash-timeout safety net), kept out of the domain.
+- A journal source port that reads only what a debrief needs: path discovery, an incremental byte-offset tail for the live watcher, a bounded read of the latest session (back only to the previous `Shutdown`) and a per-file streaming read for the all-history debrief, so no path loads the whole journal into memory. A clock port covers the few places that legitimately need wall-clock time (the crash-timeout safety net), kept out of the domain.
 - An exporter port, a configuration port and a release-source port that supplies the latest published version for the opt-in update check.
-- The use cases: a live watch loop that debriefs the session at shutdown, a one-shot debrief of the last session and a one-shot debrief of the full history to date. Every path calls the same domain reducer.
+- The use cases: a live watch loop that debriefs the session at shutdown, a one-shot debrief of the last session and a one-shot debrief of the full history to date. The all-history use case folds the journal file by file, keeping only the moments, the state-bearing events and the window endpoints rather than every event at once. Every path calls the same domain reducer.
 - An update service that compares the running version against the latest release through a pure version comparison and reports whether a newer one exists, so the ui can point the player at the download. It is the only application service that touches the network, and only through the injected release-source port.
 
 A use case may itself be an immutable object holding its injected dependencies.
@@ -67,7 +68,7 @@ A use case may itself be an immutable object holding its injected dependencies.
 
 Implements the application's ports against the real world; it is never imported by the domain or the application. It owns:
 
-- Journal IO: Journal directory discovery, the incremental byte-offset tail that reads only new bytes and the parse skeleton. This IO is reused from the author's EDColonisationAsst, which already solves Journal path discovery and incremental tailing.
+- Journal IO: Journal directory discovery, the incremental byte-offset tail that reads only new bytes, a newest-first backward read that stops as soon as it has bracketed the latest session, a per-file batch iterator for streaming the whole history and the parse skeleton. The tail and discovery are reused from the author's EDColonisationAsst, which already solves Journal path discovery and incremental tailing.
 - Configuration loading from TOML via stdlib `tomllib`, supplying the event taxonomy and any tunable values so the domain stays free of magic numbers.
 - Exporters: the Jinja2 HTML renderer (inlined CSS, zero JavaScript) and the Markdown renderer, plus file writing. Each timeline row renders its activity (domain) glyph with the control mode shown as a compact tag, so a row reads as what the Commander did rather than which control mode held it. The session log is ordered most recent first.
 - A GitHub release source for the update check: a single short, best-effort HTTPS GET built on the standard-library `urllib` (no third-party HTTP dependency), returning the latest release tag or None on any failure.
@@ -97,11 +98,11 @@ journal bytes  ->  parse (infrastructure)  ->  reducer (domain)
                          zero JavaScript)                   paste format)
 ```
 
-Live tray path: the watcher polls the active Journal file's modification time at a low frequency, tails new bytes from the last offset, feeds parsed events to the reducer and on a `Shutdown` event generates the debrief automatically. A crash-timeout acts as a safety net so a session that ends without a clean `Shutdown` still produces a report.
+Live tray path: the watcher polls the active Journal at a low frequency, tails new bytes from the last offset and feeds parsed events to the reducer, retaining only the session in progress so a tray left running for days stays bounded in memory. On a `Shutdown` event it generates the debrief automatically; a crash-timeout acts as a safety net so a session that ends without a clean `Shutdown` still produces a report.
 
-Cold one-shot path: "Debrief my last session" discovers the latest Journal, reads the slice from the last `LoadGame` to the end of the stream, runs the same reducer and renders the same `SessionDebrief`. It works even if o7 Debrief was not running during play.
+Cold one-shot path: "Debrief my last session" reads the newest Journal files backwards, stopping as soon as it has seen enough `Shutdown` events to bracket the latest run (typically the newest file or two), runs the same reducer and renders the same `SessionDebrief`. It never reads the whole history and works even if o7 Debrief was not running during play. "Debrief my history to date" does cover every event but streams the journal one file at a time, folding each file into a bounded summary rather than loading it all at once.
 
-Session isolation falls out of the slice rule: the current session is always "from the last `LoadGame` to the end of the stream", so events from an earlier session never enter the reduction.
+Session isolation is by `Shutdown` bracketing: the latest session is the run ending at the last `Shutdown` (or the end of the log when the game closed without one), starting just after the previous `Shutdown`. Every `LoadGame` within that run, including those a return to the main menu fires, stays in the session, so an earlier session never enters the reduction.
 
 Rank handling reflects what the journal can actually tell us. A `Promotion` (a tier-up) is reported in the session it happens. Fractional rank percentages are only snapshotted by the journal at startup, so they are finalised at the next launch; only ranks that changed are shown, never a full unchanged ladder.
 
@@ -125,7 +126,8 @@ Rank handling reflects what the journal can actually tell us. A `Promotion` (a t
 | A desktop executable, not a local server. | The tool reads a local file and writes a local report; a server adds ports, lifecycle and attack surface for no user benefit. Local-first keeps the player's data on the player's machine. | A background HTTP service, a browser-based UI talking to localhost, any inbound network surface. The one exception is the opt-in update check: a single outbound GET the player triggers by hand, which never downloads or runs anything and fails silently. |
 | Batch reporting, not live. | The value is reflective: a coherent end-of-session summary. A live feed is a different product (an overlay) with different constraints. | Real-time on-screen updates, an in-game overlay, continuous streaming of partial state. |
 | TOML configuration for the event taxonomy. | The mapping from raw events to moments is data, not code; holding it in TOML (read with stdlib `tomllib`) keeps magic numbers and domain-specific mappings out of the logic and makes the taxonomy reviewable. | Hardcoded event-to-moment mappings and tuning constants scattered through the codebase. |
-| Session isolation by last-`LoadGame` slice. | A session is unambiguously "the last `LoadGame` to the end of the stream". Defining it structurally means a previous session can never bleed into the current debrief. | Heuristic session boundaries, time-window guesses or accidental inclusion of a prior session's events. |
+| Session isolation by `Shutdown` bracketing. | A session is one game run, bounded by `Shutdown` events; the latest is the run ending at the last `Shutdown`. Anchoring on `Shutdown` rather than `LoadGame` keeps a run that returned to the main menu (which fires a fresh `LoadGame`) whole. Defining it structurally means a previous session can never bleed into the current debrief. | Heuristic session boundaries, time-window guesses and shrinking a run to its final leg by anchoring on `LoadGame`. |
+| Reads bounded to the session, not the journal history. | A debrief is a function of one session's bytes, so reading the entire journal to produce one was waste that grew without limit as a Commander's logs piled up. The last-session read walks back only to the previous `Shutdown`, the all-history read streams file by file and the tray recorder keeps only the current session. | Loading the whole journal history into memory for a debrief; an always-on tray whose memory grows with uptime. |
 
 ## Quality enforcement
 

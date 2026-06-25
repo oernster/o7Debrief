@@ -25,8 +25,9 @@ o7 Debrief currently supports Windows only. It is built and tested as a standalo
 
 - Live system-tray watcher that follows the active Journal with a low-frequency modification-time poll (no `watchdog` dependency) and automatically generates a debrief on `Shutdown`, with a crash-timeout safety net for sessions that end without a clean shutdown.
 - Cold one-shot mode: "Debrief my last session" reads the most recent session while "Debrief my history to date" covers everything you have played so far; both produce a report even if o7 Debrief was not running while you played.
+- Light on resources: o7 Debrief reads only the events each debrief needs rather than the whole journal, so it stays small and quiet in the tray no matter how many years of logs you have. A last-session debrief reads back only as far as the previous session; the all-history report streams the journal file by file; the live watcher keeps only the session in progress.
 - A home screen on a left-click of the tray icon: the live status, the two debrief actions and the reports generated this run, all in one place. A right-click opens the full tray menu.
-- Session isolation: the latest session is the slice of the journal from the last `LoadGame` to the end of the stream, so a previous session never bleeds into the current one.
+- Session isolation: the latest session is the run bounded by `Shutdown` events (the run ending at the last `Shutdown`), with every `LoadGame` inside it kept, so a previous session never bleeds into the current one.
 - Rank reporting that is honest about journal timing: tier-ups (a `Promotion`) are reported immediately and fractional rank percentages are finalised at the next launch because the journal only snapshots rank progress at startup. Only ranks that actually changed are shown.
 - A single self-contained HTML report (inlined CSS, zero JavaScript) as the canonical output, plus a Markdown rendering for pasting elsewhere. A default export format is configurable and can be overridden per export.
 - A configuration-driven event taxonomy held in TOML, so the mapping from raw events to moments has no magic numbers buried in code.
