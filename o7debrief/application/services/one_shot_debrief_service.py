@@ -85,18 +85,23 @@ class OneShotDebriefService:
     ) -> ExportResult:
         """Read all journal history to date, then build, present and export it.
 
-        Unlike the last-session debrief this reads every recorded event. It
-        loads the saved rank snapshot to present the rank diff against it but
+        Unlike the last-session debrief this covers every recorded event, but
+        it streams the journal one file at a time and folds each batch into a
+        bounded collection rather than loading the whole history into memory.
+        It loads the saved rank snapshot to present the rank diff against it but
         never saves a new one, so presenting the diff stays read-only and the
         all-history view cannot overwrite the last-session baseline. Handy for
         reviewing or for testing the app without playing a fresh session.
         """
-        events = self._journal_source.read_all()
+        collection = self._debrief_builder.collect_history(
+            self._journal_source.iter_event_batches()
+        )
+        events = collection.state_events
         commander = self._resolve_commander(events, commander_hint)
         snapshot = self._rank_store.load(commander)
         start_tiers, start_pcts = _snapshot_starts(snapshot)
         deltas, _end_pcts = self._rank_analyzer.analyse(events, start_tiers, start_pcts)
-        debrief = self._debrief_builder.build(commander, events, deltas)
+        debrief = self._debrief_builder.build_collected(commander, collection, deltas)
         view = self._presenter.present(debrief)
         return self._export_service.export(view, request or self._default_request())
 

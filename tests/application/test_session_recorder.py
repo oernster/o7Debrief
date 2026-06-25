@@ -62,3 +62,21 @@ def test_poll_with_no_new_events_keeps_offset() -> None:
 
     assert result == ()
     assert source.read_new_calls == [0]
+
+
+def test_poll_trims_to_the_current_session_across_a_shutdown() -> None:
+    # A finished run (ending in Shutdown) then the first event of a fresh run,
+    # delivered over two polls.
+    finished = (event("LoadGame", 0), event("Shutdown", 1))
+    fresh = (event("LoadGame", 2),)
+    source = FakeJournalSource(new_batches=((finished, 2), (fresh, 3)))
+    recorder = SessionRecorder(source)
+
+    after_finished = recorder.poll()
+    after_fresh = recorder.poll()
+
+    assert [e.event_type for e in after_finished] == ["LoadGame", "Shutdown"]
+    # The finished run is dropped once the new run begins, so the recorder never
+    # accumulates events across sessions for the life of the always-on tray app.
+    assert [e.event_type for e in after_fresh] == ["LoadGame"]
+    assert recorder.status().event_count == 1

@@ -7,7 +7,7 @@ events only through this port, so it never depends on the file format.
 
 from __future__ import annotations
 
-from typing import Protocol
+from typing import Iterator, Protocol
 
 from o7debrief.domain.model.raw_event import RawEvent
 
@@ -30,5 +30,13 @@ class JournalSource(Protocol):
 
         The returned offset is passed back on the next call so the source
         can resume from where it left off (a tail-style incremental read).
+        """
+        ...
+
+    def iter_event_batches(self) -> Iterator[tuple[RawEvent, ...]]:
+        """Yield the whole history one file's events at a time, oldest first.
+
+        Lets the application fold an all-history debrief without ever holding
+        every event in memory at once.
         """
         ...

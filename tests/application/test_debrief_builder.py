@@ -246,3 +246,100 @@ def test_build_records_ship_changes_as_timeline_moments() -> None:
     assert swaps[0].label == (
         "Swapped from Cobra Mk III (STARDUST) to Federal Corvette (BIG BERTHA)."
     )
+
+
+def test_collect_history_keeps_only_state_events_and_window_endpoints() -> None:
+    builder = DebriefBuilder(spec())
+    batch_one = (
+        event("Commander", 0, Name="Jameson", FID="F1234"),
+        event("LoadGame", 1, Ship="cobramkiii"),
+        event("FSDJump", 2, StarSystem="Sol"),
+        event("Shutdown", 3),
+    )
+    batch_two = (
+        event("LoadGame", 4, Ship="cobramkiii"),
+        event("Promotion", 5, Combat=4),
+        event("Shutdown", 6),
+    )
+
+    collection = builder.collect_history([batch_one, batch_two])
+
+    # Commander/rank/ship events are retained; plain events (FSDJump, Shutdown)
+    # are not, so the whole history is never held at once.
+    assert [e.event_type for e in collection.state_events] == [
+        "Commander",
+        "LoadGame",
+        "LoadGame",
+        "Promotion",
+    ]
+    # Only the earliest and latest events are kept, to build the window.
+    assert collection.window_events == (batch_one[0], batch_two[-1])
+
+
+def test_collect_history_of_no_batches_is_empty() -> None:
+    collection = DebriefBuilder(spec()).collect_history([])
+
+    assert collection.moments == ()
+    assert collection.state_events == ()
+    assert collection.window_events == ()
+
+
+def test_collect_history_tracks_earliest_and_latest_out_of_order() -> None:
+    # A batch whose events are not in time order exercises both the
+    # "earlier than the earliest" and "later than the latest" updates.
+    middle = event("FSDJump", 5, StarSystem="Sol")
+    earliest = event("FSDJump", 2, StarSystem="Lave")
+    latest = event("FSDJump", 8, StarSystem="Diso")
+
+    collection = DebriefBuilder(spec()).collect_history([(middle, earliest, latest)])
+
+    assert collection.window_events == (earliest, latest)
+
+
+def test_build_collected_matches_a_whole_history_build() -> None:
+    # The streamed all-history build must produce exactly what a single
+    # whole-history build would, only without holding every event at once.
+    builder = DebriefBuilder(spec())
+    batch_one = (
+        event(
+            "LoadGame",
+            0,
+            Ship="cobramkiii",
+            Ship_Localised="Cobra Mk III",
+            ShipID=1,
+            ShipName="STARDUST",
+        ),
+        event("FSDJump", 1, StarSystem="Sol"),
+        event("Shutdown", 2),
+    )
+    batch_two = (
+        event(
+            "LoadGame",
+            3,
+            Ship="cobramkiii",
+            Ship_Localised="Cobra Mk III",
+            ShipID=1,
+            ShipName="STARDUST",
+        ),
+        event(
+            "ShipyardSwap",
+            4,
+            ShipType="federation_corvette",
+            ShipType_Localised="Federal Corvette",
+            ShipID=2,
+            StoreShipID=1,
+            StoreOldShip="CobraMkIII",
+        ),
+        event(
+            "Loadout", 5, Ship="federation_corvette", ShipID=2, ShipName="BIG BERTHA"
+        ),
+        event("Shutdown", 6),
+    )
+    all_events = batch_one + batch_two
+
+    built = builder.build(commander(), all_events, ())
+    collected = builder.build_collected(
+        commander(), builder.collect_history([batch_one, batch_two]), ()
+    )
+
+    assert collected == built

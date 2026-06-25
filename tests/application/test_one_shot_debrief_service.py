@@ -74,11 +74,14 @@ def _build_service(
     *,
     latest=(),
     all_events=(),
+    event_batches=None,
     store: FakeRankStore,
     exporters,
     preferences_store=None,
 ):
-    source = FakeJournalSource(latest=latest, all_events=all_events)
+    source = FakeJournalSource(
+        latest=latest, all_events=all_events, event_batches=event_batches
+    )
     the_spec = spec()
     return OneShotDebriefService(
         journal_source=source,
@@ -249,6 +252,39 @@ def test_debrief_all_history_honours_an_explicit_request() -> None:
 
     assert len(result.paths) == 1
     assert len(md.rendered) == 1
+    assert store.saved == []
+
+
+def test_debrief_all_history_streams_file_by_file_without_read_all() -> None:
+    store = FakeRankStore()
+    md = FakeExporter("md", b"# debrief")
+    # The history arrives as two separate per-file batches, never one big read.
+    batches = (
+        (
+            event("Commander", 0, Name="Jameson", FID="F1234"),
+            event("LoadGame", 1, Ship="cobramkiii"),
+            event("Promotion", 2, Combat=4),
+            event("Shutdown", 3),
+        ),
+        (
+            event("LoadGame", 4, Ship="cobramkiii"),
+            event("Bounty", 5, Target="Pirate", TotalReward=500000),
+            event("Shutdown", 6),
+        ),
+    )
+    service = _build_service(event_batches=batches, store=store, exporters=(md,))
+
+    result = service.debrief_all_history(request=RenderRequest(("md",), "/out"))
+
+    assert len(result.paths) == 1
+    # It streamed the journal in batches and never materialised the whole
+    # history through read_all.
+    source = service._journal_source
+    assert source.iter_batches_calls == 1
+    assert source.read_all_calls == 0
+    # The commander still resolves from the streamed state events.
+    assert store.load_calls == ["F1234"]
+    # An all-history debrief never overwrites the last-session baseline.
     assert store.saved == []
 
 

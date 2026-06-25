@@ -8,6 +8,8 @@ domain, never a mock of it. No infrastructure is imported here.
 
 from __future__ import annotations
 
+from typing import Iterator
+
 from o7debrief.application.dto.debrief_view import DebriefView
 from o7debrief.application.dto.preferences import Preferences
 from o7debrief.application.dto.rank_snapshot import RankSnapshot
@@ -86,13 +88,18 @@ class FakeJournalSource:
         all_events: tuple[RawEvent, ...] = (),
         latest: tuple[RawEvent, ...] = (),
         new_batches: tuple[tuple[tuple[RawEvent, ...], int], ...] = (),
+        event_batches: tuple[tuple[RawEvent, ...], ...] | None = None,
     ) -> None:
         self._all = all_events
         self._latest = latest
         self._new_batches = list(new_batches)
+        self._event_batches = event_batches
         self.read_new_calls: list[int] = []
+        self.read_all_calls = 0
+        self.iter_batches_calls = 0
 
     def read_all(self) -> tuple[RawEvent, ...]:
+        self.read_all_calls += 1
         return self._all
 
     def read_latest_session(self) -> tuple[RawEvent, ...]:
@@ -103,6 +110,14 @@ class FakeJournalSource:
         if self._new_batches:
             return self._new_batches.pop(0)
         return (), since_offset
+
+    def iter_event_batches(self) -> Iterator[tuple[RawEvent, ...]]:
+        self.iter_batches_calls += 1
+        if self._event_batches is not None:
+            return iter(self._event_batches)
+        if self._all:
+            return iter((self._all,))
+        return iter(())
 
 
 class FakeReleaseSource:

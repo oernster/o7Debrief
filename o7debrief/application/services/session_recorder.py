@@ -11,6 +11,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from o7debrief.domain.aggregation.session_bracketer import latest_session
+
 if TYPE_CHECKING:
     from o7debrief.application.ports.journal_source import JournalSource
     from o7debrief.domain.model.raw_event import RawEvent
@@ -47,14 +49,18 @@ class SessionRecorder:
         return self._events
 
     def poll(self) -> tuple[RawEvent, ...]:
-        """Append newly written events since the last poll; return all so far.
+        """Append newly written events, trim to the current session, return it.
 
-        Uses the source's incremental read so repeated polls accumulate the
-        session rather than re-reading the whole journal each time.
+        Uses the source's incremental read so each poll only fetches what was
+        appended since the last one, then keeps only the latest session's
+        events. Trimming on every poll bounds the recorder to a single session
+        for the life of the always-on tray app: without it the held events
+        would grow without limit, accumulating every event across every session
+        and journal-file rotation until the app was restarted.
         """
         new_events, new_offset = self._journal_source.read_new(self._offset)
         self._offset = new_offset
-        self._events = self._events + new_events
+        self._events = latest_session(self._events + new_events)
         return self._events
 
     def status(self) -> SessionStatus:
