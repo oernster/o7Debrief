@@ -21,6 +21,8 @@ from o7debrief.domain.model.rollups import (
     MiningRollup,
     MissionRollup,
     OnFootRollup,
+    SlfRollup,
+    SlvRollup,
     SrvRollup,
     TradeRollup,
 )
@@ -46,6 +48,8 @@ _ONE_OCCURRENCE = 1
 _MODE_ORDER: tuple[ActivityMode, ...] = (
     ActivityMode.SHIP,
     ActivityMode.SRV,
+    ActivityMode.SLV,
+    ActivityMode.SLF,
     ActivityMode.ON_FOOT,
 )
 
@@ -139,6 +143,18 @@ def _srv(moments: tuple[ConceptualMoment, ...]) -> SrvRollup:
     return SrvRollup(deployments=_count(moments, MomentKind.SRV_DEPLOY))
 
 
+def _slv(moments: tuple[ConceptualMoment, ...]) -> SlvRollup:
+    return SlvRollup(
+        deployments=_count(moments, MomentKind.SLV_DEPLOY),
+        hangars_bought=_count(moments, MomentKind.VESSEL_HANGAR_BUY),
+        hangars_sold=_count(moments, MomentKind.VESSEL_HANGAR_SELL),
+    )
+
+
+def _slf(moments: tuple[ConceptualMoment, ...]) -> SlfRollup:
+    return SlfRollup(deployments=_count(moments, MomentKind.SLF_DEPLOY))
+
+
 def _on_foot(moments: tuple[ConceptualMoment, ...]) -> OnFootRollup:
     return OnFootRollup(
         disembarks=_count(moments, MomentKind.DISEMBARK),
@@ -200,6 +216,8 @@ def _activity(moments: tuple[ConceptualMoment, ...]) -> ActivityRollup:
         carrier=rollup(ActivityDomain.CARRIER, _carrier),
         exobiology=rollup(ActivityDomain.EXOBIOLOGY, _exobiology),
         srv=rollup(ActivityDomain.SRV, _srv),
+        slv=rollup(ActivityDomain.SLV, _slv),
+        slf=rollup(ActivityDomain.SLF, _slf),
         on_foot=rollup(ActivityDomain.ON_FOOT, _on_foot),
         modes_used=_modes_used(moments),
     )

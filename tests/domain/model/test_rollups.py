@@ -13,6 +13,8 @@ from o7debrief.domain.model.rollups import (
     MiningRollup,
     MissionRollup,
     OnFootRollup,
+    SlfRollup,
+    SlvRollup,
     SrvRollup,
     TradeRollup,
 )
@@ -34,6 +36,10 @@ def test_rollup_defaults_are_empty() -> None:
     assert CarrierRollup().jumps == 0
     assert ExobiologyRollup().sold.value == 0
     assert SrvRollup().deployments == 0
+    assert SlvRollup().deployments == 0
+    assert SlvRollup().hangars_bought == 0
+    assert SlvRollup().hangars_sold == 0
+    assert SlfRollup().deployments == 0
     assert OnFootRollup().disembarks == 0
     assert OnFootRollup().settlements == 0
 
@@ -67,6 +73,8 @@ def test_active_domains_with_all_present_covers_every_branch() -> None:
         carrier=CarrierRollup(),
         exobiology=ExobiologyRollup(),
         srv=SrvRollup(),
+        slv=SlvRollup(),
+        slf=SlfRollup(),
         on_foot=OnFootRollup(),
         modes_used=(ActivityMode.SHIP,),
     )
@@ -81,6 +89,8 @@ def test_active_domains_with_all_present_covers_every_branch() -> None:
         ActivityDomain.CARRIER,
         ActivityDomain.EXOBIOLOGY,
         ActivityDomain.SRV,
+        ActivityDomain.SLV,
+        ActivityDomain.SLF,
         ActivityDomain.ON_FOOT,
     )
     assert rollup.modes_used == (ActivityMode.SHIP,)

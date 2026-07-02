@@ -28,6 +28,8 @@ _EMOJI_BY_TOKEN: dict[str, str] = {
     "wrench": "\U0001f527",
     "anchor": "⚓",
     "buggy": "\U0001f699",
+    "helicopter": "\U0001f681",
+    "fighter": "\U0001f6e9️",
     "boot": "\U0001f97e",
     "leaf": "\U0001f343",
     "ship": "\U0001f6f8",

@@ -45,6 +45,10 @@ _CARRIER_JUMPS = ("carrier.jumps", "Carrier jumps")
 _SAMPLES = ("exobiology.samples", "Samples")
 _SOLD = ("exobiology.sold", "Organic data sold")
 _DEPLOYMENTS = ("srv.deployments", "Deployments")
+_SLV_DEPLOYMENTS = ("slv.deployments", "Deployments")
+_HANGARS_BOUGHT = ("slv.hangars_bought", "Hangars bought")
+_HANGARS_SOLD = ("slv.hangars_sold", "Hangars sold")
+_SLF_DEPLOYMENTS = ("slf.deployments", "Deployments")
 _DISEMBARKS = ("on_foot.disembarks", "Disembarks")
 _SETTLEMENTS = ("on_foot.settlements", "Settlements")
 
@@ -137,6 +141,18 @@ def _srv_stats(rollup, fmt, resolver) -> tuple[DomainStat, ...]:
     return (_stat(resolver, _DEPLOYMENTS, fmt.integer(rollup.deployments)),)
 
 
+def _slv_stats(rollup, fmt, resolver) -> tuple[DomainStat, ...]:
+    return (
+        _stat(resolver, _SLV_DEPLOYMENTS, fmt.integer(rollup.deployments)),
+        _stat(resolver, _HANGARS_BOUGHT, fmt.integer(rollup.hangars_bought)),
+        _stat(resolver, _HANGARS_SOLD, fmt.integer(rollup.hangars_sold)),
+    )
+
+
+def _slf_stats(rollup, fmt, resolver) -> tuple[DomainStat, ...]:
+    return (_stat(resolver, _SLF_DEPLOYMENTS, fmt.integer(rollup.deployments)),)
+
+
 def _on_foot_stats(rollup, fmt, resolver) -> tuple[DomainStat, ...]:
     return (
         _stat(resolver, _DISEMBARKS, fmt.integer(rollup.disembarks)),
@@ -158,6 +174,8 @@ _BUILDERS: tuple[tuple[str, str, object], ...] = (
     ("carrier", "carrier", _carrier_stats),
     ("exobiology", "exobiology", _exobiology_stats),
     ("srv", "srv", _srv_stats),
+    ("slv", "slv", _slv_stats),
+    ("slf", "slf", _slf_stats),
     ("on_foot", "on_foot", _on_foot_stats),
 )
 

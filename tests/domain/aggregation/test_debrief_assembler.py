@@ -124,15 +124,37 @@ def test_full_session_populates_every_rollup() -> None:
             mode=ActivityMode.SRV,
         ),
         _moment(
+            MomentKind.SLV_DEPLOY,
+            ActivityDomain.SLV,
+            17,
+            mode=ActivityMode.SLV,
+        ),
+        _moment(
+            MomentKind.VESSEL_HANGAR_BUY,
+            ActivityDomain.SLV,
+            18,
+        ),
+        _moment(
+            MomentKind.VESSEL_HANGAR_SELL,
+            ActivityDomain.SLV,
+            19,
+        ),
+        _moment(
+            MomentKind.SLF_DEPLOY,
+            ActivityDomain.SLF,
+            19,
+            mode=ActivityMode.SLF,
+        ),
+        _moment(
             MomentKind.DISEMBARK,
             ActivityDomain.ON_FOOT,
-            17,
+            20,
             mode=ActivityMode.ON_FOOT,
         ),
         _moment(
             MomentKind.SETTLEMENT_VISIT,
             ActivityDomain.ON_FOOT,
-            18,
+            21,
             mode=ActivityMode.ON_FOOT,
         ),
     )
@@ -160,6 +182,10 @@ def test_full_session_populates_every_rollup() -> None:
     assert activity.exobiology.samples == 1
     assert activity.exobiology.sold.value == 9000
     assert activity.srv.deployments == 1
+    assert activity.slv.deployments == 1
+    assert activity.slv.hangars_bought == 1
+    assert activity.slv.hangars_sold == 1
+    assert activity.slf.deployments == 1
     assert activity.on_foot.disembarks == 1
     assert activity.on_foot.settlements == 1
 
@@ -174,11 +200,15 @@ def test_full_session_populates_every_rollup() -> None:
         ActivityDomain.CARRIER,
         ActivityDomain.EXOBIOLOGY,
         ActivityDomain.SRV,
+        ActivityDomain.SLV,
+        ActivityDomain.SLF,
         ActivityDomain.ON_FOOT,
     )
     assert activity.modes_used == (
         ActivityMode.SHIP,
         ActivityMode.SRV,
+        ActivityMode.SLV,
+        ActivityMode.SLF,
         ActivityMode.ON_FOOT,
     )
     expected_net = 30000 + 50000 + 20000 + 1000 + 4000 + 15000 + 9000
@@ -199,6 +229,8 @@ def test_partial_session_leaves_unused_rollups_none() -> None:
     assert activity.carrier is None
     assert activity.exobiology is None
     assert activity.srv is None
+    assert activity.slv is None
+    assert activity.slf is None
     assert activity.on_foot is None
     assert activity.active_domains == (ActivityDomain.TRAVEL,)
 

@@ -23,6 +23,8 @@ from o7debrief.domain.model.rollups import (
     MiningRollup,
     MissionRollup,
     OnFootRollup,
+    SlfRollup,
+    SlvRollup,
     SrvRollup,
     TradeRollup,
 )
@@ -69,7 +71,7 @@ def moment(
 
 
 def full_activity() -> ActivityRollup:
-    """Return an ActivityRollup with every one of the eleven domains present."""
+    """Return an ActivityRollup with every one of the thirteen domains present."""
     return ActivityRollup(
         flight=FlightRollup(jumps=3, distance_ly=120),
         exploration=ExplorationRollup(
@@ -86,6 +88,8 @@ def full_activity() -> ActivityRollup:
         carrier=CarrierRollup(jumps=1),
         exobiology=ExobiologyRollup(samples=6, sold=Credits(40000)),
         srv=SrvRollup(deployments=2),
+        slv=SlvRollup(deployments=1, hangars_bought=1, hangars_sold=1),
+        slf=SlfRollup(deployments=2),
         on_foot=OnFootRollup(disembarks=3, settlements=1),
         modes_used=(ActivityMode.SHIP, ActivityMode.SRV, ActivityMode.ON_FOOT),
     )

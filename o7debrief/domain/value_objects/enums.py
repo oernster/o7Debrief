@@ -21,6 +21,8 @@ class ActivityMode(Enum):
 
     SHIP = auto()
     SRV = auto()
+    SLV = auto()
+    SLF = auto()
     ON_FOOT = auto()
 
 
@@ -36,6 +38,8 @@ class ActivityDomain(Enum):
     ENGINEERING = auto()
     CARRIER = auto()
     SRV = auto()
+    SLV = auto()
+    SLF = auto()
     ON_FOOT = auto()
     EXOBIOLOGY = auto()
     SHIPYARD = auto()
@@ -61,6 +65,14 @@ class MomentKind(Enum):
     EXOBIO_SAMPLE = auto()
     EXOBIO_SELL = auto()
     SRV_DEPLOY = auto()
+    SLV_DEPLOY = auto()
+    SLV_DOCK = auto()
+    SLV_DESTROYED = auto()
+    SLF_DEPLOY = auto()
+    SLF_DOCK = auto()
+    SLF_DESTROYED = auto()
+    VESSEL_HANGAR_BUY = auto()
+    VESSEL_HANGAR_SELL = auto()
     DISEMBARK = auto()
     SETTLEMENT_VISIT = auto()
     PROMOTION = auto()

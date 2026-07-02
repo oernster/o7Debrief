@@ -1,7 +1,7 @@
 """Per-domain rollups and the aggregate ActivityRollup.
 
 Each rollup summarises one gameplay domain with a small set of integer,
-Credits or tuple fields. ``ActivityRollup`` composes the eleven optional
+Credits or tuple fields. ``ActivityRollup`` composes the thirteen optional
 domain rollups and exposes which domains were actually active.
 """
 
@@ -23,6 +23,8 @@ __all__ = [
     "CarrierRollup",
     "ExobiologyRollup",
     "SrvRollup",
+    "SlvRollup",
+    "SlfRollup",
     "OnFootRollup",
     "ActivityRollup",
 ]
@@ -110,6 +112,29 @@ class SrvRollup:
 
 
 @dataclass(frozen=True, slots=True)
+class SlvRollup:
+    """Ship-launched vessel summary: Nomad deployments and hangar trading.
+
+    ``deployments`` counts how many times the vessel was launched onto a
+    surface; ``hangars_bought`` and ``hangars_sold`` count Vessel Hangar
+    module purchases and sales (of any size). Credit flows are deliberately
+    not summed here so vessel outfitting does not distort net-credit totals,
+    matching how ship-module and market purchases are treated elsewhere.
+    """
+
+    deployments: int = 0
+    hangars_bought: int = 0
+    hangars_sold: int = 0
+
+
+@dataclass(frozen=True, slots=True)
+class SlfRollup:
+    """Ship-launched fighter summary: number of fighter deployments."""
+
+    deployments: int = 0
+
+
+@dataclass(frozen=True, slots=True)
 class OnFootRollup:
     """On-foot summary: disembarks and settlements visited."""
 
@@ -131,13 +156,15 @@ _DOMAIN_BY_ATTR: tuple[tuple[str, ActivityDomain], ...] = (
     ("carrier", ActivityDomain.CARRIER),
     ("exobiology", ActivityDomain.EXOBIOLOGY),
     ("srv", ActivityDomain.SRV),
+    ("slv", ActivityDomain.SLV),
+    ("slf", ActivityDomain.SLF),
     ("on_foot", ActivityDomain.ON_FOOT),
 )
 
 
 @dataclass(frozen=True, slots=True)
 class ActivityRollup:
-    """All eleven domain rollups plus the set of control modes used."""
+    """All thirteen domain rollups plus the set of control modes used."""
 
     flight: FlightRollup | None = None
     exploration: ExplorationRollup | None = None
@@ -149,6 +176,8 @@ class ActivityRollup:
     carrier: CarrierRollup | None = None
     exobiology: ExobiologyRollup | None = None
     srv: SrvRollup | None = None
+    slv: SlvRollup | None = None
+    slf: SlfRollup | None = None
     on_foot: OnFootRollup | None = None
     modes_used: tuple[ActivityMode, ...] = ()
 

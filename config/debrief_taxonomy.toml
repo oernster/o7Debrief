@@ -20,6 +20,8 @@ section_order = [
     "missions",
     "engineering",
     "srv",
+    "slv",
+    "slf",
     "on_foot",
     "carrier",
     "shipyard",
@@ -97,6 +99,18 @@ icon = "buggy"
 default_mode = "srv"
 
 [[domain]]
+key = "slv"
+title = "Ship-Launched Vessel"
+icon = "helicopter"
+default_mode = "slv"
+
+[[domain]]
+key = "slf"
+title = "Ship-Launched Fighter"
+icon = "fighter"
+default_mode = "slf"
+
+[[domain]]
 key = "on_foot"
 title = "On Foot"
 icon = "boot"
@@ -128,6 +142,16 @@ tag = "S"
 label = "SRV"
 icon = "buggy"
 tag = "R"
+
+[modes.slv]
+label = "Ship-Launched Vessel"
+icon = "helicopter"
+tag = "V"
+
+[modes.slf]
+label = "Ship-Launched Fighter"
+icon = "fighter"
+tag = "L"
 
 [modes.foot]
 label = "On Foot"
@@ -254,6 +278,114 @@ domain = "srv"
 mode = "srv"
 kind = "srv_deploy"
 text = "Deployed the SRV onto the surface."
+
+# Ship-Launched Vessel (the Nomad, first SLV, 2026). Confirmed against a live
+# journal: the Nomad is asymmetric. It DEPLOYS through the ship-launched fighter
+# path (a LaunchFighter whose Loadout is a Nomad variant) and DOCKS through the
+# SRV path (a DockSRV whose SRVType is the vessel, localised "Nomad"). Because
+# LaunchFighter is shared with genuine fighters, a where-filter restricts the
+# deployment to Nomad loadouts. Docking and loss are control-mode transitions in
+# the phase tracker (DockSRV and FighterDestroyed both return to the ship), so
+# only the deployment is a timeline moment here, mirroring how the SRV is
+# treated. Nomad loadout variants are buyable with ARX or in-game credits;
+# add any further variant to the where_contains list below (a one-line edit).
+[[moment]]
+event = "LaunchFighter"
+domain = "slv"
+mode = "slv"
+kind = "slv_deploy"
+where_field = "Loadout"
+where_contains = ["galactic", "stellar", "standard"]
+text = "Deployed the Nomad onto the surface."
+
+# The Nomad docks through the SRV path (DockSRV, SRVType lander01, localised
+# "Nomad"), shared with the buggy, so the where-filter restricts this to the
+# vessel. The mode after docking is the ship, so the row carries the ship tag.
+[[moment]]
+event = "DockSRV"
+domain = "slv"
+mode = "ship"
+kind = "slv_dock"
+where_field = "SRVType"
+where_contains = ["lander"]
+text = "Docked the Nomad."
+
+# Losing the vessel fires SRVDestroyed (SRVType lander01), shared with the buggy,
+# so the where-filter restricts this to the vessel. The row names the vessel type
+# from the event's SRVType_Localised, so no vessel name is hardcoded here.
+[[moment]]
+event = "SRVDestroyed"
+domain = "slv"
+mode = "ship"
+kind = "slv_destroyed"
+where_field = "SRVType"
+where_contains = ["lander"]
+text = "Lost the Nomad."
+
+# Ship-launched fighters (the F63 Condor, GU-97, Taipan and the Guardian hybrids
+# Trident/Javelin/Lance, each with loadout variants such as Gelid or Rogue).
+# They share LaunchFighter with the Nomad, so these fighter rules MUST follow the
+# Nomad slv_deploy rule above: the first rule whose filter matches wins, and the
+# fighter deploy has no filter (it catches every non-Nomad LaunchFighter). The
+# fighter type is named from the LaunchFighter loadout; DockFighter and
+# FighterDestroyed carry only the vehicle ID, so their type is recovered by
+# matching that ID against the launch (handled in the reducer).
+[[moment]]
+event = "LaunchFighter"
+domain = "slf"
+mode = "slf"
+kind = "slf_deploy"
+text = "Deployed a ship-launched fighter."
+
+[[moment]]
+event = "DockFighter"
+domain = "slf"
+mode = "ship"
+kind = "slf_dock"
+text = "Docked a ship-launched fighter."
+
+[[moment]]
+event = "FighterDestroyed"
+domain = "slf"
+mode = "ship"
+kind = "slf_destroyed"
+text = "Lost a ship-launched fighter."
+
+# Vessel Hangar module (Mk I / Mk II, any size) bought, sold or traded in.
+# The Vessel Hangar that houses the Nomad is the game's Fighter Bay module: the
+# player-facing Mk I is Int_FighterBay_Size{5,6,7}_Class1 and the new Mk II is
+# Int_FighterBayMk2_Size{5,6,7}_Class1 (confirmed against the shipyard module
+# list). These reuse the standard outfitting events, which fire for every
+# module, so a where-filter restricts them to hangar bays: the moment is created
+# only when the item name contains the "fighterbay" token below (case-
+# insensitive, so it also matches "fighterbaymk2"). The token, not the event, is
+# the thing to adjust if the module's internal name changes in a live journal.
+[[moment]]
+event = "ModuleBuy"
+domain = "slv"
+mode = "ship"
+kind = "vessel_hangar_buy"
+where_field = "BuyItem"
+where_contains = ["fighterbay"]
+text = "Bought a Vessel Hangar module."
+
+[[moment]]
+event = "ModuleSell"
+domain = "slv"
+mode = "ship"
+kind = "vessel_hangar_sell"
+where_field = "SellItem"
+where_contains = ["fighterbay"]
+text = "Sold a Vessel Hangar module."
+
+[[moment]]
+event = "ModuleSellRemote"
+domain = "slv"
+mode = "ship"
+kind = "vessel_hangar_sell"
+where_field = "SellItem"
+where_contains = ["fighterbay"]
+text = "Traded in a stored Vessel Hangar module."
 
 [[moment]]
 event = "Disembark"
@@ -401,6 +533,30 @@ domain = "srv"
 label = "SRV deployments"
 op = "count"
 event = "LaunchSRV"
+
+[[aggregate]]
+domain = "slv"
+label = "Vessel deployments"
+op = "count"
+event = "LaunchFighter"
+
+[[aggregate]]
+domain = "slv"
+label = "Vessel hangars bought"
+op = "count"
+event = "ModuleBuy"
+
+[[aggregate]]
+domain = "slv"
+label = "Vessel hangars sold"
+op = "count"
+event = "ModuleSell"
+
+[[aggregate]]
+domain = "slf"
+label = "Fighter deployments"
+op = "count"
+event = "LaunchFighter"
 
 # ---------------------------------------------------------------------------
 # Thresholds: named numeric values the domain compares against. Keeping them

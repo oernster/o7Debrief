@@ -31,6 +31,16 @@ class MomentRule:
     those, ``credits_array_field`` names the array and ``credits_item_fields``
     names the per-entry numeric keys to sum. When ``credits_array_field`` is
     set it takes precedence over ``credits_field``.
+
+    Some journal events are shared across many subjects and only become the
+    conceptual moment when one payload field carries a distinguishing token.
+    A ``ModuleBuy`` becomes a Vessel Hangar purchase only when its bought-item
+    name contains ``fighterbay``; a ``LaunchFighter`` is a Nomad deployment
+    only when its loadout is one of the Nomad variants. For those, ``where_field``
+    names the payload key to inspect and ``where_contains`` is a tuple of
+    case-insensitive substrings, any one of which appearing in that field
+    satisfies the filter. When ``where_field`` is unset or ``where_contains`` is
+    empty the rule matches every occurrence.
     """
 
     event_type: str
@@ -41,6 +51,8 @@ class MomentRule:
     credits_field: str | None
     credits_array_field: str | None = None
     credits_item_fields: tuple[str, ...] = ()
+    where_field: str | None = None
+    where_contains: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,11 +74,22 @@ class RollupSpec:
     labels: tuple[tuple[str, str], ...]
 
     def rule_for(self, event_type: str) -> MomentRule | None:
-        """Return the rule matching ``event_type``, or ``None`` if absent."""
+        """Return the first rule matching ``event_type``, or ``None`` if absent."""
         for rule in self.rules:
             if rule.event_type == event_type:
                 return rule
         return None
+
+    def rules_for(self, event_type: str) -> tuple[MomentRule, ...]:
+        """Return all rules matching ``event_type``, in declaration order.
+
+        A single journal event can map to different moments depending on a
+        payload field (a ``LaunchFighter`` is a Nomad deployment or a fighter
+        deployment by its loadout). The caller tries these in order and uses the
+        first whose where-filter matches, so ordering in the taxonomy decides
+        precedence.
+        """
+        return tuple(rule for rule in self.rules if rule.event_type == event_type)
 
     def label_for(self, key: str, default: str) -> str:
         """Return the configured label for ``key``, or ``default``."""

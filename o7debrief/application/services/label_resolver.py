@@ -42,6 +42,8 @@ _GENERIC_LABEL_KEY = "label.{key}"
 _MODE_STRINGS: dict[str, str] = {
     "SHIP": "ship",
     "SRV": "srv",
+    "SLV": "slv",
+    "SLF": "slf",
     "ON_FOOT": "foot",
 }
 

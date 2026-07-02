@@ -15,7 +15,13 @@ from o7debrief.domain.value_objects.enums import (
 
 
 def test_activity_mode_members() -> None:
-    assert {m.name for m in ActivityMode} == {"SHIP", "SRV", "ON_FOOT"}
+    assert {m.name for m in ActivityMode} == {
+        "SHIP",
+        "SRV",
+        "SLV",
+        "SLF",
+        "ON_FOOT",
+    }
 
 
 def test_activity_domain_members() -> None:
@@ -29,6 +35,8 @@ def test_activity_domain_members() -> None:
         "ENGINEERING",
         "CARRIER",
         "SRV",
+        "SLV",
+        "SLF",
         "ON_FOOT",
         "EXOBIOLOGY",
         "SHIPYARD",
@@ -55,6 +63,14 @@ def test_moment_kind_members() -> None:
         "EXOBIO_SAMPLE",
         "EXOBIO_SELL",
         "SRV_DEPLOY",
+        "SLV_DEPLOY",
+        "SLV_DOCK",
+        "SLV_DESTROYED",
+        "SLF_DEPLOY",
+        "SLF_DOCK",
+        "SLF_DESTROYED",
+        "VESSEL_HANGAR_BUY",
+        "VESSEL_HANGAR_SELL",
         "DISEMBARK",
         "SETTLEMENT_VISIT",
         "PROMOTION",

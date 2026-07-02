@@ -24,6 +24,7 @@ from o7debrief.application.dto.debrief_view import (
 )
 from o7debrief.application.services.label_resolver import mode_string_from_name
 from o7debrief.application.services.presenter_domains import DOMAIN_ORDER
+from o7debrief.application.services.timeline_text import row_text
 
 __all__ = [
     "build_header",
@@ -156,6 +157,8 @@ def _timeline_entry(moment, fmt, resolver) -> TimelineEntry:
 
     The row's icon is the moment's activity (domain) glyph, so it shows what
     was done; the control mode rides along as the compact tag and full label.
+    The row text comes from ``timeline_text.row_text``, which enriches death,
+    ship-launched-vehicle and bounty rows and passes everything else through.
     """
     mode = mode_string_from_name(moment.mode.name)
     return TimelineEntry(
@@ -164,7 +167,7 @@ def _timeline_entry(moment, fmt, resolver) -> TimelineEntry:
         mode_label=resolver.mode_label(mode),
         mode_tag=resolver.mode_tag(mode),
         icon=resolver.domain_icon(moment.domain.name.lower()),
-        text=moment.label,
+        text=row_text(moment, resolver),
         system=_moment_system(moment),
     )
 

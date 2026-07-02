@@ -54,6 +54,8 @@ _MAGNITUDE_FIELD = "magnitude_field"
 _CREDITS_FIELD = "credits_field"
 _CREDITS_ARRAY_FIELD = "credits_array_field"
 _CREDITS_ITEM_FIELDS = "credits_item_fields"
+_WHERE_FIELD = "where_field"
+_WHERE_CONTAINS = "where_contains"
 _SCHEMA_VERSION = "schema_version"
 _APP_NAME = "app_name"
 _LICENSE = "license"
@@ -81,6 +83,8 @@ _FOOTER_LICENSE_KEY = "label.footer.license"
 _MODE_TO_ENUM_NAME = {
     "ship": "SHIP",
     "srv": "SRV",
+    "slv": "SLV",
+    "slf": "SLF",
     "foot": "ON_FOOT",
 }
 
@@ -147,6 +151,19 @@ class TomlConfigProvider:
         )
 
 
+def _where_tokens(value: Any) -> tuple[str, ...]:
+    """Normalise a taxonomy where_contains value to a tuple of tokens.
+
+    The taxonomy may write a single string or a list of strings; both become a
+    tuple. An absent value (None) becomes the empty tuple, meaning no filter.
+    """
+    if value is None:
+        return ()
+    if isinstance(value, str):
+        return (value,)
+    return tuple(value)
+
+
 def _build_rules(data: dict[str, Any]) -> tuple[MomentRule, ...]:
     """Build a MomentRule for each ``[[moment]]`` entry in the taxonomy."""
     rules: list[MomentRule] = []
@@ -161,6 +178,8 @@ def _build_rules(data: dict[str, Any]) -> tuple[MomentRule, ...]:
                 credits_field=moment.get(_CREDITS_FIELD),
                 credits_array_field=moment.get(_CREDITS_ARRAY_FIELD),
                 credits_item_fields=tuple(moment.get(_CREDITS_ITEM_FIELDS, ())),
+                where_field=moment.get(_WHERE_FIELD),
+                where_contains=_where_tokens(moment.get(_WHERE_CONTAINS)),
             )
         )
     return tuple(rules)

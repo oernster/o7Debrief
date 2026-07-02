@@ -100,8 +100,8 @@ def test_present_full_debrief_yields_contract_shape() -> None:
     assert context["header"]["end_system"] == "Achenar"
     assert context["header"]["systems_visited"] == "2"
     assert context["header"]["duration"] == "0h 0m"
-    # All eleven domains are present, in canonical order starting with travel.
-    assert len(context["domains"]) == 11
+    # All thirteen domains are present, in canonical order starting with travel.
+    assert len(context["domains"]) == 13
     assert context["domains"][0]["key"] == "travel"
     # Timeline has one entry per moment, most recent first, with resolved modes.
     modes = [entry["mode"] for entry in context["timeline"]]
@@ -353,7 +353,8 @@ def test_timeline_categories_group_by_domain_in_canonical_order() -> None:
     assert sum(category["count"] for category in categories) == len(context["timeline"])
     by_key = {category["key"]: category for category in categories}
     assert by_key["combat"]["count"] == 1
-    assert by_key["combat"]["entries"][0]["text"] == "BOUNTY"
+    # A bounty with no target in its detail reads as a bare, configured bounty.
+    assert by_key["combat"]["entries"][0]["text"] == "Bounty"
     assert by_key["combat"]["entries"][0]["mode"] == "ship"
     # The row's icon is the activity (domain), not the control mode.
     assert by_key["combat"]["entries"][0]["icon"] == "combat"
@@ -383,7 +384,7 @@ def test_ship_changes_form_a_shipyard_timeline_category() -> None:
     # ...but Shipyard is timeline-only, so it has no stat section.
     section_keys = [section["key"] for section in context["domains"]]
     assert "shipyard" not in section_keys
-    assert len(section_keys) == 11
+    assert len(section_keys) == 13
 
 
 def test_timeline_categories_empty_when_no_moments() -> None:
