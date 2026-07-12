@@ -136,6 +136,50 @@ def test_credits_field_bool_is_rejected_as_zero() -> None:
     assert moments[0].credits_delta.value == 0
 
 
+_MISSION_RULE = MomentRule(
+    event_type="MissionCompleted",
+    kind=MomentKind.MISSION_COMPLETE,
+    domain=ActivityDomain.MISSIONS,
+    mode=ActivityMode.SHIP,
+    magnitude_field=None,
+    credits_field="Reward",
+    coins_field="MercCoins",
+)
+
+
+def test_coins_field_reads_value_alongside_credits() -> None:
+    spec = _spec((_MISSION_RULE,))
+    events = (_ev("MissionCompleted", 0, (("Reward", 15000), ("MercCoins", 500))),)
+    moments = build_moments(events, spec)
+    assert moments[0].credits_delta == Credits(15000)
+    assert moments[0].coins_delta == Credits(500)
+
+
+def test_coins_field_none_yields_zero() -> None:
+    # A rule that names no coin field leaves the coins delta at zero.
+    spec = _spec((_BOUNTY_RULE,))
+    moments = build_moments((_ev("Bounty", 0, (("Reward", 1000),)),), spec)
+    assert moments[0].coins_delta.value == 0
+
+
+def test_coins_field_absent_yields_zero() -> None:
+    spec = _spec((_MISSION_RULE,))
+    moments = build_moments((_ev("MissionCompleted", 0, (("Reward", 1000),)),), spec)
+    assert moments[0].coins_delta.value == 0
+
+
+def test_coins_field_non_int_yields_zero() -> None:
+    spec = _spec((_MISSION_RULE,))
+    events = (_ev("MissionCompleted", 0, (("MercCoins", "many"),)),)
+    assert build_moments(events, spec)[0].coins_delta.value == 0
+
+
+def test_coins_field_bool_is_rejected_as_zero() -> None:
+    spec = _spec((_MISSION_RULE,))
+    events = (_ev("MissionCompleted", 0, (("MercCoins", True),)),)
+    assert build_moments(events, spec)[0].coins_delta.value == 0
+
+
 def test_mode_is_taken_from_phase_tracker() -> None:
     # After LaunchSRV the bounty moment should be tagged SRV mode.
     launch_rule = MomentRule(

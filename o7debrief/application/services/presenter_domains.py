@@ -40,6 +40,7 @@ _EARNED = ("trade.earned", "Earned")
 _REFINED = ("mining.refined", "Refined")
 _COMPLETED = ("missions.completed", "Completed")
 _REWARDS = ("missions.rewards", "Rewards")
+_MERC_COINS = ("missions.merc_coins", "Merc Coins")
 _CRAFTED = ("engineering.crafted", "Modifications")
 _CARRIER_JUMPS = ("carrier.jumps", "Carrier jumps")
 _SAMPLES = ("exobiology.samples", "Samples")
@@ -119,6 +120,7 @@ def _missions_stats(rollup, fmt, resolver) -> tuple[DomainStat, ...]:
     return (
         _stat(resolver, _COMPLETED, fmt.integer(rollup.completed)),
         _stat(resolver, _REWARDS, fmt.credits(rollup.rewards.value)),
+        _stat(resolver, _MERC_COINS, fmt.coins(rollup.coin_rewards.value)),
     )
 
 

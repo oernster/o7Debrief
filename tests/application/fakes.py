@@ -54,6 +54,7 @@ def number_format() -> NumberFormat:
     """Return a NumberFormat mirroring the taxonomy [format] table."""
     return NumberFormat(
         credits_suffix="Cr",
+        coins_suffix="Merc Coins",
         distance_suffix="ly",
         thousands=True,
         duration_format="{hours}h {minutes}m",

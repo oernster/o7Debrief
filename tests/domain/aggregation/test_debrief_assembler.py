@@ -33,6 +33,7 @@ def _moment(
     mode: ActivityMode = ActivityMode.SHIP,
     magnitude: int = 0,
     credits: int = 0,
+    coins: int = 0,
     detail: tuple = (),
 ) -> ConceptualMoment:
     return ConceptualMoment(
@@ -43,6 +44,7 @@ def _moment(
         label=kind.name,
         magnitude=magnitude,
         credits_delta=Credits(credits),
+        coins_delta=Credits(coins),
         detail=detail,
     )
 
@@ -314,3 +316,30 @@ def test_single_located_moment_is_both_start_and_end() -> None:
     debrief = assemble(_commander(), _window(), moments, (), _spec())
     assert str(debrief.start_system) == "Sol"
     assert str(debrief.end_system) == "Sol"
+
+
+def test_mission_coins_total_on_rollup_and_excluded_from_net_credits() -> None:
+    # Two completed Operations each pay credits and Merc Coins. The coins total
+    # on the missions rollup, while net credits count only the credit rewards.
+    moments = (
+        _moment(
+            MomentKind.MISSION_COMPLETE,
+            ActivityDomain.MISSIONS,
+            1,
+            credits=15000,
+            coins=500,
+        ),
+        _moment(
+            MomentKind.MISSION_COMPLETE,
+            ActivityDomain.MISSIONS,
+            2,
+            credits=5000,
+            coins=250,
+        ),
+    )
+    debrief = assemble(_commander(), _window(), moments, (), _spec())
+    assert debrief.activity.missions.completed == 2
+    assert debrief.activity.missions.rewards.value == 20000
+    assert debrief.activity.missions.coin_rewards.value == 750
+    # The coins must not inflate the credit figure.
+    assert debrief.net_credits_delta.value == 20000

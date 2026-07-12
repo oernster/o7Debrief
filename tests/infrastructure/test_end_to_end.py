@@ -131,6 +131,7 @@ def _number_format(path: Path) -> NumberFormat:
         table = tomllib.load(handle)["format"]
     return NumberFormat(
         credits_suffix=table["credits_suffix"],
+        coins_suffix=table["coins_suffix"],
         distance_suffix=table["distance_suffix"],
         thousands=table["thousands"],
         duration_format=table["duration_format"],

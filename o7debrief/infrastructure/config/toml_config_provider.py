@@ -54,6 +54,7 @@ _MAGNITUDE_FIELD = "magnitude_field"
 _CREDITS_FIELD = "credits_field"
 _CREDITS_ARRAY_FIELD = "credits_array_field"
 _CREDITS_ITEM_FIELDS = "credits_item_fields"
+_COINS_FIELD = "coins_field"
 _WHERE_FIELD = "where_field"
 _WHERE_CONTAINS = "where_contains"
 _SCHEMA_VERSION = "schema_version"
@@ -178,6 +179,7 @@ def _build_rules(data: dict[str, Any]) -> tuple[MomentRule, ...]:
                 credits_field=moment.get(_CREDITS_FIELD),
                 credits_array_field=moment.get(_CREDITS_ARRAY_FIELD),
                 credits_item_fields=tuple(moment.get(_CREDITS_ITEM_FIELDS, ())),
+                coins_field=moment.get(_COINS_FIELD),
                 where_field=moment.get(_WHERE_FIELD),
                 where_contains=_where_tokens(moment.get(_WHERE_CONTAINS)),
             )

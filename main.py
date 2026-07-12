@@ -135,6 +135,7 @@ _RELEASES_PAGE_URL = "https://github.com/oernster/o7Debrief/releases/latest"
 # The taxonomy table and keys that populate the display NumberFormat.
 _FORMAT_TABLE = "format"
 _KEY_CREDITS_SUFFIX = "credits_suffix"
+_KEY_COINS_SUFFIX = "coins_suffix"
 _KEY_DISTANCE_SUFFIX = "distance_suffix"
 _KEY_THOUSANDS = "thousands"
 _KEY_DURATION_FORMAT = "duration_format"
@@ -282,6 +283,7 @@ def _load_number_format(taxonomy_path: Path) -> NumberFormat:
     table = data[_FORMAT_TABLE]
     return NumberFormat(
         credits_suffix=table[_KEY_CREDITS_SUFFIX],
+        coins_suffix=table[_KEY_COINS_SUFFIX],
         distance_suffix=table[_KEY_DISTANCE_SUFFIX],
         thousands=table[_KEY_THOUSANDS],
         duration_format=table[_KEY_DURATION_FORMAT],

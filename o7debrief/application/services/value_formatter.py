@@ -39,6 +39,7 @@ class NumberFormat:
     """Display formatting tokens, sourced from the taxonomy ``[format]``."""
 
     credits_suffix: str
+    coins_suffix: str
     distance_suffix: str
     thousands: bool
     duration_format: str
@@ -63,6 +64,10 @@ class ValueFormatter:
     def credits(self, value: int) -> str:
         """Return a credit amount grouped and suffixed (for example Cr)."""
         return f"{self.integer(value)}{_SUFFIX_SEPARATOR}{self._fmt.credits_suffix}"
+
+    def coins(self, value: int) -> str:
+        """Return a Merc Coins amount grouped and suffixed (for example Merc Coins)."""
+        return f"{self.integer(value)}{_SUFFIX_SEPARATOR}{self._fmt.coins_suffix}"
 
     def distance(self, value: int) -> str:
         """Return a distance grouped and suffixed (for example ly)."""

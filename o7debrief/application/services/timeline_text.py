@@ -60,6 +60,22 @@ _BOUNTY_GENERIC = ("combat.bounty", "Bounty")
 _TARGET_LOCALISED_FIELD = "Target_Localised"
 _TARGET_FIELD = "Target"
 
+# Mission-completion rows name the mission (an Operation carries a readable
+# LocalisedName) and its issuing faction, and surface the Merc Coins reward on
+# the row when one was paid. The credit reward is totalled in the Missions
+# section rather than repeated on every row. The _Localised name is preferred so
+# a raw token is never shown when the journal offers a readable form.
+_MISSION_KIND = "MISSION_COMPLETE"
+_COMPLETED_VERB = ("missions.completed_verb", "Completed")
+_MISSION_FOR = ("missions.for", "for")
+_GENERIC_MISSION = ("missions.generic", "a mission")
+_MISSION_NAME_FIELDS = ("LocalisedName", "Name")
+_FACTION_FIELD = "Faction"
+# Structural punctuation for a coin gain, for example " (+500 Merc Coins)".
+_COIN_GAIN_OPEN = " (+"
+_COIN_GAIN_CLOSE = ")"
+_NO_COINS = 0
+
 
 def _first_str(mapping, keys) -> str | None:
     """Return the first present, non-blank string among keys in a mapping."""
@@ -149,8 +165,35 @@ def _bounty_text(moment, resolver) -> str:
     return f"{resolver.generic(*_BOUNTY_ON)} {ship}"
 
 
-def row_text(moment, resolver) -> str:
-    """Return the session-log text for a moment, enriched where the kind needs it."""
+def _mission_text(moment, resolver, fmt) -> str:
+    """Return a mission-completion row: the mission, its faction and any coins.
+
+    An Operation pays a Merc Coins reward, appended in parentheses when present;
+    the credit reward is totalled in the Missions section, not repeated here.
+    The formatter is used only to group and suffix the coin amount.
+    """
+    detail = dict(moment.detail)
+    name = _first_str(detail, _MISSION_NAME_FIELDS) or resolver.generic(
+        *_GENERIC_MISSION
+    )
+    verb = resolver.generic(*_COMPLETED_VERB)
+    faction = _first_str(detail, (_FACTION_FIELD,))
+    if faction is not None:
+        line = f"{verb} {name} {resolver.generic(*_MISSION_FOR)} {faction}"
+    else:
+        line = f"{verb} {name}"
+    coins = moment.coins_delta.value
+    if coins > _NO_COINS:
+        line = f"{line}{_COIN_GAIN_OPEN}{fmt.coins(coins)}{_COIN_GAIN_CLOSE}"
+    return line
+
+
+def row_text(moment, resolver, fmt) -> str:
+    """Return the session-log text for a moment, enriched where the kind needs it.
+
+    The formatter is passed for the few rows that surface an amount (a mission's
+    Merc Coins reward); name-only rows ignore it.
+    """
     kind = moment.kind.name
     if kind == _DEATH_KIND:
         return _death_text(moment, resolver)
@@ -158,4 +201,6 @@ def row_text(moment, resolver) -> str:
         return _vehicle_text(moment, resolver)
     if kind == _BOUNTY_KIND:
         return _bounty_text(moment, resolver)
+    if kind == _MISSION_KIND:
+        return _mission_text(moment, resolver, fmt)
     return moment.label

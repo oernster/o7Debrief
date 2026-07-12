@@ -256,7 +256,13 @@ domain = "missions"
 mode = "ship"
 kind = "mission_complete"
 credits_field = "Reward"
-text = "Completed mission for {{ Faction }} ({{ Reward }} Cr)."
+# Operations pay a Merc Coins reward alongside credits. This names the journal
+# field carrying that amount. The reward is new game content not in the
+# published journal schema, so the key is assumed here (PascalCase like
+# "Reward") and confirmed against a real completed-Operation journal; if the
+# live journal spells it differently, change only this value.
+coins_field = "MercCoins"
+text = "Completed {{ LocalisedName }} for {{ Faction }} ({{ Reward }} Cr, {{ MercCoins }} Merc Coins)."
 
 [[moment]]
 event = "EngineerCraft"
@@ -743,6 +749,7 @@ tiers = [
 
 [format]
 credits_suffix = "Cr"
+coins_suffix = "Merc Coins"
 distance_suffix = "ly"
 thousands = true
 duration_format = "{hours}h {minutes}m"

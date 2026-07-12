@@ -73,6 +73,19 @@ def _sum_credits(moments: tuple[ConceptualMoment, ...], kind: MomentKind) -> Cre
     return total
 
 
+def _sum_coins(moments: tuple[ConceptualMoment, ...], kind: MomentKind) -> Credits:
+    """Sum the Merc Coins deltas of moments of a given kind.
+
+    A separate currency from credits, so it is totalled on its own and never
+    contributes to the session net-credits figure.
+    """
+    total = Credits.zero()
+    for moment in moments:
+        if moment.kind == kind:
+            total = total + moment.coins_delta
+    return total
+
+
 def _by_domain(
     moments: tuple[ConceptualMoment, ...], domain: ActivityDomain
 ) -> tuple[ConceptualMoment, ...]:
@@ -121,6 +134,7 @@ def _missions(moments: tuple[ConceptualMoment, ...]) -> MissionRollup:
     return MissionRollup(
         completed=_count(moments, MomentKind.MISSION_COMPLETE),
         rewards=_sum_credits(moments, MomentKind.MISSION_COMPLETE),
+        coin_rewards=_sum_coins(moments, MomentKind.MISSION_COMPLETE),
     )
 
 

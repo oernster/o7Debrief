@@ -8,7 +8,7 @@ credit delta and a tuple of supporting detail pairs.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from o7debrief.domain.errors import InvalidRawEventError
 from o7debrief.domain.value_objects.credits import Credits
@@ -34,6 +34,10 @@ class ConceptualMoment:
     magnitude: int
     credits_delta: Credits
     detail: tuple[tuple[str, object], ...]
+    # A second, distinct currency delta (Operations pay Merc Coins). It rides
+    # its own channel so it never folds into the session net-credits figure,
+    # and defaults to zero for the many moments that carry no coin reward.
+    coins_delta: Credits = field(default_factory=Credits.zero)
 
     def __post_init__(self) -> None:
         if not self.label:

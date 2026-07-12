@@ -76,10 +76,15 @@ class MiningRollup:
 
 @dataclass(frozen=True, slots=True)
 class MissionRollup:
-    """Mission summary: completions and their reward total."""
+    """Mission summary: completions and their reward totals.
+
+    ``rewards`` is the credit total; ``coin_rewards`` is the separate Merc Coins
+    total earned from Operations, kept apart from credits by design.
+    """
 
     completed: int = 0
     rewards: Credits = field(default_factory=Credits.zero)
+    coin_rewards: Credits = field(default_factory=Credits.zero)
 
 
 @dataclass(frozen=True, slots=True)

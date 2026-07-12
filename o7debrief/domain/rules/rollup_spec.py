@@ -26,6 +26,15 @@ class MomentRule:
     read for the moment's magnitude and scalar credit delta; either may be
     ``None`` when the event carries no such value.
 
+    ``coins_field`` names a second, distinct currency field read alongside the
+    credit one (Operations pay a Merc Coins reward on ``MissionCompleted``). It
+    is a separate channel on purpose: coins are not credits and must never fold
+    into the session's net-credits figure. It may be ``None`` when the event
+    pays no coins. The Merc Coins reward is new game content absent from the
+    published journal schema, so its journal key is configured here (in the
+    taxonomy) rather than assumed in code; if the live journal spells it
+    differently, only the taxonomy value changes.
+
     Some events spread their credit value across a nested array rather than a
     single key (an exobiology sale lists each sample under ``BioData``). For
     those, ``credits_array_field`` names the array and ``credits_item_fields``
@@ -51,6 +60,7 @@ class MomentRule:
     credits_field: str | None
     credits_array_field: str | None = None
     credits_item_fields: tuple[str, ...] = ()
+    coins_field: str | None = None
     where_field: str | None = None
     where_contains: tuple[str, ...] = ()
 

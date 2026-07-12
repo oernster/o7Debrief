@@ -18,6 +18,7 @@ def _ungrouped() -> ValueFormatter:
     fmt = number_format()
     plain = NumberFormat(
         credits_suffix=fmt.credits_suffix,
+        coins_suffix=fmt.coins_suffix,
         distance_suffix=fmt.distance_suffix,
         thousands=False,
         duration_format=fmt.duration_format,
@@ -40,6 +41,17 @@ def test_credits_and_distance_carry_suffixes() -> None:
 
     assert fmt.credits(14320500) == "14,320,500 Cr"
     assert fmt.distance(120) == "120 ly"
+
+
+def test_coins_carry_their_own_suffix() -> None:
+    fmt = _grouped()
+
+    assert fmt.coins(2500) == "2,500 Merc Coins"
+    assert fmt.coins(0) == "0 Merc Coins"
+
+
+def test_coins_respect_the_grouping_flag() -> None:
+    assert _ungrouped().coins(2500) == "2500 Merc Coins"
 
 
 def test_signed_credits_prefixes_sign_both_ways() -> None:

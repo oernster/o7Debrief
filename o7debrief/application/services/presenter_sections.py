@@ -158,7 +158,8 @@ def _timeline_entry(moment, fmt, resolver) -> TimelineEntry:
     The row's icon is the moment's activity (domain) glyph, so it shows what
     was done; the control mode rides along as the compact tag and full label.
     The row text comes from ``timeline_text.row_text``, which enriches death,
-    ship-launched-vehicle and bounty rows and passes everything else through.
+    ship-launched-vehicle, bounty and mission rows and passes everything else
+    through. The formatter is handed on so a mission row can show its coins.
     """
     mode = mode_string_from_name(moment.mode.name)
     return TimelineEntry(
@@ -167,7 +168,7 @@ def _timeline_entry(moment, fmt, resolver) -> TimelineEntry:
         mode_label=resolver.mode_label(mode),
         mode_tag=resolver.mode_tag(mode),
         icon=resolver.domain_icon(moment.domain.name.lower()),
-        text=row_text(moment, resolver),
+        text=row_text(moment, resolver, fmt),
         system=_moment_system(moment),
     )
 

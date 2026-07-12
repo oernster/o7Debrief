@@ -52,12 +52,13 @@ def moment(
     mode: ActivityMode = ActivityMode.SHIP,
     magnitude: int = 0,
     credits: int = 0,
+    coins: int = 0,
+    detail: tuple[tuple[str, object], ...] = (),
     system: str | None = None,
 ) -> ConceptualMoment:
     """Build a single ConceptualMoment, optionally tagged with a star system."""
-    detail: tuple[tuple[str, object], ...] = ()
     if system is not None:
-        detail = ((STAR_SYSTEM_FIELD, system),)
+        detail = detail + ((STAR_SYSTEM_FIELD, system),)
     return ConceptualMoment(
         kind=kind,
         domain=domain,
@@ -66,6 +67,7 @@ def moment(
         label=kind.name,
         magnitude=magnitude,
         credits_delta=Credits(credits),
+        coins_delta=Credits(coins),
         detail=detail,
     )
 
