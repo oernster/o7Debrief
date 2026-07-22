@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://oernster.github.io/o7Debrief/sitemap.xml
