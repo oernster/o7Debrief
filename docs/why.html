@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why o7 Debrief exists: the session the game never summarises</title>
+<meta name="description" content="Why o7 Debrief was built: Elite Dangerous logs everything you do and says almost nothing about it. o7 Debrief reduces the Player Journal into one verifiable session debrief where every figure traces to a real entry.">
+<link rel="icon" href="assets/o7Debrief.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="o7 Debrief">
+<meta property="og:title" content="Why o7 Debrief exists: the session the game never summarises">
+<meta property="og:description" content="Elite Dangerous logs everything you do and says almost nothing about it. o7 Debrief reduces the Player Journal into one verifiable session debrief where every figure traces to a real entry.">
+<meta property="og:url" content="https://ernster.dev/o7Debrief/why.html">
+<meta property="og:image" content="https://ernster.dev/o7Debrief/assets/social-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="o7 Debrief - Commander Mission Debrief for Elite Dangerous">
+<meta property="og:locale" content="en_GB">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Why o7 Debrief exists">
+<meta name="twitter:description" content="Elite Dangerous logs everything you do and says almost nothing about it. o7 Debrief reduces the Player Journal into one verifiable session debrief.">
+<meta name="twitter:image" content="https://ernster.dev/o7Debrief/assets/social-card.png">
+<link rel="canonical" href="https://ernster.dev/o7Debrief/why.html">
+<meta name="author" content="Oliver Ernster">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0d0d10">
+<style>
+  :root {
+    --bg: #0d0d10;
+    --surface: #16161d;
+    --edge: #2a2a33;
+    --accent: #f07b05;
+    --accent-soft: #f8a24a;
+    --text: #d7d7da;
+    --muted: #8a8a93;
+    --mono: 'Consolas', 'Cascadia Code', ui-monospace, 'SF Mono', monospace;
+    --sans: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.6;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    z-index: 10;
+  }
+  a { color: var(--accent-soft); text-decoration: none; }
+  a:hover { color: var(--accent); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+  header.mini {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 28px 0 8px;
+  }
+  header.mini img { width: 44px; height: 44px; }
+  header.mini .name {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+  section { padding: 40px 0; }
+  h2 {
+    font-family: var(--mono);
+    color: var(--accent);
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--edge);
+    padding-bottom: 10px;
+    margin-bottom: 28px;
+  }
+  .prose h1 {
+    font-family: var(--mono);
+    font-size: clamp(28px, 4vw, 36px);
+    color: var(--text);
+    margin: 0 0 18px;
+  }
+  .prose p {
+    color: var(--muted);
+    max-width: 780px;
+    font-size: 16.5px;
+    margin: 0 0 18px;
+  }
+  .prose p strong { color: var(--text); }
+  .cta { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 30px; }
+  .btn {
+    display: inline-block;
+    padding: 13px 28px;
+    border-radius: 24px;
+    font-weight: 700;
+    font-size: 15px;
+    border: 1px solid var(--edge);
+  }
+  .btn.primary {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+  }
+  .btn.primary:hover { background: var(--accent-soft); color: var(--bg); }
+  .btn.ghost { background: var(--surface); color: var(--text); }
+  .btn.ghost:hover { background: var(--edge); }
+  footer {
+    border-top: 1px solid var(--edge);
+    margin-top: 32px;
+    padding: 32px 0 56px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  footer .mono { font-family: var(--mono); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+
+    <header class="mini">
+      <a href="index.html"><img src="assets/o7Debrief.png" alt="o7 Debrief icon"></a>
+      <a href="index.html"><span class="name">o7 Debrief</span></a>
+    </header>
+
+    <section class="prose" id="exists">
+      <h2>The reasoning</h2>
+      <h1>Why this exists</h1>
+      <p>Elite Dangerous keeps the most honest record a game could keep and then says nothing
+        about it. The Player Journal logs every jump, scan, bounty and sale as it happens; the
+        game presents none of it back. A three-hour exploration run ends and the only evidence it
+        happened is ten thousand lines of JSON in a folder you never open. The work is real,
+        complete and unreadable.</p>
+      <p>o7 Debrief reads that log and hands the session back as one self-contained debrief: the
+        credits, jumps and scans across exploration, combat, trade, mining, missions and
+        exobiology, a session log you can tab through by activity and your rank progress across
+        the run, rendered as a file any browser opens plus a text version ready for Discord.
+        It models the session the way you remember it (by what you were doing) rather than the
+        way the game stores it (a flat stream of events).</p>
+      <p>The design rule underneath is provenance. Every figure in a report is a claim and every
+        claim needs a source, so nothing is estimated, inferred or padded: a number either traces
+        to a real journal entry or it does not appear. The same rule produces the honest rank
+        reporting, which admits what the source cannot yet know: tier-ups show at once while
+        fractional percentages settle at the next launch, because the journal only snapshots
+        progress at startup. A debrief that flatters you is worth less than no debrief at all.</p>
+      <p>It runs the way a companion tool should: quietly, from the system tray, writing the
+        debrief when you close the game or running cold after the fact on your last session or
+        your whole history, with both paths driving the same reducer so the answer never depends
+        on how you asked. Local-first throughout: your journal never leaves your machine, there is
+        no cloud, account or telemetry and the one optional network call (Check for updates)
+        only opens the releases page in your browser.</p>
+      <p>Full reasoning at <a href="https://www.crankthecode.com/posts/o7debrief">crankthecode.com</a>.</p>
+      <div class="cta">
+        <a class="btn primary" href="index.html#download">Download o7 Debrief</a>
+        <a class="btn ghost" href="index.html">Back to overview</a>
+      </div>
+    </section>
+
+    <footer>
+      <p class="mono">o7 Debrief</p>
+      <p>
+        Built by Oliver Ernster &middot; released under the GNU Lesser General Public Licence v3.0 (LGPL-3.0)
+        &middot; <a href="https://github.com/oernster/o7Debrief">github.com/oernster/o7Debrief</a>
+      </p>
+      <p>Elite Dangerous is a trademark of Frontier Developments plc. This is an unofficial, fan-made tool.</p>
+    </footer>
+
+  </div>
+</body>
+</html>

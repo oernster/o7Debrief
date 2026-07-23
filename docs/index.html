@@ -425,6 +425,7 @@
       <div class="cta">
         <a class="btn primary" href="#download">Download</a>
         <a class="btn ghost" href="example-report.html">View example report</a>
+        <a class="btn ghost" href="why.html">Why it exists</a>
         <a class="btn ghost" href="https://github.com/oernster/o7Debrief">View on GitHub</a>
       </div>
       <p class="platform-note">Windows 10 and 11 &middot; runs quietly from the system tray</p>
@@ -578,9 +579,9 @@
 <script>
     // The download buttons never go stale: each points at GitHub's releases/latest/download
     // redirect, which always serves the newest release's asset (the asset names are version-free
-    // by design). This script only decorates the page with live details: the version chip, the
-    // release date and each installer's size, fetched from the GitHub API. If the call fails
-    // (offline, rate-limited), the static text above stands on its own.
+    // by design). This script only decorates the page with live details: the version chip and
+    // each installer's size, fetched from the GitHub API. If the call fails (offline,
+    // rate-limited), the static text above stands on its own.
     (function () {
         var api = 'https://api.github.com/repos/oernster/o7Debrief/releases/latest';
         fetch(api).then(function (r) {
@@ -589,12 +590,7 @@
         }).then(function (rel) {
             var version = (rel.tag_name || '').replace(/^v/, '');
             if (version) {
-                var when = '';
-                if (rel.published_at) {
-                    when = ' · ' + new Date(rel.published_at).toLocaleDateString(undefined,
-                        {day: 'numeric', month: 'long', year: 'numeric'});
-                }
-                document.getElementById('dl-version').textContent = 'Version ' + version + when;
+                document.getElementById('dl-version').textContent = 'Version ' + version;
             }
             if (rel.html_url) {
                 document.getElementById('dl-whats-new').href = rel.html_url;
