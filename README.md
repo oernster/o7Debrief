@@ -63,7 +63,8 @@ The project enforces 100% line and branch coverage on the domain and application
 
 ```pytest -v --cov```
 
-See [TESTING.md](TESTING.md) for the full strategy.
+See [TESTING.md](TESTING.md) for the full strategy, and [TECH_DEBT.md](TECH_DEBT.md) for what is
+still open, what is deliberately left and what only looks like debt.
 
 ## Build
 
