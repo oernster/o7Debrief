@@ -1,10 +1,10 @@
-<img width="64" height="64" alt="o7 Debrief" src="assets/o7Debrief.png" /> [o7 Debrief](https://oernster.github.io/o7Debrief/)
+<img width="64" height="64" alt="o7 Debrief" src="assets/o7Debrief.png" /> [o7 Debrief](https://ernster.dev/o7Debrief/)
 
 # o7 Debrief
 
 A local-first Windows desktop application that reads the Elite Dangerous player Journal and produces a single self-contained Commander Mission Debrief report at the end of a play session.
 
-o7 Debrief watches the Journal while you play, brackets each session by its `LoadGame` and `Shutdown` events, aggregates the raw journal stream into high-level moments and renders a debrief when the session ends or whenever you ask for one. Every figure in the report traces back to a real journal field. Nothing is estimated, inferred or padded.
+o7 Debrief watches the Journal while you play, brackets each session by its `LoadGame` and `Shutdown` events, aggregates the raw journal stream into high-level moments and renders a debrief when the session ends or whenever you ask for one. Every figure in the report traces back to a real journal field. Nothing is estimated, inferred or padded. A figure the journal never stated is reported as unread rather than as zero.
 
 ## Who it is for
 
@@ -34,9 +34,12 @@ o7 Debrief currently supports Windows only. It is built and tested as a standalo
 - Ship-launched vessel coverage (the Nomad SLV): the debrief tracks deploying, docking and losing the vessel as its own control context alongside ship, SRV and on-foot, naming the vessel type on each row. It also counts Vessel Hangar modules bought, sold or traded in. The vessel is its own domain section, so a surface-exploration session in the Nomad reads clearly.
 - Ship-launched fighter coverage: deploying, docking and losing a fighter (the F63 Condor, GU-97, Taipan and the Guardian Trident, Javelin and Lance, in any loadout variant) each appear as their own row in a dedicated fighter context, named from the journal loadout. Flying a fighter yourself is its own control context; an NPC-crewed fighter leaves you in the ship.
 - Clearer session log: each row shows the activity it records (a trade, a bounty, a scan) rather than which control mode you were in. The log is ordered most recent first, so the latest thing you did sits at the top.
-- Deaths name the killer and the cause: a death row reports who destroyed you, by name, with their ship and rank where the journal records them and every attacker listed for a wing kill; a self-destruct is named as such and an environmental death reads simply as a loss.
+- Deaths that stand alone: a death row reports who destroyed you, by name, with their ship, rank and squadron where the journal records them and every attacker listed for a wing kill; a self-destruct is named as such and an environmental death reads simply as a loss. The killer's ship is named from the targeting scan that preceded the kill, so it reads "Cobra Mk V" rather than the raw model token the death event carries.
+- Every death also names the victim: you, plus the vehicle you actually lost, at the moment you lost it rather than whatever you finished the session in. An SRV destroyed under you is named as the SRV, not the ship it launched from. The rebuy the resurrection charged closes the row, a real cost no other figure in the report accounts for.
+- Readings the journal never gave are said out loud rather than shown as zero. Your credit balance sits beside the session's change, a rank percentage carries its last known reading forward and reports "No reading" only when nothing is known at all, then the systems figure names where you actually are because a commander is always somewhere. A count of nothing is never printed where the truth is that nothing was read.
+- A Notices block that appears only when it must: if the taxonomy names a journal field an event never carried, the report says so instead of quietly printing zero, naming the event and the field.
 - Combat kills name the ship: a bounty row names the ship you destroyed (any type, since NPCs can fly any ship, including a ship-launched fighter), so what you killed and what killed you both identify the ship type.
-- Missions and Operations name themselves: a completed mission row names the mission (an Operation carries a readable title) and its issuing faction; an Operation also surfaces the Merc Coins it paid on the row, for example "Completed Infiltrate the compound for Fong Wang Limited (+500 Merc Coins)". The Missions section totals both the credit reward and the Merc Coins separately; the Merc Coins are kept out of the net-credits figure because they are a distinct currency. The Merc Coins journal field is named in the taxonomy, so a game-side change to it is a one-line config edit.
+- Missions and Operations name themselves: a completed mission row names the mission (an Operation carries a readable title) and its issuing faction; an Operation also surfaces the Merc Coins it paid on the row, for example "Completed Infiltrate the compound for Fong Wang Limited (+500 Merc Coins)". The Missions section totals both the credit reward and the Merc Coins separately; the Merc Coins are kept out of the net-credits figure because they are a distinct currency. The Merc Coins journal field is named in the taxonomy, so a game-side change to it is a one-line config edit. If the named field is absent from an Operation the report raises a notice rather than reporting a reward of zero.
 - A Check for updates entry in the tray menu: it asks GitHub whether a newer release exists, tells you when one does and opens the releases page in your browser. This is the only network call the app makes, it runs only when you click it and nothing is ever downloaded or run for you; a failed check is silent.
 
 ## Stack
@@ -47,7 +50,7 @@ o7 Debrief currently supports Windows only. It is built and tested as a standalo
 | Desktop UI | PySide6 (system tray and minimal windows) |
 | Report templating | Jinja2 (HTML) |
 | Configuration | stdlib `tomllib` (TOML taxonomy) |
-| Testing | pytest with pytest-cov (100% gate on domain, application and the setup program's operations and state) |
+| Testing | pytest with pytest-cov (100% gate on domain, application, five infrastructure sub-packages and the setup program's operations and state) |
 | Packaging | Nuitka (standalone Windows executable) |
 | Licence | LGPL-3.0 |
 
@@ -61,7 +64,7 @@ To run from source during development, see [DEVELOPMENT-README.md](DEVELOPMENT-R
 
 ## Test
 
-The project enforces 100% line and branch coverage on the domain and application layers and on the setup program's operations and state model.
+The project enforces 100% line and branch coverage on the domain and application layers, on the infrastructure sub-packages that can reach it and on the setup program's operations and state model.
 
 ```pytest -v --cov```
 

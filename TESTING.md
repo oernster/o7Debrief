@@ -4,20 +4,27 @@ The test strategy for o7 Debrief. The goal is a debrief that is reproducible and
 
 ## The 100% gate and its scope
 
-A hard coverage gate of 100% line and branch coverage applies to four packages:
+A hard coverage gate of 100% line and branch coverage applies to these packages:
 
 - `o7debrief.domain`
 - `o7debrief.application`
+- `o7debrief.infrastructure.archive`
+- `o7debrief.infrastructure.autostart`
+- `o7debrief.infrastructure.clock`
+- `o7debrief.infrastructure.sink`
+- `o7debrief.infrastructure.update`
 - `installer.ops`
 - `installer.state`
 
 The first two are the deterministic core: the reducer, the value objects, the `SessionDebrief` aggregate, the use cases and the ports. They are pure logic with injected dependencies, so every line and branch can be reached by a fast, deterministic test. Holding them at 100% is what makes "the same journal bytes produce the same debrief" a property the suite actually proves, not a hope.
 
-The other two are the setup program's operations and its state model. They do the most privileged work in the product (registry writes, shortcut creation, per-user deployment, uninstall) and they are Qt-free, so they are gated rather than left unmeasured. Three seams make that possible without touching a real installation: commands are run through an injectable runner, the registry keys are a value that a test replaces with a scratch set and the per-user locations come from environment variables the suite redirects. No mocking library is used; the doubles are hand-written and live in `tests/installer/fakes.py`.
+The five infrastructure sub-packages are there because they already stood at 100% with no branch a test cannot reach. They are the adapters whose work is file and registry mechanics with no OS-specific discovery in them. The rest of infrastructure cannot join: it measures 79% branch coverage, concentrated in `journal/windows_paths.py` and `journal/paths.py`, which walk operating-system-specific locations a test on one machine cannot reach. Coverage carries a single fail-under, so gating a layer at 79% alongside layers held at 100% would drag the one threshold down and quietly end the hard gate on the pure layers. That trade is recorded as open debt rather than taken.
+
+The installer pair are the setup program's operations and its state model. They do the most privileged work in the product (registry writes, shortcut creation, per-user deployment, uninstall) and they are Qt-free, so they are gated rather than left unmeasured. Three seams make that possible without touching a real installation: commands are run through an injectable runner, the registry keys are a value that a test replaces with a scratch set and the per-user locations come from environment variables the suite redirects. No mocking library is used; the doubles are hand-written and live in `tests/installer/fakes.py`.
 
 Four areas are deliberately excluded from the hard gate:
 
-- `o7debrief.infrastructure` is integration-tested. Its correctness is in reading real Journal bytes, discovering the Journal directory, tailing from the right offset and writing files; that is exercised against sample journal fixtures, not measured by branch coverage of glue code.
+- The rest of `o7debrief.infrastructure` is integration-tested. Its correctness is in reading real Journal bytes, discovering the Journal directory, tailing from the right offset and writing files; that is exercised against sample journal fixtures, not measured by branch coverage of glue code.
 - `o7debrief.ui` is exercised with light Qt tests under an offscreen platform. Its correctness is in wiring user actions to use cases, which is verified behaviourally rather than chased to 100%.
 - The rest of the setup program is outside the measured set: `installer.ui` is its Qt client, `installer/app.py` is its composition root and `installer/cli.py` and `installer/constants.py` are the command line the registered `UninstallString` re-invokes and the names shared across the package. They are excluded on the same grounds as `o7debrief.ui` and `main.py`.
 - `main.py`, the composition root, is wiring. It is covered by the application running and by the structural composition-root test, not by a coverage target.
@@ -43,7 +50,7 @@ The structural suite under `tests/structural/` scans the source as an AST or as 
 
 - `test_layering.py`: the dependency direction `ui -> application -> domain <- infrastructure` holds and the UI imports the application layer only.
 - `test_domain_purity.py`: the domain imports no I/O, logging, `os`, `pathlib`, `threading` or wall-clock calls (`datetime.now()` / `date.today()`) and works in event-time only. Imports under `if TYPE_CHECKING:` are exempt.
-- `test_loc_limits.py`: no module under `o7debrief/`, `installer/` or `tests/` exceeds 400 lines. The setup program is in scope deliberately: it was one module of over a thousand lines that no rule could see.
+- `test_loc_limits.py`: no module under `o7debrief/`, `installer/`, `tests/` or the repository root exceeds 400 lines. The setup program is in scope deliberately: it was one module of over a thousand lines that no rule could see. So is the root, which was in the same state: the composition root sat outside every scanned tree and was the largest module in the project. The exemptions there (the composition root and the delivery scripts) are named with a reason each; a companion test fails if an exemption names a file that no longer exists.
 - `test_composition_root.py`: there is exactly one composition root and no module-level singletons or service locators elsewhere.
 - `test_no_magic_numbers.py`: domain-specific values come from the TOML taxonomy or named constants, not inline literals.
 
@@ -58,7 +65,7 @@ pytest
 echo "EXIT=$LASTEXITCODE"
 ```
 
-- `EXIT=0` means all tests passed and the 100% gate on the four gated packages was met.
+- `EXIT=0` means all tests passed and the 100% gate on every gated package was met.
 - Any non-zero value means a failure. Check the line under the coverage table first: it says whether coverage reached the threshold. If it did, the cause is a test failure and that output sits above the table.
 
 To run the UI tests headless, set the offscreen Qt platform first:
@@ -84,4 +91,4 @@ echo "EXIT=$LASTEXITCODE"
 
 ## How coverage is configured
 
-Coverage is configured in `pyproject.toml`. The gate is `--cov-fail-under=100` with branch coverage enabled, scoped via `--cov` to `o7debrief.domain`, `o7debrief.application`, `installer.ops` and `installer.state`. Naming the measured packages explicitly is what keeps the gate honest: anything not named is simply not measured, so infrastructure, both UI layers and the two composition roots sit outside it by construction rather than by an omit rule that could silently widen. Because the configuration lives in `pyproject.toml`, running `pytest` from the repository root applies the gate automatically; there is no separate flag to remember and no way to pass locally while silently dropping below the threshold.
+Coverage is configured in `pyproject.toml`. The gate is `--cov-fail-under=100` with branch coverage enabled, scoped via `--cov` to the packages listed above. Naming the measured packages explicitly is what keeps the gate honest: anything not named is simply not measured, so the ungated infrastructure, both UI layers and the two composition roots sit outside it by construction rather than by an omit rule that could silently widen. The omit list is kept to what a bare `pytest --cov` would otherwise pull in, for a reason learned the hard way: naming a layer there silenced it even when coverage was asked for it explicitly, so measuring infrastructure reported no data at all. Because the configuration lives in `pyproject.toml`, running `pytest` from the repository root applies the gate automatically; there is no separate flag to remember and no way to pass locally while silently dropping below the threshold.

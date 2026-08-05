@@ -4,6 +4,8 @@ o7 Debrief is a local-first Windows desktop application that turns the Elite Dan
 
 The governing idea: a debrief is a deterministic function of the journal bytes for one session. Everything else (a tray, a one-shot command, an export format) is plumbing around that function. The architecture exists to keep that function pure, the data real and the layers honest.
 
+The organising distinction inside that function is between a **level** and an **event**. A level is a state the journal states outright: a credit balance, the active ship, a rank percentage, the current star system. It persists until something changes it, so the last known reading stays valid and may be carried forward from earlier history. An event belongs to the session that produced it: a jump, a bounty, a credit delta. Levels are read from the raw events and passed into the domain as readings; events are folded from moments. Confusing the two is what makes a report say zero where it should say nothing was read, so the split is structural rather than stylistic: `assemble()` derives no level at all.
+
 ## Invariants
 
 Each invariant below is enforced by a structural test that scans the source as an AST or as text, so the rule cannot quietly rot into a convention. Where an invariant has no single test it is enforced by review and noted as such.
@@ -13,14 +15,16 @@ Each invariant below is enforced by a structural test that scans the source as a
 | I1 | Dependencies point inwards only: `ui -> application -> domain <- infrastructure`. No layer imports a layer it must not see. | [tests/structural/test_layering.py](tests/structural/test_layering.py) |
 | I2 | The UI is a client of the application layer only. UI code never imports domain or infrastructure directly. | [tests/structural/test_layering.py](tests/structural/test_layering.py) |
 | I3 | The domain is pure stdlib: no I/O, no logging, no `os`, no `pathlib`, no `threading` and no wall-clock reads (`datetime.now()` / `date.today()`). The domain works in event-time taken from journal fields. | [tests/structural/test_domain_purity.py](tests/structural/test_domain_purity.py) |
-| I4 | No module exceeds 400 lines, across `o7debrief/`, `installer/` and `tests/`. Oversized modules are decomposed into helpers, not left to grow. | [tests/structural/test_loc_limits.py](tests/structural/test_loc_limits.py) |
+| I4 | No module exceeds 400 lines, across `o7debrief/`, `installer/`, `tests/` and the repository root. Oversized modules are decomposed into helpers, not left to grow. Root exemptions (the composition root and the delivery scripts) are named in the test with a reason each; a second test fails if an exemption outlives its file. | [tests/structural/test_loc_limits.py](tests/structural/test_loc_limits.py) |
 | I5 | There is exactly one composition root. Dependencies are wired there by constructor injection; there are no module-level singletons or service locators elsewhere. | [tests/structural/test_composition_root.py](tests/structural/test_composition_root.py) |
 | I6 | No magic numbers in logic. Domain-specific values (thresholds, day numbers, limits, the event taxonomy) come from the TOML configuration or named constants, never from inline literals. | [tests/structural/test_no_magic_numbers.py](tests/structural/test_no_magic_numbers.py) |
 | I7 | Domain types are immutable: frozen dataclasses with `tuple[...]` collections, validated on construction. | [tests/structural/test_domain_purity.py](tests/structural/test_domain_purity.py) (paired with domain unit tests) |
 | I8 | The two capture paths (live tray watcher and cold one-shot) feed one shared reducer, so the same journal bytes yield the same `SessionDebrief` regardless of trigger. | Domain and application unit tests (determinism), supported by I1 and I5 |
 | I9 | Reads are bounded to the session they need, never the whole journal history. A last-session debrief reads back only to the previous `Shutdown`; the all-history debrief streams the journal one file at a time; the long-running tray recorder retains only the session in progress. | Application and infrastructure tests (the backward-scan, streaming and recorder-trim guards) |
 
-Invariants I1 to I6 are the load-bearing structural rules and have dedicated tests. I7, I8 and I9 are properties the structure makes possible and are pinned by the test suite rather than by a single AST scan.
+| I10 | A figure the journal never stated is never reported as zero. Every level is optional at the type level (`None` means unread) and the presenter words the absence; a rule that names a field its matching event never carried is surfaced as a notice in the report. | Domain and application unit tests (the level tests, `test_field_diagnostics.py`) |
+
+Invariants I1 to I6 are the load-bearing structural rules and have dedicated tests. I7 to I10 are properties the structure makes possible and are pinned by the test suite rather than by a single AST scan.
 
 ## Layers and components
 
@@ -61,6 +65,8 @@ The domain plus stdlib only; it never imports infrastructure or UI. It defines t
 - An exporter port, a configuration port and a release-source port that supplies the latest published version for the opt-in update check.
 - The use cases: a live watch loop that debriefs the session at shutdown, a one-shot debrief of the last session and a one-shot debrief of the full history to date. The all-history use case folds the journal file by file, keeping only the moments, the state-bearing events and the window endpoints rather than every event at once. Every path calls the same domain reducer.
 - An update service that compares the running version against the latest release through a pure version comparison and reports whether a newer one exists, so the ui can point the player at the download. It is the only application service that touches the network and it reaches it solely through the injected release-source port.
+- The level folds, one per state the journal reports outright: the active ship over time (so a death names the hull flown at that instant rather than the one the session ended in), the systems visited, the latest credit balance and the readings gathered around each death. Each takes raw events and returns a small immutable history the builder passes into the domain as a reading. They live here rather than in the domain because they read the journal's own vocabulary, which is configuration to the domain, not part of it.
+- A field diagnostic that reports when a taxonomy rule names a payload field the matching event never carried, so a value the report could not read is stated instead of printed as zero.
 
 A use case may itself be an immutable object holding its injected dependencies.
 

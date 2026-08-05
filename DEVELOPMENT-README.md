@@ -44,7 +44,7 @@ python main.py
 
 ## Run the tests and read the result
 
-The project enforces 100% line and branch coverage on the domain and application layers and on the setup program's operations and state model. This changes how you read the result, because a run can fail with every test passing: coverage below the threshold fails it on its own. Do not grep the output for `passed`, `failed` or `error` either, since the coverage table lists module paths and a filename such as `errors.py` matches "error" on a clean run. Trust the exit code.
+The project enforces 100% line and branch coverage on the domain and application layers, on the five infrastructure sub-packages that can reach it and on the setup program's operations and state model. This changes how you read the result, because a run can fail with every test passing: coverage below the threshold fails it on its own. Do not grep the output for `passed`, `failed` or `error` either, since the coverage table lists module paths and a filename such as `errors.py` matches "error" on a clean run. Trust the exit code.
 
 ```powershell
 pytest
@@ -128,7 +128,8 @@ tests/
   installer/       The setup program's operations and state, against scratch
                    registry keys and a redirected profile.
   structural/      AST and source-scan boundary checks (layering, domain purity,
-                   400-line limit, single composition root, no magic numbers).
+                   400-line limit including the repository root, single
+                   composition root, no magic numbers).
 main.py            The single composition root.
 installer_main.py  Entry point for the setup program.
 buildexe.py        Nuitka standalone build.
