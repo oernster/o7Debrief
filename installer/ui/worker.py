@@ -16,11 +16,20 @@ from installer.ops.errors import InstallerError
 from installer.ops.progress import ProgressCallback
 
 # An operation receives a progress reporter and returns whatever the caller
-# needs afterwards (the installed executable path, or None).
+# needs afterwards (the installed executable path, else None).
 Operation = Callable[[ProgressCallback], object]
 
 NO_ERROR = ""
 UNEXPECTED_ERROR = "The operation failed: {detail}"
+
+# The longest the interface thread will wait for a worker thread to stop.
+# The wait must be bounded. It runs on the interface thread, so a thread that
+# never stops would freeze the whole setup program with no window left to
+# report it, which is exactly how launching the app on finish hung the
+# installer: the window closed, shutdown began and an unbounded wait never
+# returned. A worker that has already reported finished is done, so this
+# bound is reached only by a wedged thread.
+THREAD_STOP_TIMEOUT_MS = 5000
 
 
 class OperationWorker(QObject):
@@ -58,12 +67,28 @@ class OperationWorker(QObject):
 
 
 class OperationRunner(QObject):
-    """Owns the worker thread for one operation and cleans it up afterwards."""
+    """Owns the worker thread for one operation and cleans it up afterwards.
+
+    The worker's signals are connected to bound methods of this object, never
+    to bare callables. A signal connected to a plain function with no receiver
+    runs in the SENDER's thread. The sender here lives on the worker
+    thread. That is not a detail: it put the caller's callbacks on the worker
+    thread, so the window was touched and closed from a thread that must never
+    touch it. The teardown below then called ``wait()`` on the very thread it
+    was running in, which is a deadlock by definition. This object lives on the
+    interface thread, so a bound method of it is delivered there instead.
+    """
 
     def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self._thread: QThread | None = None
         self._worker: OperationWorker | None = None
+        self._on_progress: Callable[[int, str], None] | None = None
+        self._on_finished: Callable[[str, object], None] | None = None
+
+    def is_idle(self) -> bool:
+        """Return whether no worker thread is currently held."""
+        return self._thread is None
 
     def start(
         self,
@@ -76,20 +101,57 @@ class OperationRunner(QObject):
         worker = OperationWorker(operation)
         worker.moveToThread(thread)
 
+        self._on_progress = on_progress
+        self._on_finished = on_finished
+
         thread.started.connect(worker.run)
-        worker.progressed.connect(on_progress)
-        worker.finished.connect(on_finished)
-        worker.finished.connect(lambda *_: self._stop())
+        worker.progressed.connect(self._forward_progress)
+        worker.finished.connect(self._forward_finished)
 
         self._thread = thread
         self._worker = worker
         thread.start()
 
+    @Slot(int, str)
+    def _forward_progress(self, pct: int, message: str) -> None:
+        """Hand one progress update to the caller, on the interface thread."""
+        if self._on_progress is not None:
+            self._on_progress(pct, message)
+
+    @Slot(str, object)
+    def _forward_finished(self, error: str, result: object) -> None:
+        """Release the thread, then hand the outcome to the caller.
+
+        The thread is released first, so by the time the caller runs there is
+        nothing left to wait on. The caller may close the window and end the
+        program; it must never do that with a teardown still pending.
+        """
+        self._stop()
+        callback = self._on_finished
+        self._on_progress = None
+        self._on_finished = None
+        if callback is not None:
+            callback(error, result)
+
     def _stop(self) -> None:
-        """Quit and wait for the worker thread, then release both objects."""
+        """Quit and wait for the worker thread, then release both objects.
+
+        The references are dropped first, so a second call cannot wait on a
+        thread already being torn down. The thread and worker are deleted
+        through the event loop rather than by falling out of scope, then only
+        once the thread has actually finished: deleting a running QThread
+        aborts the process.
+        """
         thread = self._thread
-        if thread is not None:
-            thread.quit()
-            thread.wait()
+        worker = self._worker
         self._thread = None
         self._worker = None
+        if thread is None:
+            return
+        thread.quit()
+        thread.wait(THREAD_STOP_TIMEOUT_MS)
+        if not thread.isFinished():
+            return
+        if worker is not None:
+            worker.deleteLater()
+        thread.deleteLater()

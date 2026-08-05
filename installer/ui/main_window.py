@@ -1,7 +1,7 @@
 """The setup window: a themed, state-aware lifecycle screen.
 
 The window holds no installer logic of its own. It reads one state snapshot,
-decides what to offer, and hands each operation to a worker thread. British
+decides what to offer, then hands each operation to a worker thread. British
 spelling is used in comments. No em dashes appear anywhere.
 """
 
@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import replace
 from pathlib import Path
 
+from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QDialog, QWidget
 
 from installer.constants import APP_DISPLAY_NAME
@@ -34,6 +35,11 @@ from installer.ui.licence_dialog import LicenceDialog
 from installer.ui.themes import STYLESHEET, WINDOW_HEIGHT, WINDOW_WIDTH
 from installer.ui.uninstall_dialog import UninstallDialog
 from installer.ui.worker import OperationRunner
+
+# Zero delay: the close is posted to the back of the event queue rather than
+# postponed, so it happens on the very next turn, after the worker teardown
+# already queued ahead of it.
+_CLOSE_ON_NEXT_TURN_MS = 0
 
 WINDOW_TITLE = f"Install {APP_DISPLAY_NAME}"
 INSTALLED_MESSAGE = "Installed to {path}."
@@ -149,7 +155,13 @@ class InstallerWindow(QWidget):
         self._widgets.status.setText(INSTALLED_MESSAGE.format(path=exe_path.parent))
         if self._widgets.launch_on_finish.isChecked():
             launch(exe_path)
-            self.close()
+            # Close on the next turn of the event loop rather than inside this
+            # callback. The runner has already released its worker thread by
+            # the time this runs, so closing here would be safe; posting it
+            # keeps application shutdown out of a signal emission altogether,
+            # which is the state that hung the setup program when the callback
+            # was still arriving on the worker thread.
+            QTimer.singleShot(_CLOSE_ON_NEXT_TURN_MS, self.close)
             return
         self._refresh()
 
