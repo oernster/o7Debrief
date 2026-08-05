@@ -31,12 +31,12 @@ o7 Debrief currently supports Windows only. It is built and tested as a standalo
 - Rank reporting that is honest about journal timing: tier-ups (a `Promotion`) are reported immediately and fractional rank percentages are finalised at the next launch because the journal only snapshots rank progress at startup. Only ranks that actually changed are shown.
 - A single self-contained HTML report (inlined CSS, zero JavaScript) as the canonical output, plus a Markdown rendering for pasting elsewhere. A default export format is configurable and can be overridden per export.
 - A configuration-driven event taxonomy held in TOML, so the mapping from raw events to moments has no magic numbers buried in code.
-- Ship-launched vessel coverage (the Nomad SLV): the debrief tracks deploying, docking and losing the vessel as its own control context alongside ship, SRV and on-foot, naming the vessel type on each row, and counts Vessel Hangar modules bought, sold or traded in. The vessel is its own domain section, so a surface-exploration session in the Nomad reads clearly.
+- Ship-launched vessel coverage (the Nomad SLV): the debrief tracks deploying, docking and losing the vessel as its own control context alongside ship, SRV and on-foot, naming the vessel type on each row. It also counts Vessel Hangar modules bought, sold or traded in. The vessel is its own domain section, so a surface-exploration session in the Nomad reads clearly.
 - Ship-launched fighter coverage: deploying, docking and losing a fighter (the F63 Condor, GU-97, Taipan and the Guardian Trident, Javelin and Lance, in any loadout variant) each appear as their own row in a dedicated fighter context, named from the journal loadout. Flying a fighter yourself is its own control context; an NPC-crewed fighter leaves you in the ship.
 - Clearer session log: each row shows the activity it records (a trade, a bounty, a scan) rather than which control mode you were in. The log is ordered most recent first, so the latest thing you did sits at the top.
 - Deaths name the killer and the cause: a death row reports who destroyed you, by name, with their ship and rank where the journal records them and every attacker listed for a wing kill; a self-destruct is named as such and an environmental death reads simply as a loss.
 - Combat kills name the ship: a bounty row names the ship you destroyed (any type, since NPCs can fly any ship, including a ship-launched fighter), so what you killed and what killed you both identify the ship type.
-- Missions and Operations name themselves: a completed mission row names the mission (an Operation carries a readable title) and its issuing faction, and an Operation surfaces the Merc Coins it paid on the row, for example "Completed Infiltrate the compound for Fong Wang Limited (+500 Merc Coins)". The Missions section totals both the credit reward and the Merc Coins separately, and the Merc Coins are kept out of the net-credits figure because they are a distinct currency. The Merc Coins journal field is named in the taxonomy, so a game-side change to it is a one-line config edit.
+- Missions and Operations name themselves: a completed mission row names the mission (an Operation carries a readable title) and its issuing faction; an Operation also surfaces the Merc Coins it paid on the row, for example "Completed Infiltrate the compound for Fong Wang Limited (+500 Merc Coins)". The Missions section totals both the credit reward and the Merc Coins separately; the Merc Coins are kept out of the net-credits figure because they are a distinct currency. The Merc Coins journal field is named in the taxonomy, so a game-side change to it is a one-line config edit.
 - A Check for updates entry in the tray menu: it asks GitHub whether a newer release exists, tells you when one does and opens the releases page in your browser. This is the only network call the app makes, it runs only when you click it and nothing is ever downloaded or run for you; a failed check is silent.
 
 ## Stack
@@ -47,23 +47,25 @@ o7 Debrief currently supports Windows only. It is built and tested as a standalo
 | Desktop UI | PySide6 (system tray and minimal windows) |
 | Report templating | Jinja2 (HTML) |
 | Configuration | stdlib `tomllib` (TOML taxonomy) |
-| Testing | pytest with pytest-cov (100% gate on domain and application) |
+| Testing | pytest with pytest-cov (100% gate on domain, application and the setup program's operations and state) |
 | Packaging | Nuitka (standalone Windows executable) |
 | Licence | LGPL-3.0 |
 
 ## Install and run
 
-o7 Debrief ships as a standalone Windows executable produced by the build below; an installer is also provided. For end users there is no Python install to manage: run the installer, then start o7 Debrief from the Start menu. It places an icon in the system tray and watches the Journal from there.
+o7 Debrief ships as a standalone Windows executable produced by the build below; a setup program is also provided. For end users there is no Python install to manage: run the setup program, then start o7 Debrief from the Start menu. It places an icon in the system tray and watches the Journal from there.
+
+The setup program installs per-user, so it needs no administrator rights. It installs, repairs, upgrades and uninstalls, reports the phase and the progress of whatever it is doing rather than freezing behind a single line of text, offers to close a running copy of o7 Debrief for you instead of asking you to find the tray icon yourself and reads the current "start when I sign in to Windows" setting so the box you see matches what is actually set.
 
 To run from source during development, see [DEVELOPMENT-README.md](DEVELOPMENT-README.md).
 
 ## Test
 
-The project enforces 100% line and branch coverage on the domain and application layers.
+The project enforces 100% line and branch coverage on the domain and application layers and on the setup program's operations and state model.
 
 ```pytest -v --cov```
 
-See [TESTING.md](TESTING.md) for the full strategy, and [TECH_DEBT.md](TECH_DEBT.md) for what is
+See [TESTING.md](TESTING.md) for the full strategy and [TECH_DEBT.md](TECH_DEBT.md) for what is
 still open, what is deliberately left and what only looks like debt.
 
 ## Build
@@ -77,8 +79,10 @@ Build prerequisites and the development workflow are described in [DEVELOPMENT-R
 
 ## Architecture
 
-o7 Debrief follows a clean architecture with a strict dependency direction and a deterministic core. The two capture paths (live tray watcher and cold one-shot) share one reducer, so a debrief is reproducible from the same journal bytes regardless of how it was triggered. The full set of invariants, the layer breakdown, the execution flow and the design-decision rationale are in [ARCHITECTURE.md](ARCHITECTURE.md).
+o7 Debrief follows a clean architecture with a strict dependency direction and a deterministic core. The two capture paths (live tray watcher and cold one-shot) share one reducer, so a debrief is reproducible from the same journal bytes regardless of how it was triggered. The setup program is a second, self-contained program built to the same shape, with its side effects and its state model separated from its Qt client so the privileged work is measurable. The full set of invariants, the layer breakdown, the execution flow and the design-decision rationale are in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Licence
 
 o7 Debrief is released under the GNU Lesser General Public License v3.0 (LGPL-3.0). See [LICENSE](LICENSE) for the full text.
+
+Elite Dangerous is a trademark of Frontier Developments plc. o7 Debrief is an unofficial, fan-made tool and is not affiliated with Frontier Developments.

@@ -290,7 +290,6 @@
       "image": "https://ernster.dev/o7Debrief/assets/social-card.png",
       "screenshot": "https://ernster.dev/o7Debrief/assets/screenshot.png",
       "inLanguage": "en-GB",
-      "dateModified": "2026-07-03",
       "description": "A free, local-first Windows app that turns your Elite Dangerous Player Journal into a self-contained Commander Mission Debrief and session report. Every figure traces back to a real journal entry.",
       "keywords": "Elite Dangerous, Commander Mission Debrief, session report, Player Journal, exploration, mining, trading, bounty hunting, exobiology, rank progress, Windows tray app, local-first, free, open source",
       "featureList": [
@@ -303,6 +302,7 @@
         "Completed missions and Operations named in the session log, with the Merc Coins an Operation pays tracked separately from credits",
         "Clearer session log shown most recent first, with each row's icon showing the activity rather than the control mode",
         "Optional check for updates that points you to a newer release and never downloads or runs anything",
+        "Per-user setup needing no administrator rights, which reports its progress and offers to close a running copy when you upgrade",
         "Local-first with no cloud, no account and no telemetry"
       ],
       "author": {
@@ -402,6 +402,14 @@
           "acceptedAnswer": {
             "@type": "Answer",
             "text": "Windows 10 and Windows 11. It runs quietly from the system tray and reads the Player Journal that Elite Dangerous writes on your PC."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I install or upgrade o7 Debrief?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Run the setup program. It installs for your user account only, so it never asks for administrator rights. It names the phase it is in and shows its progress as it works. Upgrading over a copy that is still running in the tray is handled for you: setup offers to close it and carry on. The same program repairs and uninstalls."
           }
         }
       ]
@@ -536,6 +544,10 @@
           <h3>Which Windows versions does o7 Debrief support?</h3>
           <p>Windows 10 and Windows 11. It runs quietly from the system tray and reads the Player Journal that Elite Dangerous writes on your PC.</p>
         </div>
+        <div class="card">
+          <h3>How do I install or upgrade o7 Debrief?</h3>
+          <p>Run the setup program. It installs for your user account only, so it never asks for administrator rights. It names the phase it is in and shows its progress as it works. Upgrading over a copy that is still running in the tray is handled for you: setup offers to close it and carry on. The same program repairs and uninstalls.</p>
+        </div>
       </div>
     </section>
 
@@ -545,7 +557,7 @@
       <p class="section-sub">Download the newest release with one click. Free and
         LGPL-3.0, local-first Windows software with no cloud, no account and no
         telemetry.</p>
-      <span class="dl-version" id="dl-version">Latest release</span>
+      <span class="dl-version" id="dl-version">Version <!--VERSION-->1.7.0<!--/VERSION--></span>
       <div class="downloads">
         <div class="dl-card">
           <div class="ico">🪟</div>
@@ -554,7 +566,7 @@
           <a class="btn primary" href="https://github.com/oernster/o7Debrief/releases/latest/download/o7DebriefSetup.exe">
             Download for Windows</a>
           <p class="meta" data-asset="o7DebriefSetup.exe">Setup program (.exe)</p>
-          <p class="how">Run the setup: it installs per-user, so no administrator rights are needed.</p>
+          <p class="how">Run the setup: it installs per-user, so no administrator rights are needed. It shows its progress as it works and offers to close a running copy when you upgrade.</p>
         </div>
       </div>
       <p class="dl-links">
@@ -581,7 +593,9 @@
     // redirect, which always serves the newest release's asset (the asset names are version-free
     // by design). This script only decorates the page with live details: the version chip and
     // each installer's size, fetched from the GitHub API. If the call fails (offline,
-    // rate-limited), the static text above stands on its own.
+    // rate-limited), the static text above stands on its own: the version chip carries the
+    // version stamped into this page by stamp_version.py at the repository root, which reads
+    // the VERSION file that is the single source of truth.
     (function () {
         var api = 'https://api.github.com/repos/oernster/o7Debrief/releases/latest';
         fetch(api).then(function (r) {

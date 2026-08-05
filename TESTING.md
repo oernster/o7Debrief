@@ -13,13 +13,13 @@ A hard coverage gate of 100% line and branch coverage applies to four packages:
 
 The first two are the deterministic core: the reducer, the value objects, the `SessionDebrief` aggregate, the use cases and the ports. They are pure logic with injected dependencies, so every line and branch can be reached by a fast, deterministic test. Holding them at 100% is what makes "the same journal bytes produce the same debrief" a property the suite actually proves, not a hope.
 
-The other two are the setup program's operations and its state model. They do the most privileged work in the product (registry writes, shortcut creation, per-user deployment, uninstall) and they are Qt-free, so they are gated rather than left unmeasured. Three seams make that possible without touching a real installation: commands are run through an injectable runner, the registry keys are a value that a test replaces with a scratch set, and the per-user locations come from environment variables the suite redirects. No mocking library is used; the doubles are hand-written and live in `tests/installer/fakes.py`.
+The other two are the setup program's operations and its state model. They do the most privileged work in the product (registry writes, shortcut creation, per-user deployment, uninstall) and they are Qt-free, so they are gated rather than left unmeasured. Three seams make that possible without touching a real installation: commands are run through an injectable runner, the registry keys are a value that a test replaces with a scratch set and the per-user locations come from environment variables the suite redirects. No mocking library is used; the doubles are hand-written and live in `tests/installer/fakes.py`.
 
 Four areas are deliberately excluded from the hard gate:
 
 - `o7debrief.infrastructure` is integration-tested. Its correctness is in reading real Journal bytes, discovering the Journal directory, tailing from the right offset and writing files; that is exercised against sample journal fixtures, not measured by branch coverage of glue code.
 - `o7debrief.ui` is exercised with light Qt tests under an offscreen platform. Its correctness is in wiring user actions to use cases, which is verified behaviourally rather than chased to 100%.
-- `installer.ui` and `installer/app.py` are the setup program's Qt client and its composition root, excluded on the same grounds as `o7debrief.ui` and `main.py`.
+- The rest of the setup program is outside the measured set: `installer.ui` is its Qt client, `installer/app.py` is its composition root and `installer/cli.py` and `installer/constants.py` are the command line the registered `UninstallString` re-invokes and the names shared across the package. They are excluded on the same grounds as `o7debrief.ui` and `main.py`.
 - `main.py`, the composition root, is wiring. It is covered by the application running and by the structural composition-root test, not by a coverage target.
 
 Excluding these from the hard gate is a correctness decision, not a shortcut: a 100% target on IO and UI glue rewards mocking the real world, which is exactly where these layers must not be mocked.
@@ -49,7 +49,9 @@ The structural suite under `tests/structural/` scans the source as an AST or as 
 
 ## Running the suite and reading the result
 
-Because the gate uses `--cov-fail-under=100`, a normal run prints the coverage table last and emits no "N passed" summary line. Do not grep the output for `passed`, `failed` or `error`: filenames in the coverage table (for example `errors.py`) are false matches. Read the exit code.
+Because the gate uses `--cov-fail-under=100`, a run has two ways to fail and only one of them is a test failure. Coverage falling below the threshold fails the run while every test still passes, so pytest's usual summary line can read `562 passed` on a run that exited non-zero. The line is real; it is just not the whole answer.
+
+Reading the output needs the same care. The coverage table is printed after the test results and before that summary line, so any failure detail is well above both. Do not grep for `passed`, `failed` or `error` to decide the outcome: the table lists module paths, so a filename such as `errors.py` matches a grep for "error" on a completely clean run. Read the exit code.
 
 ```powershell
 pytest
@@ -57,7 +59,7 @@ echo "EXIT=$LASTEXITCODE"
 ```
 
 - `EXIT=0` means all tests passed and the 100% gate on the four gated packages was met.
-- Any non-zero value means a failure; scroll past the coverage table to the actual failure output.
+- Any non-zero value means a failure. Check the line under the coverage table first: it says whether coverage reached the threshold. If it did, the cause is a test failure and that output sits above the table.
 
 To run the UI tests headless, set the offscreen Qt platform first:
 
@@ -82,4 +84,4 @@ echo "EXIT=$LASTEXITCODE"
 
 ## How coverage is configured
 
-Coverage is configured in `pyproject.toml`. The gate is `--cov-fail-under=100` with branch coverage enabled, scoped via `--cov` to `o7debrief.domain` and `o7debrief.application`. Infrastructure, UI and the composition root are omitted from the measured set, so the 100% requirement applies only to the deterministic core. Because the configuration lives in `pyproject.toml`, running `pytest` from the repository root applies the gate automatically; there is no separate flag to remember and no way to pass locally while silently dropping below the threshold.
+Coverage is configured in `pyproject.toml`. The gate is `--cov-fail-under=100` with branch coverage enabled, scoped via `--cov` to `o7debrief.domain`, `o7debrief.application`, `installer.ops` and `installer.state`. Naming the measured packages explicitly is what keeps the gate honest: anything not named is simply not measured, so infrastructure, both UI layers and the two composition roots sit outside it by construction rather than by an omit rule that could silently widen. Because the configuration lives in `pyproject.toml`, running `pytest` from the repository root applies the gate automatically; there is no separate flag to remember and no way to pass locally while silently dropping below the threshold.
