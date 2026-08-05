@@ -81,6 +81,20 @@ PySide6, the client of the application layer only. It owns the system-tray icon 
 
 A single `main.py` constructs the concrete infrastructure adapters and injects them into the application use cases, then hands those to the UI. This is the only place wiring happens (I5). There are no module-level singletons.
 
+### The setup program
+
+The `installer` package is a second, self-contained program that ships the first one. It imports nothing from `o7debrief` and is deliberately dependency-light: process detection is `tasklist`, version comparison is a tuple compare and shortcuts are written through the Windows scripting host, so the compiled onefile pulls in nothing beyond PySide6 and the standard library.
+
+It follows the same shape as the application, for the same reason. `ops` holds the side effects (payload extraction, paths, shortcuts, process control, and the install, repair and uninstall sequences) and `state` holds the HKCU registrations, version comparison and the state model the window reads. Neither imports Qt. `ui` is the only Qt client, `shared` holds resource resolution and crash logging, and `app.py` is the composition root.
+
+Three seams keep the privileged work testable, which is what allows `installer.ops` and `installer.state` to sit inside the 100% gate:
+
+- every external command goes through an injectable `CommandRunner`, so no test spawns a process it did not intend to;
+- the HKCU locations are a `RegistryKeys` value rather than constants baked into each function, so a test writes to a scratch key instead of the user's own registration;
+- the per-user directories come from environment variables, so the suite redirects the profile into a temporary tree.
+
+The entry point is `installer_main.py` at the repository root rather than a script inside the package. A script is compiled with its own directory on the module search path, so compiling `installer/app.py` directly would leave the `installer.*` imports unresolvable. Compiling from the root also gives the payload one anchor that holds in both source and compiled runs: it is resolved relative to the `installer` package directory, and `buildinstaller.py` includes the staged payload at that same relative location.
+
 ## Execution flow
 
 The same core path serves both capture modes. The difference is only where the journal bytes come from and what triggers the render.
@@ -133,4 +147,4 @@ Rank handling reflects what the journal can actually tell us. A `Promotion` (a t
 
 ## Quality enforcement
 
-The structure is held in place by the structural tests listed against the invariants, by a 100% line and branch coverage gate on `o7debrief.domain` and `o7debrief.application` and by constructor injection through a single composition root. Infrastructure and UI are integration-tested and deliberately excluded from the hard coverage gate, because their correctness lives in talking to the real Journal, the real filesystem and a real Qt event loop rather than in branch coverage of pure logic. The testing strategy is documented in [TESTING.md](TESTING.md) and the build-from-source workflow in [DEVELOPMENT-README.md](DEVELOPMENT-README.md).
+The structure is held in place by the structural tests listed against the invariants, by a 100% line and branch coverage gate on `o7debrief.domain`, `o7debrief.application`, `installer.ops` and `installer.state`, and by constructor injection through a single composition root. Infrastructure and UI are integration-tested and deliberately excluded from the hard coverage gate, because their correctness lives in talking to the real Journal, the real filesystem and a real Qt event loop rather than in branch coverage of pure logic; `installer.ui` is excluded on the same grounds. The 400-line module limit covers `o7debrief/`, `installer/` and `tests/`. The testing strategy is documented in [TESTING.md](TESTING.md) and the build-from-source workflow in [DEVELOPMENT-README.md](DEVELOPMENT-README.md).

@@ -1,10 +1,13 @@
 """Enforce the per-module line-count limit.
 
-Every Python module under ``o7debrief/`` and ``tests/`` must be at most 400
-lines long. A module that grows past this is a signal to decompose it into
-helper modules or capability mixins, which keeps each unit small enough to hold
-in the head and to review in one pass. British spelling is used in comments. No
-em dashes appear anywhere.
+Every Python module under ``o7debrief/``, ``installer/`` and ``tests/`` must be
+at most 400 lines long. A module that grows past this is a signal to decompose
+it into helper modules or capability mixins, which keeps each unit small enough
+to hold in the head and to review in one pass.
+
+The setup program is in scope deliberately. It was one module of over a thousand
+lines that no rule could see, which is exactly the state this limit exists to
+prevent. British spelling is used in comments. No em dashes appear anywhere.
 """
 
 from __future__ import annotations
@@ -14,8 +17,10 @@ from pathlib import Path
 # The maximum permitted number of lines in any single module.
 MAX_LINES = 400
 
-# The two trees this rule covers, named relative to the repository root.
-SCANNED_TREES = ("o7debrief", "tests")
+# The trees this rule covers, named relative to the repository root. The staged
+# installer payload is build output rather than source, so it is skipped.
+SCANNED_TREES = ("o7debrief", "installer", "tests")
+SKIPPED_PARTS = ("__pycache__", "payload")
 
 
 def _repo_root() -> Path:
@@ -34,7 +39,7 @@ def _iter_modules(root: Path):
         if not base.is_dir():
             continue
         for path in base.rglob("*.py"):
-            if "__pycache__" in path.parts:
+            if any(part in SKIPPED_PARTS for part in path.parts):
                 continue
             yield path
 

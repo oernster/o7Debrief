@@ -2,7 +2,7 @@
 
 A standing reference to the project's outstanding technical debt. It records what is still open, weighs whether each item is worth doing and gives the rationale. Every item is a behaviour-preserving internal concern: nothing here proposes reverting a feature or changing any UI or UX behaviour. Scope is the whole repository (the `o7debrief` package, the composition root, the taxonomy configuration, the bespoke installer and the delivery scripts) read against `ARCHITECTURE.md`, `TESTING.md` and the tests under `tests/structural/`.
 
-This is the most rigorously enforced project in the portfolio. `tests/structural/` holds five separate suites: layering, domain purity (including a ban on reading the clock), a composition-root whitelist, a 400-line cap over both `o7debrief/` and `tests/`, and a magic-numbers test that exists nowhere else in the account. The domain and application layers are gated at 100% branch coverage across 81 test files. The list below is short because there is not much left.
+This is the most rigorously enforced project in the portfolio. `tests/structural/` holds five separate suites: layering, domain purity (including a ban on reading the clock), a composition-root whitelist, a 400-line cap over `o7debrief/`, `installer/` and `tests/`, and a magic-numbers test that exists nowhere else in the account. The domain and application layers are gated at 100% branch coverage, as are the setup program's operations and state model. The list below is short because there is not much left.
 
 ---
 
@@ -28,21 +28,9 @@ This is a verification gap, not a defect, and it closes with evidence rather tha
 - Add a note beside the config value recording when and against what it was confirmed.
 - Consider surfacing a one-time diagnostic when a rule names a `coins_field` that is absent from an event it otherwise matched. That converts a silent zero into something observable without weakening the domain rule.
 
-## 2. `buildinstaller.py` tells the reader to write a file that already exists
+## 2. `main.py` is 515 lines and is the one module the size rule cannot see
 
-Three places in `buildinstaller.py` carry the same stale instruction:
-
-- The module docstring: "TODO (author): provide the installer UI entry script described by INSTALLER_ENTRY below (installer/app.py). It is intentionally out of scope for this build tooling."
-- A comment above `INSTALLER_ENTRY`: "TODO(author): supply this PySide6 script. It is not created by this build tooling."
-- The runtime guard's error message: "TODO(author): provide installer/app.py (the PySide6 installer UI)."
-
-`installer/app.py` is tracked and present. It is the installer that every other bespoke installer in the portfolio was rebranded from.
-
-The runtime guard itself is correct and should stay: a build that fails clearly when the entry script is missing is right. What is wrong is the prose around it, which describes the repository as it was before the installer was written and tells a new reader to do work that is done. Delete the two TODO comments and reword the guard's message to state the fact ("installer UI entry script not found") without the instruction.
-
-## 3. `main.py` is 515 lines and is the one module the size rule cannot see
-
-`tests/structural/test_loc_limits.py` walks `o7debrief/` and `tests/` and fails anything over 400 lines. `main.py` is at repository root, so it is outside that scope, and at 515 lines it is the largest Python file in the project.
+`tests/structural/test_loc_limits.py` walks `o7debrief/`, `installer/` and `tests/` and fails anything over 400 lines. `main.py` is at repository root, so it is outside that scope, and at 515 lines it is the largest Python file in the project.
 
 Its own docstring explains why it is long and the explanation is a good one: it is the single place permitted to import infrastructure, it constructs every adapter explicitly, and it deliberately avoids module-level singletons and scattered literals. A composition root that wires a dozen ports honestly will be long, and the alternative (hiding the wiring in a container) is worse and is banned here for good reason.
 
@@ -53,23 +41,15 @@ So the item is not "shorten it". It is that the one file exempt from the rule is
 
 The first is honest and cheap. The second is tidier and risks obscuring the linear flow the docstring values.
 
-## 4. Infrastructure and UI are tested but not gated
+## 3. Infrastructure and UI are tested but not gated
 
-`addopts` reads `--cov=o7debrief.domain --cov=o7debrief.application --cov-branch --cov-fail-under=100`. So the gate covers two layers.
+`addopts` gates `o7debrief.domain`, `o7debrief.application`, `installer.ops` and `installer.state` at 100% branch coverage. So two of the application's four layers are outside it.
 
 Infrastructure is not ungated because it is untested: `tests/infrastructure/` holds thirteen modules covering the journal source, the config provider, both renderers, the archive, the sink, both stores, the release source, the icons, Windows autostart and an end-to-end test. That is thorough. It simply does not count toward the failing threshold, so coverage there can decay without anything reporting it.
 
 The journal source and `windows_paths.py` are the parts worth bringing inside. They are the boundary with the outside world, which is precisely where item 1's failure mode lives. Adding `--cov=o7debrief.infrastructure` at whatever level the existing tests already achieve, and raising it from there, costs nothing today and stops the drift.
 
 The UI omission is correct and should stay.
-
-## 5. The installer is outside every gate
-
-`installer/app.py` is not in the coverage source and has no tests, and carries four broad exception handlers (lines 585, 934, 952, 968) with no stated reasons.
-
-This is the pattern across the portfolio's bespoke installers and the same answer applies: the non-UI logic (payload extraction, the HKCU uninstall key, shortcut creation, launcher-path resolution) is Qt-free and can be lifted into a testable module, leaving the widget code as the untested surface. Meridian's `installer/ops` and `installer/ui` split is the shape to copy.
-
-Given that this installer is the ancestor of the others, improving it here has more leverage than improving any single copy.
 
 ---
 

@@ -4,17 +4,22 @@ The test strategy for o7 Debrief. The goal is a debrief that is reproducible and
 
 ## The 100% gate and its scope
 
-A hard coverage gate of 100% line and branch coverage applies to two layers:
+A hard coverage gate of 100% line and branch coverage applies to four packages:
 
 - `o7debrief.domain`
 - `o7debrief.application`
+- `installer.ops`
+- `installer.state`
 
-These are the deterministic core: the reducer, the value objects, the `SessionDebrief` aggregate, the use cases and the ports. They are pure logic with injected dependencies, so every line and branch can be reached by a fast, deterministic test. Holding them at 100% is what makes "the same journal bytes produce the same debrief" a property the suite actually proves, not a hope.
+The first two are the deterministic core: the reducer, the value objects, the `SessionDebrief` aggregate, the use cases and the ports. They are pure logic with injected dependencies, so every line and branch can be reached by a fast, deterministic test. Holding them at 100% is what makes "the same journal bytes produce the same debrief" a property the suite actually proves, not a hope.
 
-Three areas are deliberately excluded from the hard gate:
+The other two are the setup program's operations and its state model. They do the most privileged work in the product (registry writes, shortcut creation, per-user deployment, uninstall) and they are Qt-free, so they are gated rather than left unmeasured. Three seams make that possible without touching a real installation: commands are run through an injectable runner, the registry keys are a value that a test replaces with a scratch set, and the per-user locations come from environment variables the suite redirects. No mocking library is used; the doubles are hand-written and live in `tests/installer/fakes.py`.
+
+Four areas are deliberately excluded from the hard gate:
 
 - `o7debrief.infrastructure` is integration-tested. Its correctness is in reading real Journal bytes, discovering the Journal directory, tailing from the right offset and writing files; that is exercised against sample journal fixtures, not measured by branch coverage of glue code.
 - `o7debrief.ui` is exercised with light Qt tests under an offscreen platform. Its correctness is in wiring user actions to use cases, which is verified behaviourally rather than chased to 100%.
+- `installer.ui` and `installer/app.py` are the setup program's Qt client and its composition root, excluded on the same grounds as `o7debrief.ui` and `main.py`.
 - `main.py`, the composition root, is wiring. It is covered by the application running and by the structural composition-root test, not by a coverage target.
 
 Excluding these from the hard gate is a correctness decision, not a shortcut: a 100% target on IO and UI glue rewards mocking the real world, which is exactly where these layers must not be mocked.
@@ -27,6 +32,7 @@ Excluding these from the hard gate is a correctness decision, not a shortcut: a 
 | application | Unit tests with fakes | None | Use cases tested against fake implementations of the ports (journal source, clock, exporter, config). |
 | infrastructure | Integration tests | Yes (temp) | Journal discovery, byte-offset tail and parse run against sample journal fixtures; exporters write to a temp directory. |
 | ui | Light Qt tests | None | Real `QApplication` under `QT_QPA_PLATFORM=offscreen`; Qt is never mocked. No network. |
+| installer | Unit tests with hand-written fakes | Yes (temp, HKCU scratch keys) | The setup program's operations and state, against a redirected profile and a unique registry key that the fixture removes afterwards. |
 | structural | AST and source scans | File reads | Enforce the architectural invariants as tests so they cannot decay into convention. |
 
 Alongside the per-layer split, a few behavioural guards pin the memory characteristics the app depends on (invariant I9): that a last-session debrief reads back only to the previous `Shutdown` rather than the whole journal, that the all-history debrief streams the journal one file at a time and that the live recorder retains only the current session. These live in the application and infrastructure suites next to the tests above.
@@ -37,7 +43,7 @@ The structural suite under `tests/structural/` scans the source as an AST or as 
 
 - `test_layering.py`: the dependency direction `ui -> application -> domain <- infrastructure` holds and the UI imports the application layer only.
 - `test_domain_purity.py`: the domain imports no I/O, logging, `os`, `pathlib`, `threading` or wall-clock calls (`datetime.now()` / `date.today()`) and works in event-time only. Imports under `if TYPE_CHECKING:` are exempt.
-- `test_loc_limits.py`: no module exceeds 400 lines.
+- `test_loc_limits.py`: no module under `o7debrief/`, `installer/` or `tests/` exceeds 400 lines. The setup program is in scope deliberately: it was one module of over a thousand lines that no rule could see.
 - `test_composition_root.py`: there is exactly one composition root and no module-level singletons or service locators elsewhere.
 - `test_no_magic_numbers.py`: domain-specific values come from the TOML taxonomy or named constants, not inline literals.
 
@@ -50,7 +56,7 @@ pytest
 echo "EXIT=$LASTEXITCODE"
 ```
 
-- `EXIT=0` means all tests passed and the 100% gate on domain and application was met.
+- `EXIT=0` means all tests passed and the 100% gate on the four gated packages was met.
 - Any non-zero value means a failure; scroll past the coverage table to the actual failure output.
 
 To run the UI tests headless, set the offscreen Qt platform first:

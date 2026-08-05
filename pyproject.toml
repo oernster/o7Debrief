@@ -42,9 +42,14 @@ target-version = ["py313"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-# The hard gate covers only the two pure layers (domain and application).
+# The hard gate covers the two pure layers of the application (domain and
+# application) plus the two Qt-free halves of the setup program. The installer
+# does the most privileged work in the product (registry writes, shortcut
+# creation, per-user deployment, uninstall), so its operations and its state
+# model are gated rather than left unmeasured; installer/ui and installer/app.py
+# are the Qt client and are excluded on the same grounds as o7debrief/ui.
 # Infrastructure, ui and main.py are integration-tested, not gated here.
-addopts = "--cov=o7debrief.domain --cov=o7debrief.application --cov-branch --cov-report=term-missing --cov-fail-under=100"
+addopts = "--cov=o7debrief.domain --cov=o7debrief.application --cov=installer.ops --cov=installer.state --cov-branch --cov-report=term-missing --cov-fail-under=100"
 
 [tool.coverage.run]
 branch = true

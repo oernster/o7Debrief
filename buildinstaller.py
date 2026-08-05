@@ -17,10 +17,11 @@ Step 2 reads the standalone bundle produced by step 1, stages it (together with
 the LICENSE) as the installer payload, then compiles the installer UI into a
 single onefile executable.
 
-The installer UI itself lives in the entry script named by INSTALLER_ENTRY
-below (installer/app.py) and is out of scope here: this script only compiles
-and packages it. That UI reads the bundled payload directory
-(PAYLOAD_DIR_NAME) and LICENSE, and deploys the app to a per-user location.
+The installer itself is the ``installer`` package, entered through the script
+named by INSTALLER_ENTRY below (installer_main.py at the repository root), and
+is out of scope here: this script only compiles and packages it. That program
+reads the bundled payload directory (PAYLOAD_DIR_NAME) and LICENSE, and deploys
+the app to a per-user location.
 """
 
 from __future__ import annotations
@@ -46,10 +47,17 @@ LICENSE_FILE = PROJECT_ROOT / "LICENSE"
 ICON_FILE = PROJECT_ROOT / "assets" / "o7debrief.ico"
 VERSION_FILE = PROJECT_ROOT / "VERSION"
 
-# Installer UI entry point. This PySide6 script is not created by this build
+# Installer entry point. This PySide6 program is not created by this build
 # tooling, which only compiles and packages it.
+#
+# The entry script sits at the repository root rather than inside the package:
+# a script is compiled with its own directory on the module search path, so
+# compiling installer/app.py directly would leave the ``installer.*`` imports
+# unresolvable. Compiling from the root gives Nuitka the same layout it
+# reproduces in the bundle.
 INSTALLER_DIR = PROJECT_ROOT / "installer"
-INSTALLER_ENTRY = INSTALLER_DIR / "app.py"
+INSTALLER_ENTRY = PROJECT_ROOT / "installer_main.py"
+INSTALLER_PACKAGE = "installer"
 
 # Staging + output locations. The installer is compiled into a temporary dist
 # folder and then moved into place, so a running copy of an older installer
@@ -227,8 +235,17 @@ def build_installer() -> int:
         f"--product-version={pe_version}",
         f"--file-description={APP_DESCRIPTION} Installer",
         f"--copyright={copyright_text()}",
-        # Embed the staged payload (app bundle + LICENSE) inside the installer.
-        f"--include-data-dir={PAYLOAD_STAGE_DIR}={PAYLOAD_DIR_NAME}",
+        # Compile the whole installer package, not only what the entry script
+        # reaches statically.
+        f"--include-package={INSTALLER_PACKAGE}",
+        # Embed the staged payload (app bundle + LICENSE) inside the installer,
+        # under the package directory. The installer resolves its payload
+        # relative to the installer package in both source and compiled runs,
+        # so both find it in the same place.
+        (
+            f"--include-data-dir={PAYLOAD_STAGE_DIR}"
+            f"={INSTALLER_PACKAGE}/{PAYLOAD_DIR_NAME}"
+        ),
     ]
 
     if ICON_FILE.exists():
@@ -254,7 +271,7 @@ def build_installer() -> int:
     for part in nuitka_args:
         print("  ", part)
 
-    result = subprocess.run(nuitka_args, cwd=str(PROJECT_ROOT))
+    result = subprocess.run(nuitka_args, cwd=str(PROJECT_ROOT), check=False)
     if result.returncode != 0:
         print(
             f"[buildinstaller] ERROR: Nuitka build failed (exit {result.returncode}).",

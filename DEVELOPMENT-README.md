@@ -74,7 +74,13 @@ python buildexe.py
 python buildinstaller.py
 ```
 
-`buildinstaller.py` packages the built executable into a Windows installer for distribution to end users.
+`buildinstaller.py` packages the built executable into a Windows installer for distribution to end users. It compiles `installer_main.py` at the repository root, which is the entry point into the `installer` package. The entry script sits at the root rather than inside the package because a script is compiled with its own directory on the module search path, so compiling `installer/app.py` directly would leave the `installer.*` imports unresolvable.
+
+To run the setup program from source without building it:
+
+```powershell
+python installer_main.py
+```
 
 ## Project layout
 
@@ -87,12 +93,22 @@ o7debrief/
                    read, per-file streaming and parse), TOML config loading,
                    HTML (Jinja2) and Markdown exporters.
   ui/              PySide6 system tray and minimal windows; application layer only.
+installer/         The setup program, split so the privileged work is measurable.
+  ops/             Payload extraction, paths, shortcuts, process control and the
+                   install, repair and uninstall sequences. No Qt.
+  state/           The HKCU registrations, version comparison and the state model.
+  shared/          Resource resolution and crash logging.
+  ui/              The themed window and dialogs; the only Qt client.
+  app.py           The setup program's composition root.
 config/            TOML taxonomy mapping raw events to moments.
 tests/
   ...              Unit, integration and structural tests mirroring the source.
+  installer/       The setup program's operations and state, against scratch
+                   registry keys and a redirected profile.
   structural/      AST and source-scan boundary checks (layering, domain purity,
                    400-line limit, single composition root, no magic numbers).
 main.py            The single composition root.
+installer_main.py  Entry point for the setup program.
 buildexe.py        Nuitka standalone build.
 buildinstaller.py  Windows installer build.
 ```
