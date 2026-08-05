@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from tests.application.fakes import FakeReleaseSource
-
 from o7debrief.application.services.update_service import UpdateService
+from tests.application.fakes import FakeReleaseSource
 
 # The running version the service compares the latest release against.
 _CURRENT = "1.2.0"

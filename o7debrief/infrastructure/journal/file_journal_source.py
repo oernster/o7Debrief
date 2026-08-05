@@ -18,8 +18,8 @@ British spelling is used in comments. No em dashes appear anywhere.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
 from o7debrief.domain.aggregation.session_bracketer import SHUTDOWN, latest_session
 from o7debrief.domain.model.raw_event import RawEvent

@@ -15,7 +15,7 @@ import ctypes
 import os
 from pathlib import Path
 
-__all__ = ["get_saved_games_path", "FOLDERID_SAVED_GAMES"]
+__all__ = ["FOLDERID_SAVED_GAMES", "get_saved_games_path"]
 
 # Known Folder ID for "Saved Games" as defined by the Windows shell.
 FOLDERID_SAVED_GAMES = "{4C5C32FF-BB9D-43B0-B5B4-2D72E54EAAA4}"
@@ -95,7 +95,7 @@ def _path_from_winapi() -> Path | None:
         if ptr is not None:
             try:
                 windll.ole32.CoTaskMemFree(ptr)
-            except Exception:  # noqa: BLE001 - freeing failures are non-fatal.
+            except Exception:  # noqa: BLE001, S110 - freeing failures are non-fatal.
                 pass
 
 

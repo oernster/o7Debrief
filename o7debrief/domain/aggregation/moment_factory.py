@@ -22,7 +22,7 @@ from o7debrief.domain.rules.rollup_spec import MomentRule, RollupSpec
 from o7debrief.domain.value_objects.credits import Credits
 from o7debrief.domain.value_objects.enums import ActivityMode, MomentKind
 
-__all__ = ["build_moments", "SELF_DESTRUCT_MARK", "VESSEL_TYPE_MARK"]
+__all__ = ["SELF_DESTRUCT_MARK", "VESSEL_TYPE_MARK", "build_moments"]
 
 # Magnitude used when a rule names no magnitude field or the field is absent.
 _DEFAULT_MAGNITUDE = 0
@@ -42,12 +42,8 @@ SELF_DESTRUCT_MARK = "SelfDestruct"
 # (SRVType_Localised); a vessel deploy and a fighter dock/loss carry only an ID
 # and recover the type by matching it; a fighter deploy names it from its own
 # loadout. Nomad and fighter both arrive on LaunchFighter.
-_SLV_NAMED_KINDS = frozenset(
-    {MomentKind.SLV_DOCK, MomentKind.SLV_DESTROYED}
-)
-_SLF_CORRELATED_KINDS = frozenset(
-    {MomentKind.SLF_DOCK, MomentKind.SLF_DESTROYED}
-)
+_SLV_NAMED_KINDS = frozenset({MomentKind.SLV_DOCK, MomentKind.SLV_DESTROYED})
+_SLF_CORRELATED_KINDS = frozenset({MomentKind.SLF_DOCK, MomentKind.SLF_DESTROYED})
 _VEHICLE_KINDS = (
     _SLV_NAMED_KINDS
     | _SLF_CORRELATED_KINDS

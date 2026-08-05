@@ -11,11 +11,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 __all__ = [
-    "Preferences",
+    "DEFAULT_EXPORT_FORMAT",
     "FORMAT_HTML",
     "FORMAT_MARKDOWN",
     "VALID_EXPORT_FORMATS",
-    "DEFAULT_EXPORT_FORMAT",
+    "Preferences",
 ]
 
 # Export-format identifiers, equal to the matching exporter extensions.

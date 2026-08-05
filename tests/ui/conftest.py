@@ -9,7 +9,7 @@ conftest, so these tests run headless without a display server.
 
 from __future__ import annotations
 
-from typing import Iterator
+from collections.abc import Iterator
 
 import pytest
 from PySide6.QtWidgets import QApplication

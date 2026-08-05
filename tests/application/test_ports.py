@@ -9,6 +9,15 @@ cover the class and signature lines that remain.
 
 from __future__ import annotations
 
+from o7debrief.application.ports.clock import Clock
+from o7debrief.application.ports.config_provider import ConfigProvider
+from o7debrief.application.ports.debrief_archive import DebriefArchive
+from o7debrief.application.ports.debrief_exporter import DebriefExporter
+from o7debrief.application.ports.debrief_sink import DebriefSink
+from o7debrief.application.ports.journal_source import JournalSource
+from o7debrief.application.ports.preferences_store import PreferencesStore
+from o7debrief.application.ports.rank_snapshot_store import RankSnapshotStore
+from o7debrief.application.ports.release_source import ReleaseSource
 from tests.application.fakes import (
     FakeArchive,
     FakeConfigProvider,
@@ -21,16 +30,6 @@ from tests.application.fakes import (
     FixedClock,
     spec,
 )
-
-from o7debrief.application.ports.clock import Clock
-from o7debrief.application.ports.config_provider import ConfigProvider
-from o7debrief.application.ports.debrief_archive import DebriefArchive
-from o7debrief.application.ports.debrief_exporter import DebriefExporter
-from o7debrief.application.ports.debrief_sink import DebriefSink
-from o7debrief.application.ports.journal_source import JournalSource
-from o7debrief.application.ports.preferences_store import PreferencesStore
-from o7debrief.application.ports.rank_snapshot_store import RankSnapshotStore
-from o7debrief.application.ports.release_source import ReleaseSource
 
 
 def test_fakes_conform_to_their_ports() -> None:

@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:  # pragma: no cover - type-only import, no runtime dependency
     from o7debrief.application.ports.debrief_archive import DebriefArchive
 
-__all__ = ["RecentsPager", "NullArchive"]
+__all__ = ["NullArchive", "RecentsPager"]
 
 # The offset of the first (most recent) page.
 _FIRST_OFFSET = 0

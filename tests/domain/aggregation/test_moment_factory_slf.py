@@ -115,9 +115,7 @@ def test_nomad_launch_is_excluded_from_the_fighter_loadout_map() -> None:
         _ev("LaunchFighter", 0, (("Loadout", "galactic"), ("ID", 9))),
         _ev("DockFighter", 1, (("ID", 9),)),
     )
-    dock = next(
-        m for m in build_moments(events, spec) if m.kind is MomentKind.SLF_DOCK
-    )
+    dock = next(m for m in build_moments(events, spec) if m.kind is MomentKind.SLF_DOCK)
     assert VESSEL_TYPE_MARK not in dict(dock.detail)
 
 

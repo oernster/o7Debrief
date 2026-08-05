@@ -16,16 +16,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 __all__ = [
+    "DebriefView",
+    "DomainSection",
+    "DomainStat",
+    "FooterView",
     "HeaderView",
     "HeadlineItem",
-    "DomainStat",
-    "DomainSection",
-    "TimelineEntry",
-    "TimelineCategory",
-    "RankChange",
     "Milestone",
-    "FooterView",
-    "DebriefView",
+    "RankChange",
+    "TimelineCategory",
+    "TimelineEntry",
 ]
 
 

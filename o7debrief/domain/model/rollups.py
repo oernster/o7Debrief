@@ -13,20 +13,20 @@ from o7debrief.domain.value_objects.credits import Credits
 from o7debrief.domain.value_objects.enums import ActivityDomain, ActivityMode
 
 __all__ = [
-    "FlightRollup",
-    "ExplorationRollup",
+    "ActivityRollup",
+    "CarrierRollup",
     "CombatRollup",
-    "TradeRollup",
+    "EngineeringRollup",
+    "ExobiologyRollup",
+    "ExplorationRollup",
+    "FlightRollup",
     "MiningRollup",
     "MissionRollup",
-    "EngineeringRollup",
-    "CarrierRollup",
-    "ExobiologyRollup",
-    "SrvRollup",
-    "SlvRollup",
-    "SlfRollup",
     "OnFootRollup",
-    "ActivityRollup",
+    "SlfRollup",
+    "SlvRollup",
+    "SrvRollup",
+    "TradeRollup",
 ]
 
 

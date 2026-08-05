@@ -16,7 +16,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-__all__ = ["TailResult", "read_new_bytes", "EMPTY_OFFSET", "NO_PARTIAL"]
+__all__ = ["EMPTY_OFFSET", "NO_PARTIAL", "TailResult", "read_new_bytes"]
 
 # A fresh read starts at byte zero with no carried-over partial line.
 EMPTY_OFFSET = 0

@@ -24,7 +24,8 @@ standard library only.
 from __future__ import annotations
 
 import webbrowser
-from typing import TYPE_CHECKING, Callable
+from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QObject, QTimer
 from PySide6.QtGui import QAction, QIcon
@@ -89,7 +90,7 @@ _RECENT_PAGE_SIZE = 10
 
 def _noop() -> None:
     """Do nothing; the default handler for injected action callbacks."""
-    return None
+    return
 
 
 class TrayController(QObject):

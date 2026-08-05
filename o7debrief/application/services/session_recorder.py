@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from o7debrief.application.ports.journal_source import JournalSource
     from o7debrief.domain.model.raw_event import RawEvent
 
-__all__ = ["SessionStatus", "SessionRecorder"]
+__all__ = ["SessionRecorder", "SessionStatus"]
 
 # Starting read offset before any incremental poll has happened.
 _START_OFFSET = 0

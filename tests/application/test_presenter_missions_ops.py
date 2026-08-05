@@ -11,13 +11,12 @@ name, independent of the eventual live journal key.
 
 from __future__ import annotations
 
-from tests.application import domain_builders as build
-from tests.application.fakes import number_format, spec
-
 from o7debrief.application.services.debrief_presenter import DebriefPresenter
 from o7debrief.domain.model.rollups import ActivityRollup, MissionRollup
 from o7debrief.domain.value_objects.credits import Credits
 from o7debrief.domain.value_objects.enums import ActivityDomain, MomentKind
+from tests.application import domain_builders as build
+from tests.application.fakes import number_format, spec
 
 
 def _presenter(labels: tuple[tuple[str, str], ...] = ()) -> DebriefPresenter:
@@ -37,9 +36,7 @@ def _row_text(
         coins=coins,
         detail=detail,
     )
-    debrief = build.debrief(
-        moments=(moment,), activity=ActivityRollup(modes_used=())
-    )
+    debrief = build.debrief(moments=(moment,), activity=ActivityRollup(modes_used=()))
     return _presenter(labels).present(debrief).to_context()["timeline"][0]["text"]
 
 
@@ -49,7 +46,10 @@ def test_row_names_the_operation_faction_and_coins() -> None:
         ("Faction", "Fong Wang Limited"),
     )
     text = _row_text(detail, coins=500)
-    assert text == "Completed Infiltrate the compound for Fong Wang Limited (+500 Merc Coins)"
+    assert (
+        text
+        == "Completed Infiltrate the compound for Fong Wang Limited (+500 Merc Coins)"
+    )
 
 
 def test_row_prefers_localised_name_but_falls_back_to_the_raw_name() -> None:

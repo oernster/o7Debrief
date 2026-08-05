@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from o7debrief.domain.model.session_debrief import SessionDebrief
     from o7debrief.domain.rules.rollup_spec import RollupSpec
 
-__all__ = ["NumberFormat", "DebriefPresenter"]
+__all__ = ["DebriefPresenter", "NumberFormat"]
 
 
 class DebriefPresenter:

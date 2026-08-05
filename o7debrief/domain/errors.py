@@ -8,14 +8,14 @@ error with a single ``except O7DebriefError``.
 from __future__ import annotations
 
 __all__ = [
-    "O7DebriefError",
+    "AggregationError",
+    "InvalidCommanderError",
+    "InvalidCreditsError",
     "InvalidEventTimeError",
     "InvalidRawEventError",
-    "InvalidCreditsError",
-    "InvalidSystemNameError",
-    "InvalidCommanderError",
     "InvalidSessionWindowError",
-    "AggregationError",
+    "InvalidSystemNameError",
+    "O7DebriefError",
 ]
 
 

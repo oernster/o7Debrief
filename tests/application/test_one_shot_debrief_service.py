@@ -4,18 +4,6 @@ from __future__ import annotations
 
 import pytest
 
-from tests.application.fakes import (
-    FakeExporter,
-    FakeJournalSource,
-    FakePreferencesStore,
-    FakeRankStore,
-    FixedClock,
-    commander,
-    event,
-    number_format,
-    spec,
-)
-
 from o7debrief.application.dto.preferences import FORMAT_MARKDOWN, Preferences
 from o7debrief.application.dto.rank_snapshot import RankSnapshot
 from o7debrief.application.dto.render_request import RenderRequest
@@ -29,6 +17,17 @@ from o7debrief.application.services.one_shot_debrief_service import (
     OneShotDebriefService,
 )
 from o7debrief.application.services.rank_analyzer import RankAnalyzer
+from tests.application.fakes import (
+    FakeExporter,
+    FakeJournalSource,
+    FakePreferencesStore,
+    FakeRankStore,
+    FixedClock,
+    commander,
+    event,
+    number_format,
+    spec,
+)
 
 _CLOCK_ISO = "2026-06-15T12:00:00Z"
 

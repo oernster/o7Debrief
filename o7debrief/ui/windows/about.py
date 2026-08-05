@@ -43,20 +43,34 @@ _SPACING_PX = 8
 # actually ships or builds with. Date ranges use an en-dash entity, not a dash
 # in the source.
 _CREDITS = (
-    "<li><b>Python</b> - Copyright &copy; 2001&ndash;2026 Python Software "
-    "Foundation. Licensed under the PSF Licence.</li>",
-    "<li><b>PySide6 (Qt for Python)</b> - Copyright &copy; The Qt Company "
-    "Ltd. Licensed under the LGPL-3.0.</li>",
-    "<li><b>Jinja2</b> - Copyright &copy; 2007 Pallets. Licensed under the "
-    "BSD 3-Clause Licence.</li>",
-    "<li><b>Nuitka</b> - Copyright &copy; Kay Hayen. Licensed under the "
-    "Apache Licence 2.0.</li>",
-    "<li><b>pytest</b> - Copyright &copy; 2004&ndash;2026 Holger Krekel and "
-    "the pytest contributors. Licensed under the MIT Licence.</li>",
-    "<li><b>black</b> - Copyright &copy; 2018&ndash;2026 &#321;ukasz Langa "
-    "and contributors. Licensed under the MIT Licence.</li>",
-    "<li><b>flake8</b> - Copyright &copy; 2011&ndash;2026 Tarek Ziad&eacute; "
-    "and the flake8 contributors. Licensed under the MIT Licence.</li>",
+    (
+        "<li><b>Python</b> - Copyright &copy; 2001&ndash;2026 Python Software "
+        "Foundation. Licensed under the PSF Licence.</li>"
+    ),
+    (
+        "<li><b>PySide6 (Qt for Python)</b> - Copyright &copy; The Qt Company "
+        "Ltd. Licensed under the LGPL-3.0.</li>"
+    ),
+    (
+        "<li><b>Jinja2</b> - Copyright &copy; 2007 Pallets. Licensed under the "
+        "BSD 3-Clause Licence.</li>"
+    ),
+    (
+        "<li><b>Nuitka</b> - Copyright &copy; Kay Hayen. Licensed under the "
+        "Apache Licence 2.0.</li>"
+    ),
+    (
+        "<li><b>pytest</b> - Copyright &copy; 2004&ndash;2026 Holger Krekel and "
+        "the pytest contributors. Licensed under the MIT Licence.</li>"
+    ),
+    (
+        "<li><b>black</b> - Copyright &copy; 2018&ndash;2026 &#321;ukasz Langa "
+        "and contributors. Licensed under the MIT Licence.</li>"
+    ),
+    (
+        "<li><b>flake8</b> - Copyright &copy; 2011&ndash;2026 Tarek Ziad&eacute; "
+        "and the flake8 contributors. Licensed under the MIT Licence.</li>"
+    ),
 )
 
 

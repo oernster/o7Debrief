@@ -27,12 +27,12 @@ from o7debrief.application.services.presenter_domains import DOMAIN_ORDER
 from o7debrief.application.services.timeline_text import row_text
 
 __all__ = [
+    "build_footer",
     "build_header",
     "build_headline",
+    "build_ranks",
     "build_timeline",
     "build_timeline_categories",
-    "build_ranks",
-    "build_footer",
 ]
 
 # Journal field naming the star system an event occurred in. This is the

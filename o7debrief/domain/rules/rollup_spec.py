@@ -15,7 +15,7 @@ from o7debrief.domain.value_objects.enums import (
     MomentKind,
 )
 
-__all__ = ["MomentRule", "ThresholdSet", "RollupSpec"]
+__all__ = ["MomentRule", "RollupSpec", "ThresholdSet"]
 
 
 @dataclass(frozen=True, slots=True)

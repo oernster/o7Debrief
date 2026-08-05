@@ -2,17 +2,16 @@
 
 from __future__ import annotations
 
+from o7debrief.application.dto.render_request import RenderRequest
+from o7debrief.application.services.debrief_export_service import (
+    DebriefExportService,
+)
 from tests.application.fakes import (
     FakeExporter,
     FakeSink,
     FixedClock,
 )
 from tests.application.test_dto_and_errors import _sample_view
-
-from o7debrief.application.dto.render_request import RenderRequest
-from o7debrief.application.services.debrief_export_service import (
-    DebriefExportService,
-)
 
 # A clock time containing colons, to exercise filename sanitisation.
 _CLOCK_ISO = "2026-06-15T10:00:00Z"

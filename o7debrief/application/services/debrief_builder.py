@@ -8,11 +8,11 @@ caller passes only the per-session inputs.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 
-from o7debrief.domain.aggregation.moment_factory import build_moments
 from o7debrief.domain.aggregation.debrief_assembler import assemble
+from o7debrief.domain.aggregation.moment_factory import build_moments
 from o7debrief.domain.aggregation.session_bracketer import window_of
 from o7debrief.domain.aggregation.ship_changes import ship_change_moments
 from o7debrief.domain.model.conceptual_moment import ConceptualMoment

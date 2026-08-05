@@ -23,10 +23,10 @@ from __future__ import annotations
 import os
 import signal
 import sys
-import tomllib
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
+import tomllib
 from PySide6.QtCore import QTimer
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QSystemTrayIcon
@@ -69,7 +69,6 @@ from o7debrief.infrastructure import (
     WindowsAutostart,
 )
 from o7debrief.infrastructure.journal import paths as journal_paths
-
 from o7debrief.ui.tray.single_instance import SingleInstanceLock
 from o7debrief.ui.tray.tray_controller import TrayController
 from o7debrief.ui.view_models.session_view_model import SessionViewModel

@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from tests.application.fakes import spec
-
 from o7debrief.application.services.label_resolver import (
     LabelResolver,
     mode_string_from_name,
 )
+from tests.application.fakes import spec
 
 
 def test_mode_string_maps_every_mode_name() -> None:

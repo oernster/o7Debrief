@@ -8,7 +8,7 @@ domain, never a mock of it. No infrastructure is imported here.
 
 from __future__ import annotations
 
-from typing import Iterator
+from collections.abc import Iterator
 
 from o7debrief.application.dto.debrief_view import DebriefView
 from o7debrief.application.dto.preferences import Preferences

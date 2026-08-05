@@ -8,8 +8,9 @@ isolation, real credit rollups and both output formats written.
 
 from __future__ import annotations
 
-import tomllib
 from pathlib import Path
+
+import tomllib
 
 from o7debrief.application.services.debrief_builder import DebriefBuilder
 from o7debrief.application.services.debrief_export_service import (

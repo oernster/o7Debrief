@@ -16,6 +16,9 @@ from o7debrief.domain.aggregation.phase_tracker import (
     SlvLaunchRule,
     mode_at_each,
 )
+from o7debrief.domain.model.raw_event import RawEvent
+from o7debrief.domain.value_objects.enums import ActivityMode
+from o7debrief.domain.value_objects.event_time import EventTime
 
 # The Nomad-deployment discriminator the taxonomy supplies at runtime.
 _NOMAD = SlvLaunchRule(
@@ -23,9 +26,6 @@ _NOMAD = SlvLaunchRule(
     field="Loadout",
     tokens=("galactic", "stellar", "standard"),
 )
-from o7debrief.domain.model.raw_event import RawEvent
-from o7debrief.domain.value_objects.enums import ActivityMode
-from o7debrief.domain.value_objects.event_time import EventTime
 
 
 def _ev(event_type: str, sec: int, fields: tuple = ()) -> RawEvent:
@@ -109,7 +109,9 @@ def test_player_controlled_fighter_enters_slf_then_dock_returns_to_ship() -> Non
 
 def test_npc_fighter_launch_leaves_the_mode_unchanged() -> None:
     # PlayerControlled false means an NPC flies it; the commander stays in-ship.
-    events = (_ev(LAUNCH_FIGHTER, 0, (("Loadout", "gu97"), (PLAYER_CONTROLLED, False))),)
+    events = (
+        _ev(LAUNCH_FIGHTER, 0, (("Loadout", "gu97"), (PLAYER_CONTROLLED, False))),
+    )
     assert mode_at_each(events, _NOMAD) == (ActivityMode.SHIP,)
 
 

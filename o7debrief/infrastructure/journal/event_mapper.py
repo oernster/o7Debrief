@@ -20,7 +20,7 @@ from o7debrief.domain.errors import O7DebriefError
 from o7debrief.domain.model.raw_event import RawEvent
 from o7debrief.domain.value_objects.event_time import EventTime
 
-__all__ = ["map_record", "map_records", "EVENT_KEY", "TIMESTAMP_KEY"]
+__all__ = ["EVENT_KEY", "TIMESTAMP_KEY", "map_record", "map_records"]
 
 # The two reserved journal keys. ``event`` names the type; ``timestamp`` is the
 # event-time. Both are consumed structurally and excluded from the field tuple.

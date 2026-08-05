@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from tests.application.fakes import number_format
-
 from o7debrief.application.services.value_formatter import (
     NumberFormat,
     ValueFormatter,
 )
+from tests.application.fakes import number_format
 
 
 def _grouped() -> ValueFormatter:

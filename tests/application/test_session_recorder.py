@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from tests.application.fakes import FakeJournalSource, event
-
 from o7debrief.application.services.session_recorder import SessionRecorder
+from tests.application.fakes import FakeJournalSource, event
 
 
 def test_latest_session_events_reads_from_source() -> None:

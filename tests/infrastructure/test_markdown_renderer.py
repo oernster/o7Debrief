@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from tests.application import domain_builders as build
-from tests.application.fakes import number_format, spec
-
 from o7debrief.application.services.debrief_presenter import DebriefPresenter
 from o7debrief.domain.model.rollups import ActivityRollup
 from o7debrief.domain.value_objects.enums import (
@@ -13,6 +10,8 @@ from o7debrief.domain.value_objects.enums import (
     RankLadder,
 )
 from o7debrief.infrastructure.render.markdown_renderer import MarkdownDebriefExporter
+from tests.application import domain_builders as build
+from tests.application.fakes import number_format, spec
 
 # A moment credit value above the taxonomy big-payout threshold.
 _BIG_PAYOUT_MOMENT = 2000000

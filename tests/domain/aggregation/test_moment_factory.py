@@ -259,13 +259,17 @@ def test_where_filter_matches_when_field_contains_token() -> None:
 
 def test_where_filter_is_case_insensitive() -> None:
     spec = _spec((_HANGAR_BUY_RULE,))
-    moments = build_moments((_ev("ModuleBuy", 0, (("BuyItem", "Int_FighterBay"),)),), spec)
+    moments = build_moments(
+        (_ev("ModuleBuy", 0, (("BuyItem", "Int_FighterBay"),)),), spec
+    )
     assert len(moments) == 1
 
 
 def test_where_filter_rejects_when_token_absent() -> None:
     spec = _spec((_HANGAR_BUY_RULE,))
-    moments = build_moments((_ev("ModuleBuy", 0, (("BuyItem", "int_hyperdrive"),)),), spec)
+    moments = build_moments(
+        (_ev("ModuleBuy", 0, (("BuyItem", "int_hyperdrive"),)),), spec
+    )
     assert moments == ()
 
 
@@ -363,8 +367,6 @@ def test_deploy_without_a_matching_dock_has_no_vessel_type() -> None:
     events = (_ev("LaunchFighter", 0, (("Loadout", "galactic"), ("ID", 42))),)
     moments = build_moments(events, spec)
     assert VESSEL_TYPE_MARK not in dict(moments[0].detail)
-
-
 
 
 def test_self_destruct_marks_the_following_death() -> None:

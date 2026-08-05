@@ -26,16 +26,16 @@ from o7debrief.domain.model.raw_event import RawEvent
 from o7debrief.domain.value_objects.enums import ActivityMode
 
 __all__ = [
-    "LAUNCH_SRV",
-    "DOCK_SRV",
-    "SRV_DESTROYED",
-    "LAUNCH_FIGHTER",
-    "DOCK_FIGHTER",
-    "FIGHTER_DESTROYED",
     "DISEMBARK",
+    "DOCK_FIGHTER",
+    "DOCK_SRV",
     "EMBARK",
-    "SRV_FLAG",
+    "FIGHTER_DESTROYED",
+    "LAUNCH_FIGHTER",
+    "LAUNCH_SRV",
     "PLAYER_CONTROLLED",
+    "SRV_DESTROYED",
+    "SRV_FLAG",
     "SlvLaunchRule",
     "mode_at_each",
 ]

@@ -7,9 +7,6 @@ types and ship-launched fighters alike.
 
 from __future__ import annotations
 
-from tests.application import domain_builders as build
-from tests.application.fakes import at, number_format, spec
-
 from o7debrief.application.services.debrief_presenter import DebriefPresenter
 from o7debrief.domain.model.conceptual_moment import ConceptualMoment
 from o7debrief.domain.model.rollups import ActivityRollup
@@ -19,6 +16,8 @@ from o7debrief.domain.value_objects.enums import (
     ActivityMode,
     MomentKind,
 )
+from tests.application import domain_builders as build
+from tests.application.fakes import at, number_format, spec
 
 
 def _presenter(labels: tuple[tuple[str, str], ...] = ()) -> DebriefPresenter:
@@ -47,7 +46,10 @@ def _row_text(detail: tuple, labels: tuple[tuple[str, str], ...] = ()) -> str:
 
 def test_bounty_names_the_target_from_localised() -> None:
     text = _row_text(
-        (("Target", "federation_dropship_mkii"), ("Target_Localised", "Federal Assault Ship"))
+        (
+            ("Target", "federation_dropship_mkii"),
+            ("Target_Localised", "Federal Assault Ship"),
+        )
     )
     assert text == "Bounty on Federal Assault Ship"
 

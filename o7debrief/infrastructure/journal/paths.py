@@ -12,15 +12,15 @@ British spelling is used in comments. No em dashes appear anywhere.
 from __future__ import annotations
 
 import os
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 __all__ = [
+    "JournalDirectoryNotFoundError",
     "find_journal_directory",
     "get_journal_directory",
     "get_journal_files",
     "get_latest_journal_file",
-    "JournalDirectoryNotFoundError",
 ]
 
 # Elite journals live under ".../Saved Games/Frontier Developments/Elite Dangerous".

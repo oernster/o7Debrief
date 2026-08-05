@@ -7,8 +7,6 @@ them here keeps the test modules focused on assertions.
 
 from __future__ import annotations
 
-from tests.application.fakes import at, commander
-
 from o7debrief.domain.aggregation.debrief_assembler import STAR_SYSTEM_FIELD
 from o7debrief.domain.model.conceptual_moment import ConceptualMoment
 from o7debrief.domain.model.rank_delta import RankDelta
@@ -38,6 +36,7 @@ from o7debrief.domain.value_objects.enums import (
 )
 from o7debrief.domain.value_objects.session_window import SessionWindow
 from o7debrief.domain.value_objects.system_name import SystemName
+from tests.application.fakes import at, commander
 
 # Window seconds for a non-empty session, kept readable as named bounds.
 _START_SECOND = 0

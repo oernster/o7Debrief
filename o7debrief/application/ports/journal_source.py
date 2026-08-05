@@ -7,7 +7,8 @@ events only through this port, so it never depends on the file format.
 
 from __future__ import annotations
 
-from typing import Iterator, Protocol
+from collections.abc import Iterator
+from typing import Protocol
 
 from o7debrief.domain.model.raw_event import RawEvent
 

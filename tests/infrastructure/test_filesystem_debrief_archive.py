@@ -14,7 +14,6 @@ from o7debrief.application.dto.preferences import Preferences
 from o7debrief.infrastructure.archive.filesystem_debrief_archive import (
     FilesystemDebriefArchive,
 )
-
 from tests.application.fakes import FakePreferencesStore
 
 

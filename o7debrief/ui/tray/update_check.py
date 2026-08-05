@@ -10,7 +10,8 @@ appear anywhere.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable
+from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from o7debrief.application.services.update_service import UpdateService

@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import pytest
 
-from tests.application.fakes import FakeConfigProvider, spec
-
 from o7debrief.application.errors import ConfigSchemaMismatchError
 from o7debrief.application.services.config_loading_service import (
     ConfigLoadingService,
 )
+from tests.application.fakes import FakeConfigProvider, spec
 
 
 def test_load_spec_returns_spec_when_versions_match() -> None:

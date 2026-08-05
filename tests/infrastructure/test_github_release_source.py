@@ -7,6 +7,7 @@ missing-field, wrong-shape and failure paths without touching the network.
 from __future__ import annotations
 
 import urllib.error
+from typing import Self
 
 from o7debrief.infrastructure.update.github_release_source import GitHubReleaseSource
 
@@ -19,7 +20,7 @@ class _FakeResponse:
     def __init__(self, payload: bytes) -> None:
         self._payload = payload
 
-    def __enter__(self) -> "_FakeResponse":
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(self, *exc: object) -> bool:

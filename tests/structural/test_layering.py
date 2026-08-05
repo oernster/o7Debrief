@@ -137,9 +137,7 @@ def _is_type_checking_test(test: ast.expr) -> bool:
     """Return True if an if-test is the TYPE_CHECKING guard in either form."""
     if isinstance(test, ast.Name) and test.id == "TYPE_CHECKING":
         return True
-    if isinstance(test, ast.Attribute) and test.attr == "TYPE_CHECKING":
-        return True
-    return False
+    return isinstance(test, ast.Attribute) and test.attr == "TYPE_CHECKING"
 
 
 def test_layer_dependencies_are_respected() -> None:

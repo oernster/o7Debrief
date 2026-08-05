@@ -14,7 +14,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-__all__ = ["parse_line", "parse_lines", "parse_file"]
+__all__ = ["parse_file", "parse_line", "parse_lines"]
 
 
 def parse_line(line: str) -> dict[str, Any] | None:

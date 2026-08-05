@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from tests.application.fakes import event
-
 from o7debrief.application.services.rank_analyzer import RankAnalyzer
 from o7debrief.domain.value_objects.enums import RankLadder
+from tests.application.fakes import event
 
 
 def _analyzer() -> RankAnalyzer:

@@ -38,7 +38,7 @@ from o7debrief.domain.value_objects.enums import (
 from o7debrief.domain.value_objects.session_window import SessionWindow
 from o7debrief.domain.value_objects.system_name import SystemName
 
-__all__ = ["assemble", "STAR_SYSTEM_FIELD"]
+__all__ = ["STAR_SYSTEM_FIELD", "assemble"]
 
 # Raw-event/detail field naming the star system a moment occurred in.
 STAR_SYSTEM_FIELD = "StarSystem"

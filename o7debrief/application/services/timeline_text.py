@@ -122,7 +122,9 @@ def _single_killer_text(detail: dict, resolver) -> str | None:
         return None
     ship = _first_str(detail, _KILLER_SHIP_FIELDS)
     rank = detail.get(_KILLER_RANK_FIELD)
-    extras = [extra for extra in (ship, rank) if isinstance(extra, str) and extra.strip()]
+    extras = [
+        extra for extra in (ship, rank) if isinstance(extra, str) and extra.strip()
+    ]
     killed_by = resolver.generic(*_KILLED_BY)
     if extras:
         return f"{killed_by} {name} ({_EXTRA_SEP.join(extras)})"

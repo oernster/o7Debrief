@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from tests.application.fakes import commander, event, spec
-
-from o7debrief.domain.model.session_debrief import SessionDebrief
 from o7debrief.application.services.debrief_builder import DebriefBuilder
+from o7debrief.domain.model.session_debrief import SessionDebrief
+from tests.application.fakes import commander, event, spec
 
 
 def test_build_returns_session_debrief_with_window_and_commander() -> None:

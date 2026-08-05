@@ -8,7 +8,6 @@ next at the ends, plus the empty and null-archive cases.
 from __future__ import annotations
 
 from o7debrief.ui.tray.recents_pager import NullArchive, RecentsPager
-
 from tests.ui.fakes import FakeArchive
 
 _PAGE_SIZE = 10

@@ -6,7 +6,6 @@ from o7debrief.application.services.auto_debrief_trigger import AutoDebriefTrigg
 from o7debrief.domain.model.raw_event import RawEvent
 from o7debrief.domain.value_objects.event_time import EventTime
 from o7debrief.ui.view_models.session_view_model import SessionViewModel
-
 from tests.ui.fakes import FakeRecorder
 
 # The fake adds this many events per poll; mirrored here for the assertions.

@@ -14,7 +14,6 @@ from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
 from o7debrief.application.dto.export_result import ExportResult
 from o7debrief.ui.tray.tray_controller import TrayController
-
 from tests.ui.fakes import FakeArchive, FakeOneShot, FakeRecorder, RecordingOpener
 
 # Captions and sample report paths shared by the tray-home tests.

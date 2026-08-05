@@ -206,7 +206,7 @@ def build_exe() -> int:
     for part in nuitka_args:
         print("  ", part)
 
-    result = subprocess.run(nuitka_args, cwd=str(PROJECT_ROOT))
+    result = subprocess.run(nuitka_args, cwd=str(PROJECT_ROOT), check=False)
     if result.returncode != 0:
         print(
             f"[buildexe] ERROR: Nuitka build failed (exit {result.returncode}).",

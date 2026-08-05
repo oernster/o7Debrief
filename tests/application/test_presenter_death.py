@@ -7,9 +7,6 @@ no-killer shapes, and that the wording is configurable through the spec.
 
 from __future__ import annotations
 
-from tests.application import domain_builders as build
-from tests.application.fakes import at, number_format, spec
-
 from o7debrief.application.services.debrief_presenter import DebriefPresenter
 from o7debrief.domain.model.conceptual_moment import ConceptualMoment
 from o7debrief.domain.model.rollups import ActivityRollup
@@ -19,6 +16,8 @@ from o7debrief.domain.value_objects.enums import (
     ActivityMode,
     MomentKind,
 )
+from tests.application import domain_builders as build
+from tests.application.fakes import at, number_format, spec
 
 
 def _presenter(labels: tuple[tuple[str, str], ...] = ()) -> DebriefPresenter:

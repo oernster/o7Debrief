@@ -14,8 +14,8 @@ only.
 
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
 from pathlib import PurePath
-from typing import Callable, Sequence
 
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QIcon, QShowEvent
@@ -76,7 +76,7 @@ _HEADING_STYLE = f"color: {HEADING_COLOUR}; font-weight: bold;"
 
 def _noop() -> None:
     """Do nothing; the default for an unset pager callback."""
-    return None
+    return
 
 
 def _heading(text: str) -> QLabel:

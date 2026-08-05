@@ -12,7 +12,7 @@ _DIR = "C:/Users/Cmdr/Downloads"
 
 def _noop_save(_fmt, _on, _dir):  # type: ignore[no-untyped-def]
     """A save callback that ignores its arguments."""
-    return None
+    return
 
 
 def test_settings_dialog_preselects_the_current_format(qapp: QApplication) -> None:

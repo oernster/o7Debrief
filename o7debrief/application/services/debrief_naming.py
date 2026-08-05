@@ -11,7 +11,7 @@ only. British spelling is used in comments. No em dashes appear anywhere.
 
 from __future__ import annotations
 
-__all__ = ["NAME_STEM", "NAME_SEPARATOR", "debrief_prefix"]
+__all__ = ["NAME_SEPARATOR", "NAME_STEM", "debrief_prefix"]
 
 # Filename stem and separator for a generated debrief, before the timestamp.
 NAME_STEM = "debrief"

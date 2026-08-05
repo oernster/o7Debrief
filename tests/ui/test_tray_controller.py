@@ -14,7 +14,6 @@ from o7debrief.application.dto.export_result import ExportResult
 from o7debrief.application.dto.update_status import UpdateStatus
 from o7debrief.application.errors import ApplicationError
 from o7debrief.ui.tray.tray_controller import TrayController
-
 from tests.ui.fakes import (
     FakeArchive,
     FakeOneShot,

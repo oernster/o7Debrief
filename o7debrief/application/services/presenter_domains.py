@@ -20,7 +20,7 @@ from o7debrief.application.dto.debrief_view import (
     Milestone,
 )
 
-__all__ = ["build_domain_sections", "build_milestones", "DOMAIN_ORDER"]
+__all__ = ["DOMAIN_ORDER", "build_domain_sections", "build_milestones"]
 
 # Stat labels, resolved through the spec under these generic keys so the
 # wording is configurable and never hardcoded as a domain string.
