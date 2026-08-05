@@ -69,6 +69,14 @@ def test_percent_prefixes_sign_both_ways() -> None:
     assert fmt.percent(-5) == "-5%"
 
 
+def test_percent_level_carries_no_sign() -> None:
+    # A level says where a standing sits, so a sign would misread as movement.
+    fmt = _grouped()
+
+    assert fmt.percent_level(73) == "73%"
+    assert fmt.percent_level(0) == "0%"
+
+
 def test_duration_uses_configured_format() -> None:
     fmt = _grouped()
 

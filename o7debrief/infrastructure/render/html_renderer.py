@@ -5,7 +5,7 @@ This adapter implements the application ``DebriefExporter`` port for the
 Dangerous HUD palette, with every style inlined in one ``<style>`` block and no
 JavaScript, so the file opens identically anywhere and can be shared as-is. It
 consumes only the renderer contract returned by ``DebriefView.to_context()``;
-every value it shows is already formatted, and journal-derived text is HTML
+every value it shows is already formatted; journal-derived text is HTML
 escaped by the autoescaping template environment.
 
 British spelling is used in comments. No em dashes appear anywhere.
@@ -177,9 +177,24 @@ footer { color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem;
         {% if rank.promoted %}{{ rank.from_tier_name }} &rarr; {{ rank.to_tier_name }}
         {% else %}{{ rank.to_tier_name }}
         <span class="neutral">{{ rank.note }}</span>{% endif %}</span>
-        <span class="rank-bar" title="{{ rank.progress_pct }}%">
+        {% if rank.progress_pct is none %}
+        <span class="neutral">{{ rank.progress_display }}</span>
+        {% else %}
+        <span class="rank-bar" title="{{ rank.progress_display }}">
         <span class="rank-fill" style="width: {{ rank.progress_pct }}%"></span></span>
+        {% endif %}
       </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  {% if notices %}
+  <h2>Notices</h2>
+  <div class="panel">
+    <ul class="milestones">
+      {% for notice in notices %}
+      <li>{{ notice }}</li>
       {% endfor %}
     </ul>
   </div>

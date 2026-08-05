@@ -185,3 +185,42 @@ def test_render_includes_a_rank_progress_bar() -> None:
 
     assert "rank-bar" in html
     assert "width: 10%" in html  # combat is 10% toward the next tier
+
+
+def test_render_draws_no_bar_for_a_standing_with_no_reading() -> None:
+    # An empty bar would read as a standing of zero, which is the whole defect.
+    unread = build.rank_delta(
+        RankLadder.EMPIRE,
+        from_tier=14,
+        to_tier=14,
+        promoted=False,
+        start_pct=None,
+        end_pct=None,
+        growth_pct=None,
+        tier_ups=0,
+    )
+    debrief = build.debrief(moments=(), activity=build.full_activity(), ranks=(unread,))
+
+    html = HtmlDebriefExporter().render(_present(debrief)).decode("utf-8")
+
+    # The stylesheet still declares the bar; no bar element is emitted.
+    assert '<span class="rank-bar"' not in html
+    assert "No reading" in html
+
+
+def test_render_shows_a_notice_about_an_unread_field() -> None:
+    debrief = build.debrief(moments=(), activity=build.full_activity())
+    view = DebriefPresenter(spec(), number_format()).present(
+        debrief, (("MissionCompleted", "MercCoins"),)
+    )
+
+    html = HtmlDebriefExporter().render(view).decode("utf-8")
+
+    assert "<h2>Notices</h2>" in html
+    assert "MissionCompleted carried no MercCoins" in html
+
+
+def test_render_omits_the_notices_section_for_a_clean_reading() -> None:
+    html = HtmlDebriefExporter().render(_populated_view()).decode("utf-8")
+
+    assert "<h2>Notices</h2>" not in html

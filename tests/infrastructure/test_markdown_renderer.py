@@ -131,6 +131,27 @@ def test_render_includes_rank_progress_percentage() -> None:
     assert "10%" in md  # combat is 10% toward the next tier
 
 
+def test_render_says_so_for_a_standing_with_no_reading() -> None:
+    unread = build.rank_delta(
+        RankLadder.EMPIRE,
+        from_tier=14,
+        to_tier=14,
+        promoted=False,
+        start_pct=None,
+        end_pct=None,
+        growth_pct=None,
+        tier_ups=0,
+    )
+    debrief = build.debrief(
+        moments=(), activity=ActivityRollup(modes_used=()), ranks=(unread,)
+    )
+
+    md = MarkdownDebriefExporter().render(_present(debrief)).decode("utf-8")
+
+    assert "No reading" in md
+    assert "0%" not in md
+
+
 def test_render_omits_optional_sections_when_empty() -> None:
     debrief = build.debrief(
         moments=(), activity=ActivityRollup(modes_used=()), ranks=()
@@ -141,3 +162,22 @@ def test_render_omits_optional_sections_when_empty() -> None:
     assert "## Rank Progress" not in md
     assert "## Session Log" not in md
     assert "## Headline" in md
+
+
+def test_render_shows_a_notice_about_an_unread_field() -> None:
+    # A figure the report could not read is not a figure of zero.
+    debrief = build.debrief(moments=(), activity=ActivityRollup(modes_used=()))
+    view = DebriefPresenter(spec(), number_format()).present(
+        debrief, (("MissionCompleted", "MercCoins"),)
+    )
+
+    md = MarkdownDebriefExporter().render(view).decode("utf-8")
+
+    assert "## Notices" in md
+    assert "MissionCompleted carried no MercCoins" in md
+
+
+def test_render_omits_the_notices_section_for_a_clean_reading() -> None:
+    md = MarkdownDebriefExporter().render(_populated_view()).decode("utf-8")
+
+    assert "## Notices" not in md

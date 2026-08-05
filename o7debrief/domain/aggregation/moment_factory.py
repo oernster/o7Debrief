@@ -3,7 +3,7 @@
 Each raw event whose type has a ``MomentRule`` in the spec becomes one
 ``ConceptualMoment``. The moment's control mode comes from the phase tracker
 (aligned by index), its magnitude and credit delta are read from the
-rule's named fields, and its label is resolved through the spec (falling
+rule's named fields; its label is resolved through the spec (falling
 back to the event type so a moment is never unlabelled).
 """
 
@@ -22,7 +22,12 @@ from o7debrief.domain.rules.rollup_spec import MomentRule, RollupSpec
 from o7debrief.domain.value_objects.credits import Credits
 from o7debrief.domain.value_objects.enums import ActivityMode, MomentKind
 
-__all__ = ["SELF_DESTRUCT_MARK", "VESSEL_TYPE_MARK", "build_moments"]
+__all__ = [
+    "SELF_DESTRUCT_MARK",
+    "VESSEL_TYPE_MARK",
+    "build_moments",
+    "matches_filter",
+]
 
 # Magnitude used when a rule names no magnitude field or the field is absent.
 _DEFAULT_MAGNITUDE = 0
@@ -58,7 +63,7 @@ VESSEL_TYPE_MARK = "VesselType"
 
 
 def _magnitude_from(event: RawEvent, rule: MomentRule) -> int:
-    """Read the integer magnitude named by the rule, or the default."""
+    """Read the integer magnitude named by the rule, else the default."""
     if rule.magnitude_field is None:
         return _DEFAULT_MAGNITUDE
     raw = event.get(rule.magnitude_field)
@@ -68,10 +73,10 @@ def _magnitude_from(event: RawEvent, rule: MomentRule) -> int:
 
 
 def _credits_from(event: RawEvent, rule: MomentRule) -> Credits:
-    """Read the credit delta named by the rule, or zero.
+    """Read the credit delta named by the rule, else zero.
 
-    A rule names either a single scalar credit field or, for events whose
-    value is spread across a nested array, an array field plus the per-entry
+    A rule names either a single scalar credit field or (for events whose
+    value is spread across a nested array) an array field plus the per-entry
     fields to sum. The array form takes precedence when present.
     """
     if rule.credits_array_field is not None:
@@ -85,7 +90,7 @@ def _credits_from(event: RawEvent, rule: MomentRule) -> Credits:
 
 
 def _coins_from(event: RawEvent, rule: MomentRule) -> Credits:
-    """Read the scalar Merc Coins delta named by the rule, or zero.
+    """Read the scalar Merc Coins delta named by the rule, else zero.
 
     Coins are a separate currency from credits; a rule that names no coin field,
     or an event that omits it or carries a non-integer there, yields zero rather
@@ -100,11 +105,12 @@ def _coins_from(event: RawEvent, rule: MomentRule) -> Credits:
 
 
 def _credits_from_array(event: RawEvent, rule: MomentRule) -> Credits:
-    """Sum the rule's named item fields across its credit array, or zero.
+    """Sum the rule's named item fields across its credit array, else zero.
 
     The array field and the item fields both come from the rule (taxonomy),
-    so no journal key is hardcoded here. Entries that are not objects, and
-    item values that are not plain integers, are ignored rather than guessed.
+    so no journal key is hardcoded here. An entry that is not an object is
+    ignored rather than guessed at, as is an item value that is not a plain
+    integer.
     """
     entries = event.get(rule.credits_array_field)
     if not isinstance(entries, (list, tuple)):
@@ -120,7 +126,7 @@ def _credits_from_array(event: RawEvent, rule: MomentRule) -> Credits:
     return total
 
 
-def _matches_filter(event: RawEvent, rule: MomentRule) -> bool:
+def matches_filter(event: RawEvent, rule: MomentRule) -> bool:
     """Return whether the event satisfies the rule's optional where-filter.
 
     When the rule names a ``where_field`` and one or more ``where_contains``
@@ -169,7 +175,7 @@ def _is_nomad_launch(event: RawEvent, slv_launch: SlvLaunchRule) -> bool:
 
 
 def _titlecase(value: object) -> str | None:
-    """Return a loadout string title-cased for display, or None if blank."""
+    """Return a loadout string title-cased for display, else None if blank."""
     if isinstance(value, str) and value.strip():
         return value.title()
     return None
@@ -209,7 +215,7 @@ def _vehicle_type_for(
     srv_type_by_id: dict[object, str],
     fighter_loadout: dict[object, str],
 ) -> str | None:
-    """Return the vehicle type named on a ship-launched-vehicle moment, or None.
+    """Return the vehicle type named on a ship-launched-vehicle moment, else None.
 
     A vessel dock/loss names it directly; a vessel deploy recovers it by ID from
     the dock/loss; a fighter deploy names it from its own loadout; a fighter
@@ -259,7 +265,7 @@ def _first_matching_rule(event: RawEvent, spec: RollupSpec) -> MomentRule | None
     generic fighter). Returns None when no candidate matches.
     """
     for rule in spec.rules_for(event.event_type):
-        if _matches_filter(event, rule):
+        if matches_filter(event, rule):
             return rule
     return None
 

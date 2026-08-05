@@ -158,6 +158,7 @@ def _one_shot(journal_dir, export_dir, state_dir) -> OneShotDebriefService:
         rank_store=JsonRankSnapshotStore(state_dir),
         rank_analyzer=RankAnalyzer(),
         clock=SystemClock(),
+        spec=spec,
     )
 
 

@@ -48,16 +48,26 @@ testpaths = ["tests"]
 # creation, per-user deployment, uninstall), so its operations and its state
 # model are gated rather than left unmeasured; installer/ui and installer/app.py
 # are the Qt client and are excluded on the same grounds as o7debrief/ui.
-# Infrastructure, ui and main.py are integration-tested, not gated here.
-addopts = "--cov=o7debrief.domain --cov=o7debrief.application --cov=installer.ops --cov=installer.state --cov-branch --cov-report=term-missing --cov-fail-under=100"
+#
+# Five infrastructure sub-packages join the gate because they already stand at
+# 100% and have no OS-specific branch a test cannot reach. The rest of
+# infrastructure cannot: coverage carries a single fail-under, so gating a
+# layer measured at 79% would drag the whole threshold down and silently end
+# the 100% gate on the pure layers. Those five stay integration-tested, as do
+# ui and main.py.
+addopts = "--cov=o7debrief.domain --cov=o7debrief.application --cov=o7debrief.infrastructure.archive --cov=o7debrief.infrastructure.autostart --cov=o7debrief.infrastructure.clock --cov=o7debrief.infrastructure.sink --cov=o7debrief.infrastructure.update --cov=installer.ops --cov=installer.state --cov-branch --cov-report=term-missing --cov-fail-under=100"
 
 [tool.coverage.run]
 branch = true
-# Omit the layers that are not part of the hard coverage gate.
+# What the gate covers is decided by the packages named in addopts, not here:
+# nothing outside them is measured at all. So this list holds only what a bare
+# "pytest --cov" would otherwise pull in. It named the application's own layers
+# once, which was both redundant and misleading. It also named a path that does
+# not exist (the composition root is main.py at the repository root, never
+# o7debrief/main.py). Worse, omitting a layer here silences it even when
+# coverage is asked for it explicitly, which is why measuring infrastructure
+# reported no data at all.
 omit = [
-    "o7debrief/infrastructure/*",
-    "o7debrief/ui/*",
-    "o7debrief/main.py",
     # The test suite is not production surface. Its only uncovered lines are the
     # structural checks' failure branches, which fire solely on a dirty tree, so
     # measuring it would gate coverage on negative paths a clean codebase cannot

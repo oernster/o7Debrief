@@ -2,8 +2,13 @@
 
 Given the isolated session's moments (already chronological) plus the
 commander, window, rank progression and spec, this groups moments by domain
-into the eleven rollups, sums the net credit change, and reads the start
-and end systems from the first and last location-bearing moments.
+into the eleven rollups and sums the net credit change.
+
+Levels are not derived here. The systems, the ship and the credit balance are
+readings the journal states outright, so they are passed in and carried
+through untouched. Deriving location from the moments was wrong in a way worth
+recording: most location-bearing events produce no moment, so a session could
+name four systems and still report none.
 """
 
 from __future__ import annotations
@@ -184,28 +189,6 @@ def _net_credits(moments: tuple[ConceptualMoment, ...]) -> Credits:
     return total
 
 
-def _system_at(moment: ConceptualMoment) -> SystemName | None:
-    """Return the star system named in a moment's detail, if any."""
-    for key, value in moment.detail:
-        if key == STAR_SYSTEM_FIELD and isinstance(value, str) and value.strip():
-            return SystemName(value)
-    return None
-
-
-def _endpoints(
-    moments: tuple[ConceptualMoment, ...],
-) -> tuple[SystemName | None, SystemName | None]:
-    """Return the first and last location-bearing systems in order."""
-    located = tuple(
-        system
-        for system in (_system_at(moment) for moment in moments)
-        if system is not None
-    )
-    if not located:
-        return None, None
-    return located[0], located[-_ONE_OCCURRENCE]
-
-
 def _modes_used(moments: tuple[ConceptualMoment, ...]) -> tuple[ActivityMode, ...]:
     """Return the distinct control modes across moments in canonical order."""
     present = {moment.mode for moment in moments}
@@ -245,9 +228,19 @@ def assemble(
     spec: RollupSpec,
     ship: str = "",
     ship_name: str = "",
+    credits_balance: Credits | None = None,
+    start_system: SystemName | None = None,
+    end_system: SystemName | None = None,
+    systems_visited: int | None = None,
 ) -> SessionDebrief:
-    """Fold the session's moments into a complete SessionDebrief."""
-    start_system, end_system = _endpoints(moments)
+    """Fold the session's moments into a complete SessionDebrief.
+
+    ``credits_balance``, the systems and the ship are readings rather than
+    totals the domain computes: each is a level the journal states outright,
+    so they are passed in and carried through untouched. None means no reading
+    was seen and must stay distinguishable from a balance of zero, a count of
+    no systems or a commander who is nowhere.
+    """
     return SessionDebrief(
         commander=commander,
         window=window,
@@ -260,4 +253,6 @@ def assemble(
         config_schema_version=spec.schema_version,
         ship=ship,
         ship_name=ship_name,
+        credits_balance=credits_balance,
+        systems_visited=systems_visited,
     )

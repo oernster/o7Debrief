@@ -54,6 +54,7 @@ _RANK_KEYS = {
     "promoted",
     "note",
     "progress_pct",
+    "progress_display",
 }
 _MILESTONE_KEYS = {"icon", "text"}
 _FOOTER_KEYS = {
@@ -115,6 +116,7 @@ def _sample_view() -> DebriefView:
                 promoted=True,
                 note="",
                 progress_pct=42,
+                progress_display="42%",
             ),
         ),
         milestones=(Milestone(icon="medal", text="Promoted."),),
@@ -160,6 +162,7 @@ def test_to_context_yields_exact_contract_shape() -> None:
         "ranks",
         "milestones",
         "footer",
+        "notices",
     }
     assert set(context["header"]) == _HEADER_KEYS
     assert set(context["footer"]) == _FOOTER_KEYS

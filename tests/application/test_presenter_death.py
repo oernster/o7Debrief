@@ -1,12 +1,21 @@
 """Tests for the death-row killer summary in the timeline presenter.
 
-A death moment carries the Died payload in its detail; the presenter turns it
-into a "Killed by ..." row. These cover the single-killer, wing, name-only and
-no-killer shapes, and that the wording is configurable through the spec.
+A death moment carries the Died payload in its detail plus the victim stamped
+on by the builder; the presenter turns the pair into a "Killed by ...: CMDR ..."
+row. These cover the single-killer, wing, name-only and no-killer shapes, every
+degradation of the victim clause and that the wording is configurable through
+the spec.
 """
 
 from __future__ import annotations
 
+from o7debrief.application.services.death_details import (
+    KILLER_SQUADRON_FIELD,
+    REBUY_COST_FIELD,
+    VICTIM_NAME_FIELD,
+    VICTIM_SHIP_FIELD,
+    VICTIM_SHIP_NAME_FIELD,
+)
 from o7debrief.application.services.debrief_presenter import DebriefPresenter
 from o7debrief.domain.model.conceptual_moment import ConceptualMoment
 from o7debrief.domain.model.rollups import ActivityRollup
@@ -110,3 +119,113 @@ def test_wording_is_configurable_through_the_spec() -> None:
     text = _row_text((("Killers", [{"Name": "A"}, {"Name": "B"}]),), labels)
     assert text == "Slain by A & B"
     assert _row_text((), labels) == "Lost the ship"
+
+
+def test_the_victim_follows_the_cause_on_every_death_row() -> None:
+    # The row has to stand alone months later: who died and in what.
+    text = _row_text(
+        (
+            ("KillerName", "Cmdr Russet Meles"),
+            ("KillerRank", "Elite"),
+            (VICTIM_NAME_FIELD, "MidnightWraith"),
+            (VICTIM_SHIP_FIELD, "Imperial Cutter"),
+            (VICTIM_SHIP_NAME_FIELD, "Majestic Darkness"),
+        )
+    )
+    assert text == (
+        "Killed by Cmdr Russet Meles (Elite): "
+        'CMDR MidnightWraith in Imperial Cutter "Majestic Darkness"'
+    )
+
+
+def test_a_killerless_death_still_names_the_victim() -> None:
+    text = _row_text(
+        (
+            (VICTIM_NAME_FIELD, "MidnightWraith"),
+            (VICTIM_SHIP_FIELD, "Imperial Cutter"),
+        )
+    )
+    assert text == "Destroyed: CMDR MidnightWraith in Imperial Cutter"
+
+
+def test_an_unnamed_hull_is_named_by_its_type_alone() -> None:
+    text = _row_text(
+        (
+            ("SelfDestruct", True),
+            (VICTIM_NAME_FIELD, "MidnightWraith"),
+            (VICTIM_SHIP_FIELD, "Sidewinder"),
+        )
+    )
+    assert text == "Self-destruct: CMDR MidnightWraith in Sidewinder"
+
+
+def test_a_hull_of_unknown_type_is_named_by_its_given_name() -> None:
+    text = _row_text(
+        (
+            (VICTIM_NAME_FIELD, "MidnightWraith"),
+            (VICTIM_SHIP_NAME_FIELD, "Majestic Darkness"),
+        )
+    )
+    assert text == 'Destroyed: CMDR MidnightWraith in "Majestic Darkness"'
+
+
+def test_a_victim_with_no_ship_at_all_is_named_alone() -> None:
+    assert _row_text(((VICTIM_NAME_FIELD, "MidnightWraith"),)) == (
+        "Destroyed: CMDR MidnightWraith"
+    )
+
+
+def test_a_hull_without_a_commander_is_still_reported() -> None:
+    text = _row_text(
+        (
+            (VICTIM_SHIP_FIELD, "Imperial Cutter"),
+            (VICTIM_SHIP_NAME_FIELD, "Majestic Darkness"),
+        )
+    )
+    assert text == 'Destroyed: Imperial Cutter "Majestic Darkness"'
+
+
+def test_the_victim_wording_is_configurable_through_the_spec() -> None:
+    labels = (
+        ("label.death.victim_title", "Commander"),
+        ("label.death.victim_in", "flying a"),
+    )
+    text = _row_text(
+        (
+            (VICTIM_NAME_FIELD, "MidnightWraith"),
+            (VICTIM_SHIP_FIELD, "Imperial Cutter"),
+        ),
+        labels,
+    )
+    assert text == "Destroyed: Commander MidnightWraith flying a Imperial Cutter"
+
+
+def test_the_rebuy_charge_closes_the_row_when_one_was_paid() -> None:
+    # No other figure in the report accounts for the rebuy.
+    text = _row_text(
+        (
+            (VICTIM_NAME_FIELD, "MidnightWraith"),
+            (VICTIM_SHIP_FIELD, "Imperial Cutter"),
+            (REBUY_COST_FIELD, 11312783),
+        )
+    )
+    assert text == (
+        "Destroyed: CMDR MidnightWraith in Imperial Cutter " "(rebuy 11,312,783 Cr)"
+    )
+
+
+def test_a_death_with_no_rebuy_recorded_ends_at_the_victim() -> None:
+    text = _row_text(((VICTIM_NAME_FIELD, "MidnightWraith"),))
+    assert text == "Destroyed: CMDR MidnightWraith"
+
+
+def test_the_killers_squadron_joins_their_ship_and_rank() -> None:
+    text = _row_text(
+        (
+            ("KillerName", "Cmdr Russet Meles"),
+            ("KillerShip_Localised", "Cobra Mk V"),
+            ("KillerRank", "Elite"),
+            (KILLER_SQUADRON_FIELD, "JOME"),
+        )
+    )
+    assert text == "Killed by Cmdr Russet Meles (Cobra Mk V, Elite, JOME)"

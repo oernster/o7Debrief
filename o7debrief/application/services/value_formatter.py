@@ -88,6 +88,14 @@ class ValueFormatter:
         sign = _POSITIVE_SIGN if value >= _CREDIT_ZERO else _MINUS_SIGN
         return f"{sign}{abs(value)}{_PERCENT_SIGN}"
 
+    def percent_level(self, value: int) -> str:
+        """Return an unsigned percentage reading (for example 73%).
+
+        A level answers "where does this stand", so it carries no sign; the
+        signed form above answers "how far did it move".
+        """
+        return f"{value}{_PERCENT_SIGN}"
+
     def duration(self, seconds: float) -> str:
         """Return a duration rendered with the configured duration format."""
         whole = int(seconds)

@@ -7,7 +7,7 @@ and the ui consume the view through ``to_context()``, which yields plain
 dicts and lists in the exact shape every renderer expects.
 
 The view is modelled as small frozen sub-views so each section is typed and
-immutable, but ``to_context()`` deliberately flattens them back to plain
+immutable; ``to_context()`` deliberately flattens them back to plain
 dicts/lists so renderers never import these classes.
 """
 
@@ -169,7 +169,9 @@ class RankChange:
     ``promoted`` is True when the tier rose this period; ``note`` carries the
     label shown for a steady ladder (for example "(no change)") and is empty
     for a promoted one. ``progress_pct`` is the percentage earned toward the
-    next tier (0 to 100).
+    next tier (0 to 100), else None when no reading is known, in which case a
+    renderer must draw no bar; ``progress_display`` carries the wording either
+    way, so no renderer holds a display string of its own.
     """
 
     ladder_title: str
@@ -177,7 +179,8 @@ class RankChange:
     to_tier_name: str
     promoted: bool
     note: str
-    progress_pct: int
+    progress_pct: int | None
+    progress_display: str
 
     def as_dict(self) -> dict:
         """Return the rank change as a plain dict."""
@@ -188,6 +191,7 @@ class RankChange:
             "promoted": self.promoted,
             "note": self.note,
             "progress_pct": self.progress_pct,
+            "progress_display": self.progress_display,
         }
 
 
@@ -238,6 +242,10 @@ class DebriefView:
     milestones: tuple[Milestone, ...]
     footer: FooterView
     timeline_categories: tuple[TimelineCategory, ...] = ()
+    # Warnings about the reading itself rather than about the session: a
+    # figure the report could not read is not a figure of zero, so it says so
+    # rather than letting a silent default pass for a measurement.
+    notices: tuple[str, ...] = ()
 
     def to_context(self) -> dict:
         """Return the view as plain dicts/lists in the renderer contract shape.
@@ -257,4 +265,5 @@ class DebriefView:
             "ranks": [change.as_dict() for change in self.ranks],
             "milestones": [milestone.as_dict() for milestone in self.milestones],
             "footer": self.footer.as_dict(),
+            "notices": list(self.notices),
         }

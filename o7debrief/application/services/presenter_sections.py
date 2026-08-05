@@ -43,7 +43,13 @@ _STAR_SYSTEM_FIELD = "StarSystem"
 # Default display strings, resolved through the spec so they stay configurable.
 _UNKNOWN_SYSTEM = ("system.unknown", "Unknown")
 _UNKNOWN_SHIP = ("header.ship", "Unknown ship")
-_NET_CREDITS = ("net_credits", "Net credits")
+# The credits headline now names a balance rather than a change, because the
+# change moved to the delta slot beside it. The old "net_credits" key is kept as
+# the lookup so an existing taxonomy override is not silently dropped.
+_CREDITS_HEADLINE = ("net_credits", "Credits")
+# Shown in the value slot when the journal stated no balance at all. Distinct
+# wording is the whole point: it must not be mistakable for an amount.
+_BALANCE_UNKNOWN = ("credits.balance_unknown", "No reading")
 _JUMPS_HEADLINE = ("jumps", "Jumps")
 _BODIES_HEADLINE = ("bodies_scanned", "Bodies scanned")
 _KILLS_HEADLINE = ("kills", "Kills")
@@ -53,8 +59,9 @@ _LICENSE = ("footer.license", "")
 _GENERATED = ("footer.generated", "")
 # Label shown beside a ladder whose tier did not change this period.
 _RANK_NO_CHANGE = ("rank.no_change", "(no change)")
-# Progress percentage used when a ladder's closing percentage is unknown.
-_NO_PCT = 0
+# Shown in place of a percentage when no reading is known at all. Distinct
+# wording is the point: it must not be mistakable for a standing of zero.
+_RANK_NO_READING = ("rank.no_reading", "No reading")
 
 # Delta CSS classes for a headline value's direction.
 _POSITIVE_CLASS = "positive"
@@ -64,21 +71,22 @@ _NEUTRAL_CLASS = "neutral"
 _ZERO = 0
 
 
-def _distinct_systems(moments) -> int:
-    """Count the distinct star systems named across the moments' detail."""
-    seen: set[str] = set()
-    for moment in moments:
-        for key, value in moment.detail:
-            if key == _STAR_SYSTEM_FIELD and isinstance(value, str) and value.strip():
-                seen.add(value)
-    return len(seen)
-
-
 def _system_text(system, resolver) -> str:
-    """Return a system's display name, or the configured unknown default."""
+    """Return a system's display name, else the configured unknown default."""
     if system is None:
         return resolver.generic(*_UNKNOWN_SYSTEM)
     return str(system)
+
+
+def _visited_text(visited, fmt, resolver) -> str:
+    """Return the systems-visited count, else the configured unknown default.
+
+    A commander is always somewhere, so a count of zero is never a true
+    reading. None means nothing was recorded and the report says so instead.
+    """
+    if visited is None:
+        return resolver.generic(*_UNKNOWN_SYSTEM)
+    return fmt.integer(visited)
 
 
 def build_header(debrief, fmt, resolver) -> HeaderView:
@@ -92,7 +100,7 @@ def build_header(debrief, fmt, resolver) -> HeaderView:
         duration=fmt.duration(debrief.window.duration_s),
         start_system=_system_text(debrief.start_system, resolver),
         end_system=_system_text(debrief.end_system, resolver),
-        systems_visited=fmt.integer(_distinct_systems(debrief.moments)),
+        systems_visited=_visited_text(debrief.systems_visited, fmt, resolver),
     )
 
 
@@ -106,11 +114,25 @@ def _delta_class(value: int) -> str:
 
 
 def _net_credits_item(debrief, fmt, resolver) -> HeadlineItem:
-    """Build the net-credits headline item with a signed delta."""
+    """Build the credits headline: the balance, with the session change beside it.
+
+    The value slot carries the level and the delta slot the change. They used to
+    carry the same number, so a session with no credit events rendered its zero
+    delta in the value slot and read as a balance of nothing to anyone glancing
+    at the report. The balance is whatever the journal last stated; when it
+    stated none, the value slot says so rather than showing a figure the reader
+    would take for a real one.
+    """
     net = debrief.net_credits_delta.value
+    balance = debrief.credits_balance
+    value_display = (
+        resolver.generic(*_BALANCE_UNKNOWN)
+        if balance is None
+        else fmt.credits(balance.value)
+    )
     return HeadlineItem(
-        label=resolver.headline_label(*_NET_CREDITS),
-        value_display=fmt.credits(net),
+        label=resolver.headline_label(*_CREDITS_HEADLINE),
+        value_display=value_display,
         delta_display=fmt.signed_credits(net),
         delta_class=_delta_class(net),
     )
@@ -208,17 +230,24 @@ def build_timeline_categories(debrief, fmt, resolver) -> tuple[TimelineCategory,
     return tuple(categories)
 
 
-def build_ranks(debrief, resolver) -> tuple[RankChange, ...]:
+def build_ranks(debrief, fmt, resolver) -> tuple[RankChange, ...]:
     """Build a RankChange for every ladder in the standing, in order.
 
     A promoted ladder renders its from/to tiers; a steady one carries the
     configurable no-change note instead, so the full standing is shown either
     way. The note text comes through the resolver so it is never hardcoded.
+
+    The percentage shown is the domain's level, which is this period's reading
+    where there was one and the last known reading otherwise. A ladder with no
+    reading at all says so rather than showing a figure a reader would take
+    for a standing of zero.
     """
     no_change = resolver.generic(*_RANK_NO_CHANGE)
+    no_reading = resolver.generic(*_RANK_NO_READING)
     changes: list[RankChange] = []
     for delta in debrief.rank_progression:
         key = delta.ladder.name.lower()
+        level = delta.progress_pct
         changes.append(
             RankChange(
                 ladder_title=resolver.ladder_title(key),
@@ -226,7 +255,10 @@ def build_ranks(debrief, resolver) -> tuple[RankChange, ...]:
                 to_tier_name=resolver.tier_name(key, delta.to_tier),
                 promoted=delta.promoted,
                 note="" if delta.promoted else no_change,
-                progress_pct=delta.end_pct if delta.end_pct is not None else _NO_PCT,
+                progress_pct=level,
+                progress_display=(
+                    no_reading if level is None else fmt.percent_level(level)
+                ),
             )
         )
     return tuple(changes)

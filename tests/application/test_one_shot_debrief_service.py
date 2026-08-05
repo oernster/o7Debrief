@@ -95,6 +95,7 @@ def _build_service(
         rank_store=store,
         rank_analyzer=RankAnalyzer(),
         clock=FixedClock(_CLOCK_ISO),
+        spec=the_spec,
     )
 
 

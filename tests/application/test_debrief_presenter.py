@@ -89,6 +89,7 @@ def test_present_full_debrief_yields_contract_shape() -> None:
         activity=build.full_activity(),
         ranks=_full_ranks(),
         net_credits=BIG_PAYOUT_MOMENT,
+        systems_visited=2,
     )
 
     context = _presenter().present(debrief).to_context()
@@ -140,31 +141,7 @@ def test_delta_class_covers_all_three_directions() -> None:
     assert _delta_class(-10) == "negative"
 
 
-def test_headline_neutral_class_when_net_is_zero() -> None:
-    debrief = build.debrief(
-        moments=(),
-        activity=ActivityRollup(modes_used=()),
-        net_credits=0,
-    )
-
-    context = _presenter().present(debrief).to_context()
-
-    net = next(i for i in context["headline"] if i["label"] == "Net credits")
-    assert net["delta_class"] == "neutral"
-
-
-def test_headline_positive_class_when_net_is_positive() -> None:
-    debrief = build.debrief(
-        moments=(),
-        activity=build.full_activity(),
-        net_credits=750,
-    )
-
-    context = _presenter().present(debrief).to_context()
-
-    net = next(i for i in context["headline"] if i["label"] == "Net credits")
-    assert net["delta_class"] == "positive"
-    assert net["delta_display"] == "+750 Cr"
+# The credits headline has its own subject file: test_headline_credits.py.
 
 
 def test_unknown_systems_use_default_when_absent() -> None:
@@ -179,7 +156,8 @@ def test_unknown_systems_use_default_when_absent() -> None:
 
     assert context["header"]["start_system"] == "Unknown"
     assert context["header"]["end_system"] == "Unknown"
-    assert context["header"]["systems_visited"] == "0"
+    # Never zero: a commander is always somewhere, so no reading says so.
+    assert context["header"]["systems_visited"] == "Unknown"
 
 
 def test_timeline_entry_without_system_is_none() -> None:
@@ -263,26 +241,6 @@ def test_rank_change_renders_tier_names_and_steady_note() -> None:
     # The closing percentage drives the progress bar.
     assert combat["progress_pct"] == 10
     assert trade["progress_pct"] == 55
-
-
-def test_rank_progress_pct_defaults_to_zero_without_closing_pct() -> None:
-    delta = build.rank_delta(
-        RankLadder.EMPIRE,
-        from_tier=14,
-        to_tier=14,
-        promoted=False,
-        start_pct=0,
-        end_pct=None,
-        growth_pct=None,
-        tier_ups=0,
-    )
-    debrief = build.debrief(
-        moments=(), activity=ActivityRollup(modes_used=()), ranks=(delta,)
-    )
-
-    context = _presenter().present(debrief).to_context()
-
-    assert context["ranks"][0]["progress_pct"] == 0
 
 
 def test_header_shows_the_ship_when_known() -> None:

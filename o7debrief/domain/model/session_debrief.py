@@ -38,6 +38,17 @@ class SessionDebrief:
     config_schema_version: str
     ship: str = ""
     ship_name: str = ""
+    # The commander's credit balance as actually read from the journal, else None
+    # when the session carried no reading. A level, not a delta: it answers
+    # "how much do I have" where net_credits_delta answers "what changed". None
+    # is deliberately not zero, because a report that cannot tell an absent
+    # reading from a balance of nothing is the defect this field exists to fix.
+    credits_balance: Credits | None = None
+    # How many distinct systems the session named, else None when it named
+    # none at all and no history stated one either. None is deliberately not
+    # zero: a commander is always somewhere, so a count of no systems is never
+    # a true reading, only an admission that nothing was recorded.
+    systems_visited: int | None = None
 
     def __post_init__(self) -> None:
         previous: float | None = None

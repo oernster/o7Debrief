@@ -109,7 +109,7 @@ def rank_delta(
     from_tier: int,
     to_tier: int,
     promoted: bool,
-    start_pct: int,
+    start_pct: int | None,
     end_pct: int | None,
     growth_pct: int | None,
     tier_ups: int,
@@ -138,6 +138,8 @@ def debrief(
     schema_version: str = "1",
     ship: str = "",
     ship_name: str = "",
+    credits_balance: int | None = None,
+    systems_visited: int | None = None,
 ) -> SessionDebrief:
     """Assemble a SessionDebrief from prepared parts for presenter tests."""
     start = SystemName(start_system) if start_system is not None else None
@@ -154,4 +156,6 @@ def debrief(
         config_schema_version=schema_version,
         ship=ship,
         ship_name=ship_name,
+        credits_balance=(None if credits_balance is None else Credits(credits_balance)),
+        systems_visited=systems_visited,
     )

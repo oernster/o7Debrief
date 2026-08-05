@@ -10,6 +10,12 @@ A promoted ladder crosses a tier boundary, so its end percentage belongs
 to the new tier and a raw end-minus-start delta would be meaningless. We
 therefore leave ``growth_pct`` as ``None`` for promoted ladders and only
 compute it for ladders whose tier held steady.
+
+An unrecorded percentage is ``None`` rather than zero, on both ends. A ladder
+missing from the snapshot has no opening reading and a session with no
+``Progress`` event has no closing one; calling either zero would state a
+standing the journal never gave and would then compute a growth that never
+happened.
 """
 
 from __future__ import annotations
@@ -19,8 +25,6 @@ from o7debrief.domain.value_objects.enums import RankLadder
 
 __all__ = ["compute_rank_deltas"]
 
-# Default percentage when a ladder is absent from a snapshot.
-_DEFAULT_PCT = 0
 # Number of tier-ups for a ladder that was not promoted.
 _NO_TIER_UPS = 0
 
@@ -30,11 +34,24 @@ def _value_for(
     ladder: RankLadder,
     default: int,
 ) -> int:
-    """Return the integer paired with ``ladder``, or ``default``."""
+    """Return the integer paired with ``ladder``, else ``default``."""
     for key, value in pairs:
         if key == ladder:
             return value
     return default
+
+
+def _pct_for(
+    pairs: tuple[tuple[RankLadder, int], ...] | None,
+    ladder: RankLadder,
+) -> int | None:
+    """Return the percentage recorded for ``ladder``, else None if unrecorded."""
+    if pairs is None:
+        return None
+    for key, value in pairs:
+        if key == ladder:
+            return value
+    return None
 
 
 def _delta_for(
@@ -47,23 +64,19 @@ def _delta_for(
     """Build the RankDelta for a single ladder at its current tier.
 
     The opening tier comes from the saved snapshot; when the ladder is absent
-    from it (a first run, or a ladder never recorded before) the opening tier
+    from it (a first run or a ladder never seen before) the opening tier
     defaults to the current one, so the ladder reads as unchanged rather than
     as a spurious promotion from zero.
     """
     from_tier = _value_for(start_tiers, ladder, to_tier)
     promoted = to_tier > from_tier
-    start_pct = _value_for(start_pcts, ladder, _DEFAULT_PCT)
-    end_pct = (
-        _value_for(end_pcts, ladder, _DEFAULT_PCT) if end_pcts is not None else None
-    )
+    start_pct = _pct_for(start_pcts, ladder)
+    end_pct = _pct_for(end_pcts, ladder)
     tier_ups = to_tier - from_tier if promoted else _NO_TIER_UPS
-    if promoted:
+    if promoted or end_pct is None or start_pct is None:
         growth_pct = None
-    elif end_pct is not None:
-        growth_pct = end_pct - start_pct
     else:
-        growth_pct = None
+        growth_pct = end_pct - start_pct
     return RankDelta(
         ladder=ladder,
         from_tier=from_tier,

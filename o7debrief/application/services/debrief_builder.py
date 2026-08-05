@@ -2,15 +2,26 @@
 
 The builder is the application-side composition of three domain steps: it
 derives the session window, turns events into conceptual moments under the
-configured spec, and assembles the final debrief. It holds the spec so the
+configured spec, then assembles the final debrief. It holds the spec so the
 caller passes only the per-session inputs.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
+from o7debrief.application.services.death_details import (
+    Death,
+    deaths_in,
+    stamp_deaths,
+)
+from o7debrief.application.services.location_state import (
+    LocationHistory,
+    extended,
+    location_history,
+)
+from o7debrief.application.services.ship_state import SHIP_EVENTS, ship_history
 from o7debrief.domain.aggregation.debrief_assembler import assemble
 from o7debrief.domain.aggregation.moment_factory import build_moments
 from o7debrief.domain.aggregation.session_bracketer import window_of
@@ -21,32 +32,36 @@ from o7debrief.domain.model.raw_event import RawEvent
 from o7debrief.domain.model.session_debrief import SessionDebrief
 from o7debrief.domain.rules.rollup_spec import RollupSpec
 from o7debrief.domain.value_objects.commander_id import CommanderId
+from o7debrief.domain.value_objects.credits import Credits
+from o7debrief.domain.value_objects.system_name import SystemName
 
 __all__ = ["DebriefBuilder", "HistoryCollection"]
 
-# Journal events that establish or change the active ship across a session, and
-# the fields that name it. LoadGame names the ship at login; Loadout names it
-# whenever the commander boards one (including after a swap or purchase);
-# ShipyardSwap and ShipyardNew name the ship swapped or bought into. LoadGame and
-# Loadout use Ship (with Ship_Localised); the shipyard events use ShipType (with
-# ShipType_Localised). ShipName carries the commander's own name for the ship.
-_SHIP_EVENTS = ("LoadGame", "Loadout", "ShipyardSwap", "ShipyardNew")
-_SHIP_INTERNAL_FIELDS = ("Ship", "ShipType")
-_SHIP_DISPLAY_FIELDS = ("Ship_Localised", "ShipType_Localised")
-_SHIP_NAME_FIELDS = ("ShipName",)
+# A session that never left one system still visited it. Used only when the
+# session named no system of its own and a carried-forward reading supplies it.
+_ONE_SYSTEM = 1
+
+# The credit balance is a level rather than a delta: the journal states it
+# outright at every login, in LoadGame's Credits. The latest reading in whatever
+# events the builder was given is the one used, so the last-session path reports
+# that session's reading and the all-history path reports the most recent one in
+# the whole journal. LoadGame is already retained by _HISTORY_STATE_EVENTS
+# (through SHIP_EVENTS), so the all-history fold needs no extra retention.
+_BALANCE_EVENTS = ("LoadGame",)
+_BALANCE_FIELD = "Credits"
 
 # Journal events that name the commander, rank standing or active ship. The
 # streaming history fold keeps only these (with the derived moments and the
 # window endpoints), never the whole event history, so an all-history debrief
 # stays bounded in memory. It must cover every type read by
-# RankAnalyzer.extract_commander/analyse and by _ship_type_and_name; the
+# RankAnalyzer.extract_commander/analyse and by the ship-state fold; the
 # streaming-equivalence test guards that this stays complete.
 _HISTORY_STATE_EVENTS = (
     "Commander",
     "Rank",
     "Promotion",
     "Progress",
-) + _SHIP_EVENTS
+) + SHIP_EVENTS
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,13 +70,20 @@ class HistoryCollection:
 
     Holds only the light, derived data an all-history debrief needs: the
     conceptual moments, the few state-bearing events that name the commander,
-    rank and ship, and the earliest and latest events seen (for the session
-    window). The bulky raw events are never all held at once.
+    rank and ship, the folded location history, plus the earliest and latest
+    events seen (for the session window). The bulky raw events are never all
+    held at once. Location and the death readings are folded rather than
+    retained because the events behind them are among the most numerous in the
+    journal, while the systems and deaths themselves are few. A death and the
+    resurrection that prices it always fall in the same journal file, so
+    folding a batch at a time loses nothing.
     """
 
     moments: tuple[ConceptualMoment, ...]
     state_events: tuple[RawEvent, ...]
     window_events: tuple[RawEvent, ...]
+    location: LocationHistory = field(default_factory=LocationHistory)
+    deaths: tuple[Death, ...] = ()
 
 
 def _is_before(earlier: RawEvent, later: RawEvent) -> bool:
@@ -69,51 +91,44 @@ def _is_before(earlier: RawEvent, later: RawEvent) -> bool:
     return earlier.event_time.epoch_s < later.event_time.epoch_s
 
 
-def _first_str(event: RawEvent, fields: tuple[str, ...]) -> str:
-    """Return the first of ``fields`` that holds a non-empty string, else blank."""
-    for field in fields:
-        value = event.get(field)
-        if isinstance(value, str) and value.strip():
-            return value
-    return ""
+def _latest_balance(events: tuple[RawEvent, ...]) -> Credits | None:
+    """Return the newest credit balance stated in ``events``, else None.
 
-
-def _ship_type_and_name(events: tuple[RawEvent, ...]) -> tuple[str, str]:
-    """Return the (type, name) of the latest ship the commander is flying.
-
-    The active ship is tracked across the session rather than frozen at login: a
-    mid-session change (a Loadout on boarding, a ShipyardSwap or a ShipyardNew)
-    moves it on, so a swap is reflected instead of reporting the login vessel.
-    The localised type (for example "Imperial Cutter") is preferred over the
-    internal symbol and is paired to the active ship from whichever event in the
-    session carried it, with the internal symbol as the fallback. The custom name
-    resets when the ship changes, so the old name never shows on a new hull.
-
-    Internal symbols are matched case-insensitively: the journal writes the same
-    ship as "Cutter" in LoadGame yet "cutter" in Loadout and ShipyardSwap, so a
-    case-sensitive match would lose the localised name on an unswapped ship.
+    None means the journal offered no reading, which the report has to be able
+    to say. Returning zero instead would make "no reading" indistinguishable
+    from "no money", which is exactly the confusion this exists to remove. A
+    boolean is rejected explicitly because bool is a subclass of int and a
+    stray True would otherwise read as a balance of one credit.
     """
-    localised_by_key: dict[str, str] = {}
-    current_key = ""
-    current_symbol = ""
-    ship_name = ""
+    balance: Credits | None = None
     for event in events:
-        if event.event_type not in _SHIP_EVENTS:
+        if event.event_type not in _BALANCE_EVENTS:
             continue
-        symbol = _first_str(event, _SHIP_INTERNAL_FIELDS)
-        key = symbol.lower()
-        localised = _first_str(event, _SHIP_DISPLAY_FIELDS)
-        if key and localised:
-            localised_by_key[key] = localised
-        if key and key != current_key:
-            current_key = key
-            current_symbol = symbol
-            ship_name = ""
-        name = _first_str(event, _SHIP_NAME_FIELDS)
-        if name:
-            ship_name = name
-    ship_type = localised_by_key.get(current_key, current_symbol)
-    return ship_type, ship_name
+        value = event.get(_BALANCE_FIELD)
+        if isinstance(value, int) and not isinstance(value, bool):
+            balance = Credits(value)
+    return balance
+
+
+def _location_readings(
+    events: tuple[RawEvent, ...], carried: str | None
+) -> tuple[SystemName | None, SystemName | None, int | None]:
+    """Return the (start, end, count) location readings for a set of events.
+
+    A session that named a system reports its first and last plus how many
+    distinct ones it named. One that named none falls back to the system
+    carried forward from earlier history: the commander did not move, so that
+    system is both endpoints and the single system visited. When neither
+    states anything, all three are None and the report says so.
+    """
+    history = location_history(events)
+    endpoints = history.endpoints()
+    if endpoints is not None:
+        start, end = endpoints
+        return SystemName(start), SystemName(end), history.distinct_count()
+    if carried is not None:
+        return SystemName(carried), SystemName(carried), _ONE_SYSTEM
+    return None, None, None
 
 
 def _ordered_by_time(
@@ -134,26 +149,38 @@ class DebriefBuilder:
         commander: CommanderId,
         events: tuple[RawEvent, ...],
         rank_progression: tuple[RankDelta, ...],
+        carried_system: str | None = None,
     ) -> SessionDebrief:
         """Derive the window, build moments and assemble the debrief.
 
         ``events`` are the already-isolated events of one session. The
         domain validates emptiness and ordering, so the builder simply
-        chains the three aggregation steps in order.
+        chains the three aggregation steps in order. The ship history is
+        folded once and used twice: for the closing ship the header names, then
+        to name the hull the commander was flying at each death.
+
+        ``carried_system`` is the last system known from earlier history, used
+        only when this session named none of its own.
         """
         window = window_of(events)
+        history = ship_history(events)
         moments = _ordered_by_time(
             build_moments(events, self._spec) + ship_change_moments(events)
         )
-        ship_type, ship_name = _ship_type_and_name(events)
+        ship_type, ship_name = history.latest()
+        start_system, end_system, visited = _location_readings(events, carried_system)
         return assemble(
             commander,
             window,
-            moments,
+            stamp_deaths(moments, deaths_in(events), history, commander),
             rank_progression,
             self._spec,
             ship_type,
             ship_name,
+            _latest_balance(events),
+            start_system,
+            end_system,
+            visited,
         )
 
     def collect_history(
@@ -169,10 +196,14 @@ class DebriefBuilder:
         """
         moments: list[ConceptualMoment] = []
         state_events: list[RawEvent] = []
+        location = LocationHistory(systems=())
+        deaths: list[Death] = []
         earliest: RawEvent | None = None
         latest: RawEvent | None = None
         for batch in batches:
             moments.extend(build_moments(batch, self._spec))
+            location = extended(location, batch)
+            deaths.extend(deaths_in(batch))
             for current in batch:
                 if current.event_type in _HISTORY_STATE_EVENTS:
                     state_events.append(current)
@@ -191,6 +222,8 @@ class DebriefBuilder:
             moments=_ordered_by_time(all_moments),
             state_events=kept,
             window_events=endpoints,
+            location=location,
+            deaths=tuple(deaths),
         )
 
     def build_collected(
@@ -205,13 +238,22 @@ class DebriefBuilder:
         window endpoints, so it never needs the whole event history in hand.
         """
         window = window_of(collection.window_events)
-        ship_type, ship_name = _ship_type_and_name(collection.state_events)
+        history = ship_history(collection.state_events)
+        ship_type, ship_name = history.latest()
+        endpoints = collection.location.endpoints()
+        start_system = None if endpoints is None else SystemName(endpoints[0])
+        end_system = None if endpoints is None else SystemName(endpoints[1])
+        visited = None if endpoints is None else collection.location.distinct_count()
         return assemble(
             commander,
             window,
-            collection.moments,
+            stamp_deaths(collection.moments, collection.deaths, history, commander),
             rank_progression,
             self._spec,
             ship_type,
             ship_name,
+            _latest_balance(collection.state_events),
+            start_system,
+            end_system,
+            visited,
         )

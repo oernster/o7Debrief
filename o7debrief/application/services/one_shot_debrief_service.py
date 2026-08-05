@@ -16,6 +16,12 @@ from typing import TYPE_CHECKING
 from o7debrief.application.dto.rank_snapshot import RankSnapshot
 from o7debrief.application.dto.render_request import RenderRequest
 from o7debrief.application.errors import ApplicationError
+from o7debrief.application.services.field_diagnostics import missing_currency_fields
+from o7debrief.application.services.location_state import (
+    LocationHistory,
+    extended,
+    location_history,
+)
 
 if TYPE_CHECKING:
     from o7debrief.application.dto.export_result import ExportResult
@@ -29,6 +35,7 @@ if TYPE_CHECKING:
     )
     from o7debrief.application.services.debrief_presenter import DebriefPresenter
     from o7debrief.application.services.rank_analyzer import RankAnalyzer
+    from o7debrief.domain.rules.rollup_spec import RollupSpec
     from o7debrief.domain.value_objects.commander_id import CommanderId
 
 __all__ = ["OneShotDebriefService"]
@@ -47,6 +54,7 @@ class OneShotDebriefService:
         rank_store: RankSnapshotStore,
         rank_analyzer: RankAnalyzer,
         clock: Clock,
+        spec: RollupSpec,
     ) -> None:
         self._journal_source = journal_source
         self._debrief_builder = debrief_builder
@@ -56,6 +64,7 @@ class OneShotDebriefService:
         self._rank_store = rank_store
         self._rank_analyzer = rank_analyzer
         self._clock = clock
+        self._spec = spec
 
     def debrief_last_session(
         self,
@@ -72,8 +81,12 @@ class OneShotDebriefService:
         snapshot = self._rank_store.load(commander)
         start_tiers, start_pcts = _snapshot_starts(snapshot)
         deltas, end_pcts = self._rank_analyzer.analyse(events, start_tiers, start_pcts)
-        debrief = self._debrief_builder.build(commander, events, deltas)
-        view = self._presenter.present(debrief)
+        debrief = self._debrief_builder.build(
+            commander, events, deltas, self._carried_system(events)
+        )
+        view = self._presenter.present(
+            debrief, missing_currency_fields(events, self._spec)
+        )
         fresh = _fresh_snapshot(commander, deltas, end_pcts, self._clock.now_utc())
         self._rank_store.save(commander, fresh)
         return self._export_service.export(view, request or self._default_request())
@@ -85,8 +98,8 @@ class OneShotDebriefService:
     ) -> ExportResult:
         """Read all journal history to date, then build, present and export it.
 
-        Unlike the last-session debrief this covers every recorded event, but
-        it streams the journal one file at a time and folds each batch into a
+        Unlike the last-session debrief this covers every recorded event; it
+        streams the journal one file at a time and folds each batch into a
         bounded collection rather than loading the whole history into memory.
         It loads the saved rank snapshot to present the rank diff against it but
         never saves a new one, so presenting the diff stays read-only and the
@@ -104,6 +117,21 @@ class OneShotDebriefService:
         debrief = self._debrief_builder.build_collected(commander, collection, deltas)
         view = self._presenter.present(debrief)
         return self._export_service.export(view, request or self._default_request())
+
+    def _carried_system(self, events: tuple[object, ...]) -> str | None:
+        """Return the last system known from earlier history, else None.
+
+        The commander's position is a level, so a session that named no system
+        has not left the one the journal last recorded. Reading the history
+        back costs a full streaming pass, so it is done only when this session
+        states nothing of its own, which is the rare case.
+        """
+        if location_history(events).latest() is not None:
+            return None
+        history = LocationHistory(systems=())
+        for batch in self._journal_source.iter_event_batches():
+            history = extended(history, batch)
+        return history.latest()
 
     def _resolve_commander(
         self, events: tuple[object, ...], hint: CommanderId | None

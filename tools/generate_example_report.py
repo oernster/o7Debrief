@@ -63,8 +63,22 @@ from o7debrief.infrastructure.render.html_renderer import (  # noqa: E402
 
 _TAXONOMY = _ROOT / "config" / "debrief_taxonomy.toml"
 _OUT = _ROOT / "docs" / "example-report.html"
+# The day the sample timestamps are built on. It never appears in the output:
+# the site is timeless; a dated specimen reads as an abandoned project the
+# moment it ages. It exists only so the sample's ISO timestamps are valid.
 _DATE = "2026-06-15"
+# The sample's own datetime format, overriding the taxonomy's so no calendar
+# date is shown. The clock stays and is marked GMT, which is what the game
+# runs on plus what the journal writes, so the sample states the same thing a
+# real report does without anchoring the page to a day.
+_SAMPLE_DATETIME_FORMAT = "%H:%M:%S GMT"
 _NET_CREDITS = 7677000
+# The balance the sample commander is left holding, plus how many systems the
+# sample session touched. Both are levels the journal states outright, so the
+# sample states them too: leaving them unset would make the specimen advertise
+# a reading the app could not take, which is the opposite of what it shows.
+_CREDIT_BALANCE = 1204335000
+_SYSTEMS_VISITED = 2
 
 # One row per session-log moment: (kind, domain, mode, time, label, credits,
 # system). The label is the displayed text; the domain decides its category
@@ -207,6 +221,8 @@ def _debrief() -> SessionDebrief:
         start_system=SystemName("LHS 3447"),
         end_system=SystemName("Diaguandri"),
         net_credits_delta=Credits(_NET_CREDITS),
+        credits_balance=Credits(_CREDIT_BALANCE),
+        systems_visited=_SYSTEMS_VISITED,
         moments=_moments(),
         activity=_activity(),
         rank_progression=_ranks(),
@@ -217,7 +233,11 @@ def _debrief() -> SessionDebrief:
 
 
 def _number_format() -> NumberFormat:
-    """Read the display NumberFormat from the taxonomy [format] table."""
+    """Read the display NumberFormat from the taxonomy [format] table.
+
+    Every token comes from the taxonomy except the datetime format, which the
+    sample overrides to keep the page free of a calendar date.
+    """
     with _TAXONOMY.open("rb") as handle:
         table = tomllib.load(handle)["format"]
     return NumberFormat(
@@ -227,7 +247,7 @@ def _number_format() -> NumberFormat:
         thousands=table["thousands"],
         duration_format=table["duration_format"],
         time_format=table["time_format"],
-        datetime_format=table["datetime_format"],
+        datetime_format=_SAMPLE_DATETIME_FORMAT,
     )
 
 

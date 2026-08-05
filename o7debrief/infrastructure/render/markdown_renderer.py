@@ -3,7 +3,7 @@
 This adapter implements the application ``DebriefExporter`` port for the ``md``
 format. It produces a compact Markdown report suited to pasting into Discord or
 Reddit: a header, a fenced headline block, per-domain stat lists, a session
-timeline tagged by control mode, any rank changes and milestones, and a footer.
+timeline tagged by control mode, any rank changes and milestones, plus a footer.
 It consumes only ``DebriefView.to_context()``; every value is already formatted.
 
 British spelling is used in comments. No em dashes appear anywhere.
@@ -37,6 +37,7 @@ _H_ACTIVITY = "## Activity"
 _H_LOG = "## Session Log"
 _H_RANKS = "## Rank Progress"
 _H_MILESTONES = "## Milestones"
+_H_NOTICES = "## Notices"
 
 
 def _header(lines: list[str], header: dict, footer: dict) -> None:
@@ -116,8 +117,19 @@ def _ranks(lines: list[str], ranks: list[dict]) -> None:
             progression = f"{rank['to_tier_name']} {rank['note']}"
         lines.append(
             f"{_BULLET}**{rank['ladder_title']}**: {progression} "
-            f"{_PROGRESS_SEPARATOR} {rank['progress_pct']}%"
+            f"{_PROGRESS_SEPARATOR} {rank['progress_display']}"
         )
+    lines.append(_BLANK)
+
+
+def _notices(lines: list[str], notices: list[str]) -> None:
+    """Append warnings about the reading itself, when there are any."""
+    if not notices:
+        return
+    lines.append(_H_NOTICES)
+    lines.append(_BLANK)
+    for notice in notices:
+        lines.append(f"{_BULLET}{notice}")
     lines.append(_BLANK)
 
 
@@ -158,6 +170,7 @@ class MarkdownDebriefExporter:
         _domains(lines, context["domains"])
         _ranks(lines, context["ranks"])
         _milestones(lines, context["milestones"])
+        _notices(lines, context["notices"])
         _timeline(lines, context["timeline"])
         _footer(lines, context["footer"])
         text = _NEWLINE.join(lines) + _NEWLINE

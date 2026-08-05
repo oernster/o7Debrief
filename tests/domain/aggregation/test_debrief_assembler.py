@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-from o7debrief.domain.aggregation.debrief_assembler import (
-    STAR_SYSTEM_FIELD,
-    assemble,
-)
+from o7debrief.domain.aggregation.debrief_assembler import assemble
 from o7debrief.domain.model.conceptual_moment import ConceptualMoment
 from o7debrief.domain.rules.rollup_spec import RollupSpec, ThresholdSet
 from o7debrief.domain.value_objects.commander_id import CommanderId
@@ -17,6 +14,7 @@ from o7debrief.domain.value_objects.enums import (
 )
 from o7debrief.domain.value_objects.event_time import EventTime
 from o7debrief.domain.value_objects.session_window import SessionWindow
+from o7debrief.domain.value_objects.system_name import SystemName
 
 _SCHEMA = "9.9.9"
 
@@ -237,85 +235,29 @@ def test_partial_session_leaves_unused_rollups_none() -> None:
     assert activity.active_domains == (ActivityDomain.TRAVEL,)
 
 
-def test_start_and_end_systems_from_first_and_last_located_moments() -> None:
-    moments = (
-        _moment(
-            MomentKind.JUMP,
-            ActivityDomain.TRAVEL,
-            0,
-            detail=((STAR_SYSTEM_FIELD, "Sol"),),
-        ),
-        _moment(MomentKind.SCAN_BODY, ActivityDomain.EXPLORATION, 1),
-        _moment(
-            MomentKind.JUMP,
-            ActivityDomain.TRAVEL,
-            2,
-            detail=((STAR_SYSTEM_FIELD, "Lave"),),
-        ),
-        _moment(
-            MomentKind.JUMP,
-            ActivityDomain.TRAVEL,
-            3,
-            detail=((STAR_SYSTEM_FIELD, "Diso"),),
-        ),
+def test_location_readings_are_carried_through_untouched() -> None:
+    # Location is a level the caller reads from the events, never derived here:
+    # most location-bearing events produce no moment at all.
+    debrief = assemble(
+        _commander(),
+        _window(),
+        (),
+        (),
+        _spec(),
+        start_system=SystemName("Sol"),
+        end_system=SystemName("Diso"),
+        systems_visited=3,
     )
-    debrief = assemble(_commander(), _window(), moments, (), _spec())
     assert str(debrief.start_system) == "Sol"
     assert str(debrief.end_system) == "Diso"
+    assert debrief.systems_visited == 3
 
 
-def test_system_field_non_string_is_ignored() -> None:
-    moments = (
-        _moment(
-            MomentKind.JUMP,
-            ActivityDomain.TRAVEL,
-            0,
-            detail=((STAR_SYSTEM_FIELD, 1234),),
-        ),
-    )
-    debrief = assemble(_commander(), _window(), moments, (), _spec())
+def test_absent_location_readings_stay_none_rather_than_zero() -> None:
+    debrief = assemble(_commander(), _window(), (), (), _spec())
     assert debrief.start_system is None
     assert debrief.end_system is None
-
-
-def test_system_field_empty_string_is_ignored() -> None:
-    moments = (
-        _moment(
-            MomentKind.JUMP,
-            ActivityDomain.TRAVEL,
-            0,
-            detail=((STAR_SYSTEM_FIELD, "   "),),
-        ),
-    )
-    debrief = assemble(_commander(), _window(), moments, (), _spec())
-    assert debrief.start_system is None
-
-
-def test_moment_detail_without_system_field_is_ignored() -> None:
-    moments = (
-        _moment(
-            MomentKind.JUMP,
-            ActivityDomain.TRAVEL,
-            0,
-            detail=(("Other", "value"),),
-        ),
-    )
-    debrief = assemble(_commander(), _window(), moments, (), _spec())
-    assert debrief.start_system is None
-
-
-def test_single_located_moment_is_both_start_and_end() -> None:
-    moments = (
-        _moment(
-            MomentKind.JUMP,
-            ActivityDomain.TRAVEL,
-            0,
-            detail=((STAR_SYSTEM_FIELD, "Sol"),),
-        ),
-    )
-    debrief = assemble(_commander(), _window(), moments, (), _spec())
-    assert str(debrief.start_system) == "Sol"
-    assert str(debrief.end_system) == "Sol"
+    assert debrief.systems_visited is None
 
 
 def test_mission_coins_total_on_rollup_and_excluded_from_net_credits() -> None:

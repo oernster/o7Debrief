@@ -1,18 +1,29 @@
 """Row-text formatting for the session-log timeline.
 
 Most moments render as their configured label. A few kinds carry payload the
-report should surface instead: a death names who (or what) killed the commander
-and how; a ship-launched-vehicle row names the vehicle; a bounty names the ship
-that was destroyed. Because NPCs can now fly any ship, the killer ship and the
-bounty target are read straight from the journal rather than from a fixed list.
+report should surface instead: a death names who (or what) killed the
+commander and how, then the victim it cost; a ship-launched-vehicle row names
+the vehicle; a bounty names the ship that was destroyed. Because NPCs can now
+fly any ship, the killer ship and the bounty target are read straight from the
+journal rather than from a fixed list.
 
 This module is application-layer and imports no domain symbols: it reads the
 moment by attribute (``kind.name``, ``detail``, ``label``) and routes all
 wording through the label resolver, so nothing here hardcodes a display string.
+Its one import is of the victim detail keys, taken from the module that stamps
+them so the two never drift apart.
 British spelling is used in comments. No em dashes appear anywhere.
 """
 
 from __future__ import annotations
+
+from o7debrief.application.services.death_details import (
+    KILLER_SQUADRON_FIELD,
+    REBUY_COST_FIELD,
+    VICTIM_NAME_FIELD,
+    VICTIM_SHIP_FIELD,
+    VICTIM_SHIP_NAME_FIELD,
+)
 
 __all__ = ["row_text"]
 
@@ -32,6 +43,24 @@ _KILLERS_FIELD = "Killers"
 _WING_NAME_FIELDS = ("Name_Localised", "Name")
 _EXTRA_SEP = ", "
 _NAME_SEP = ", "
+
+# Every death row also names the victim, because "Destroyed" on its own tells a
+# reader coming back months later nothing about who was destroyed or what they
+# were flying. The three parts (commander, hull, the commander's own name for
+# it) degrade independently; a death carrying none of them reads exactly as
+# it did before. The victim follows the cause after a separator so the cause
+# keeps its own wording and any spec override of it still applies.
+_VICTIM_TITLE = ("death.victim_title", "CMDR")
+_VICTIM_IN = ("death.victim_in", "in")
+_VICTIM_SEP = ": "
+_SHIP_NAME_QUOTE = '"'
+# The rebuy is a real charge the journal states only in the resurrection that
+# follows a death. No other figure in the report accounts for it. A
+# resurrection that cost nothing is not a rebuy, so nothing is shown.
+_REBUY = ("death.rebuy", "rebuy")
+_REBUY_OPEN = " ("
+_REBUY_CLOSE = ")"
+_NO_REBUY = 0
 
 # Ship-launched-vehicle rows (the Nomad vessel and ship-launched fighters) name
 # the vehicle type, read from the moment detail (set by the moment factory) with
@@ -61,7 +90,7 @@ _TARGET_LOCALISED_FIELD = "Target_Localised"
 _TARGET_FIELD = "Target"
 
 # Mission-completion rows name the mission (an Operation carries a readable
-# LocalisedName) and its issuing faction, and surface the Merc Coins reward on
+# LocalisedName) and its issuing faction, then surface the Merc Coins reward on
 # the row when one was paid. The credit reward is totalled in the Missions
 # section rather than repeated on every row. The _Localised name is preferred so
 # a raw token is never shown when the journal offers a readable form.
@@ -87,7 +116,7 @@ def _first_str(mapping, keys) -> str | None:
 
 
 def _titlecase(value: object) -> str | None:
-    """Return an internal token title-cased for display, or None if blank."""
+    """Return an internal token title-cased for display, else None if blank."""
     if isinstance(value, str) and value.strip():
         return value.title()
     return None
@@ -102,7 +131,7 @@ def _join_names(names: list[str], resolver) -> str:
 
 
 def _wing_killers_text(entries, resolver) -> str | None:
-    """Return the summary for a wing kill, or None if it names no attacker."""
+    """Return the summary for a wing kill, else None if it names no attacker."""
     names = [
         name
         for entry in entries
@@ -116,14 +145,17 @@ def _wing_killers_text(entries, resolver) -> str | None:
 
 
 def _single_killer_text(detail: dict, resolver) -> str | None:
-    """Return the summary for a single killer, or None if none is named."""
+    """Return the summary for a single killer, else None if none is named."""
     name = _first_str(detail, _KILLER_NAME_FIELDS)
     if name is None:
         return None
     ship = _first_str(detail, _KILLER_SHIP_FIELDS)
     rank = detail.get(_KILLER_RANK_FIELD)
+    squadron = detail.get(KILLER_SQUADRON_FIELD)
     extras = [
-        extra for extra in (ship, rank) if isinstance(extra, str) and extra.strip()
+        extra
+        for extra in (ship, rank, squadron)
+        if isinstance(extra, str) and extra.strip()
     ]
     killed_by = resolver.generic(*_KILLED_BY)
     if extras:
@@ -131,9 +163,8 @@ def _single_killer_text(detail: dict, resolver) -> str | None:
     return f"{killed_by} {name}"
 
 
-def _death_text(moment, resolver) -> str:
-    """Return the death row text: who killed the commander, or a plain loss."""
-    detail = dict(moment.detail)
+def _death_cause_text(detail: dict, resolver) -> str:
+    """Return who killed the commander, else the cause of a killerless loss."""
     killers = detail.get(_KILLERS_FIELD)
     if isinstance(killers, (list, tuple)) and killers:
         wing = _wing_killers_text(killers, resolver)
@@ -147,6 +178,50 @@ def _death_text(moment, resolver) -> str:
     return resolver.generic(*_DEATH_NO_KILLER)
 
 
+def _hull_text(ship: str, ship_name: str) -> str:
+    """Return the hull as its type, its given name or the type carrying it."""
+    if not ship_name:
+        return ship
+    quoted = f"{_SHIP_NAME_QUOTE}{ship_name}{_SHIP_NAME_QUOTE}"
+    if not ship:
+        return quoted
+    return f"{ship} {quoted}"
+
+
+def _victim_text(detail: dict, resolver) -> str | None:
+    """Return the clause naming the victim, else None when none was recorded."""
+    name = _first_str(detail, (VICTIM_NAME_FIELD,))
+    hull = _hull_text(
+        _first_str(detail, (VICTIM_SHIP_FIELD,)) or "",
+        _first_str(detail, (VICTIM_SHIP_NAME_FIELD,)) or "",
+    )
+    if name is None:
+        return hull or None
+    who = f"{resolver.generic(*_VICTIM_TITLE)} {name}"
+    if not hull:
+        return who
+    return f"{who} {resolver.generic(*_VICTIM_IN)} {hull}"
+
+
+def _rebuy_text(detail: dict, resolver, fmt) -> str:
+    """Return the parenthesised rebuy charge, else nothing when none was paid."""
+    cost = detail.get(REBUY_COST_FIELD)
+    if not isinstance(cost, int) or isinstance(cost, bool) or cost <= _NO_REBUY:
+        return ""
+    label = resolver.generic(*_REBUY)
+    return f"{_REBUY_OPEN}{label} {fmt.credits(cost)}{_REBUY_CLOSE}"
+
+
+def _death_text(moment, resolver, fmt) -> str:
+    """Return the death row: the cause, who and what was lost, then the rebuy."""
+    detail = dict(moment.detail)
+    line = _death_cause_text(detail, resolver)
+    victim = _victim_text(detail, resolver)
+    if victim is not None:
+        line = f"{line}{_VICTIM_SEP}{victim}"
+    return f"{line}{_rebuy_text(detail, resolver, fmt)}"
+
+
 def _vehicle_text(moment, resolver) -> str:
     """Return a ship-launched-vehicle row naming the vehicle type."""
     verb_label, generic_label = _VEHICLE_ROWS[moment.kind.name]
@@ -157,7 +232,7 @@ def _vehicle_text(moment, resolver) -> str:
 
 
 def _bounty_text(moment, resolver) -> str:
-    """Return a bounty row naming the destroyed ship, or a bare bounty."""
+    """Return a bounty row naming the destroyed ship, else a bare bounty."""
     detail = dict(moment.detail)
     ship = _first_str(detail, (_TARGET_LOCALISED_FIELD,)) or _titlecase(
         detail.get(_TARGET_FIELD)
@@ -198,7 +273,7 @@ def row_text(moment, resolver, fmt) -> str:
     """
     kind = moment.kind.name
     if kind == _DEATH_KIND:
-        return _death_text(moment, resolver)
+        return _death_text(moment, resolver, fmt)
     if kind in _VEHICLE_ROWS:
         return _vehicle_text(moment, resolver)
     if kind == _BOUNTY_KIND:

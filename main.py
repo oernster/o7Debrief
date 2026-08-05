@@ -326,7 +326,7 @@ def _open_settings(
     """Return a handler that opens the Settings dialog and applies any change.
 
     The dialog is shown the current export format, startup state and output
-    directory, and reports the chosen values through a callback; applying them
+    directory, then reports the chosen values through a callback; applying them
     here keeps the dialog free of file and registry I/O while the store and the
     registry stay the sources of truth. An unset output directory is shown as
     the default Downloads location.
@@ -362,7 +362,7 @@ def _open_about(icon: QIcon) -> Callable[[], None]:
 
 
 def _load_licence_text() -> str:
-    """Return the bundled LICENCE text, or a short fallback when it is absent.
+    """Return the bundled LICENCE text, else a short fallback when it is absent.
 
     Reading the LICENCE file here (the composition root) keeps the ui free of
     I/O and makes the file the single source of truth for the licence shown in
@@ -439,6 +439,7 @@ def _build_one_shot(
         rank_store=rank_store,
         rank_analyzer=rank_analyzer,
         clock=clock,
+        spec=spec,
     )
     return one_shot, recorder
 

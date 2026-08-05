@@ -37,6 +37,16 @@ if TYPE_CHECKING:
 
 __all__ = ["DebriefPresenter", "NumberFormat"]
 
+# Wording for a field a rule named but the event never carried. Resolved
+# through the spec like every other display string, with the event and field
+# substituted in so the reader knows exactly what was not read.
+_MISSING_FIELD = (
+    "diagnostic.missing_field",
+    "{event} carried no {field}, so any amount it should hold reads as zero.",
+)
+_MISSING_EVENT_TOKEN = "{event}"
+_MISSING_FIELD_TOKEN = "{field}"
+
 
 class DebriefPresenter:
     """Formats a domain SessionDebrief into a presentation DebriefView.
@@ -51,8 +61,27 @@ class DebriefPresenter:
         self._formatter = ValueFormatter(number_format)
         self._resolver = LabelResolver(spec)
 
-    def present(self, debrief: SessionDebrief) -> DebriefView:
-        """Build the fully formatted view for a session debrief."""
+    def _notices(self, missing_fields: tuple[tuple[str, str], ...]) -> tuple[str, ...]:
+        """Word each unread field as a notice, in the order they were found."""
+        template = self._resolver.generic(*_MISSING_FIELD)
+        return tuple(
+            template.replace(_MISSING_EVENT_TOKEN, event).replace(
+                _MISSING_FIELD_TOKEN, field
+            )
+            for event, field in missing_fields
+        )
+
+    def present(
+        self,
+        debrief: SessionDebrief,
+        missing_fields: tuple[tuple[str, str], ...] = (),
+    ) -> DebriefView:
+        """Build the fully formatted view for a session debrief.
+
+        ``missing_fields`` are the (event, field) pairs a rule named but the
+        matching event never carried. They describe the reading rather than
+        the session, so they become notices instead of figures.
+        """
         fmt = self._formatter
         resolver = self._resolver
         return DebriefView(
@@ -61,7 +90,8 @@ class DebriefPresenter:
             domains=build_domain_sections(debrief.activity, fmt, resolver),
             timeline=build_timeline(debrief, fmt, resolver),
             timeline_categories=build_timeline_categories(debrief, fmt, resolver),
-            ranks=build_ranks(debrief, resolver),
+            ranks=build_ranks(debrief, fmt, resolver),
             milestones=build_milestones(debrief.moments, self._spec, resolver),
             footer=build_footer(debrief, fmt, resolver),
+            notices=self._notices(missing_fields),
         )
