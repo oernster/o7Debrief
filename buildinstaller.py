@@ -17,11 +17,10 @@ Step 2 reads the standalone bundle produced by step 1, stages it (together with
 the LICENSE) as the installer payload, then compiles the installer UI into a
 single onefile executable.
 
-TODO (author): provide the installer UI entry script described by
-INSTALLER_ENTRY below (installer/app.py). It is intentionally out of scope for
-this build tooling: this script only compiles and packages it. The UI is
-expected to read the bundled payload directory (PAYLOAD_DIR_NAME) and LICENSE
-and deploy the app to a per-user location.
+The installer UI itself lives in the entry script named by INSTALLER_ENTRY
+below (installer/app.py) and is out of scope here: this script only compiles
+and packages it. That UI reads the bundled payload directory
+(PAYLOAD_DIR_NAME) and LICENSE, and deploys the app to a per-user location.
 """
 
 from __future__ import annotations
@@ -47,8 +46,8 @@ LICENSE_FILE = PROJECT_ROOT / "LICENSE"
 ICON_FILE = PROJECT_ROOT / "assets" / "o7debrief.ico"
 VERSION_FILE = PROJECT_ROOT / "VERSION"
 
-# Installer UI entry point. TODO(author): supply this PySide6 script. It is not
-# created by this build tooling, which only compiles and packages it.
+# Installer UI entry point. This PySide6 script is not created by this build
+# tooling, which only compiles and packages it.
 INSTALLER_DIR = PROJECT_ROOT / "installer"
 INSTALLER_ENTRY = INSTALLER_DIR / "app.py"
 
@@ -186,8 +185,8 @@ def build_installer() -> int:
         raise SystemExit(
             f"[buildinstaller] Installer UI entry script not found at "
             f"{INSTALLER_ENTRY}.\n"
-            "TODO(author): provide installer/app.py (the PySide6 installer UI). "
-            "This build tooling compiles and packages it but does not create it."
+            "Expected the PySide6 installer UI there. This build tooling "
+            "compiles and packages it but does not create it."
         )
 
     version = read_version()
