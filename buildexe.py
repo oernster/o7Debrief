@@ -7,6 +7,10 @@ the author's other PySide6 desktop builds (see EDColonisationAsst/buildruntime.p
 and additionally embeds Windows PE version metadata (product name, versions,
 file description and copyright).
 
+The build stamps the published site from VERSION before it does anything else,
+so a packaged release can never carry a site whose version disagrees with the
+binary. Stamping is a build rule rather than a step someone has to remember.
+
 Usage (from the project root, with the venv active or detected):
 
     python buildexe.py
@@ -28,6 +32,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import stamp_version
+
 # --- Project identity (single source of truth for build metadata) -----------
 APP_DISPLAY_NAME = "o7Debrief"
 APP_DESCRIPTION = "Commander Mission Debrief"
@@ -44,8 +50,10 @@ CONFIG_DIR = PROJECT_ROOT / "config"
 ASSETS_DIR = PROJECT_ROOT / "assets"
 OUTPUT_DIR = PROJECT_ROOT / "dist"
 
-# Defaults that are structural, not domain values.
-DEFAULT_VERSION = "0.1.0"
+# Defaults that are structural, not domain values. The version fallback is a
+# sentinel rather than a plausible number: if VERSION cannot be read, the build
+# must ship something no one mistakes for a release.
+DEFAULT_VERSION = "0.0.0-dev"
 DEFAULT_JOBS = 1
 
 # Nuitka requires a 4-part numeric version (a.b.c.d) for the PE resource.
@@ -61,7 +69,7 @@ TRUTHY_VALUES = {"1", "true", "yes", "on"}
 
 
 def read_version() -> str:
-    """Return the project version from the VERSION file, or a safe default."""
+    """Return the project version from the VERSION file, else a safe default."""
     try:
         version = VERSION_FILE.read_text(encoding="utf-8").strip()
     except OSError:
@@ -72,8 +80,8 @@ def read_version() -> str:
 def to_pe_version(version: str) -> str:
     """Normalise a semantic version into the 4-part numeric form Nuitka wants.
 
-    Non-numeric suffixes (for example a pre-release tag) are dropped, and the
-    tuple is padded or truncated to exactly PE_VERSION_PARTS numeric segments.
+    Non-numeric suffixes (for example a pre-release tag) are dropped; the tuple
+    is then padded or truncated to exactly PE_VERSION_PARTS numeric segments.
     """
     numeric_parts: list[str] = []
     for raw_part in version.split("."):
@@ -121,6 +129,11 @@ def build_exe() -> int:
             file=sys.stderr,
         )
         return 1
+
+    stamped = stamp_version.main([])
+    if stamped != 0:
+        print("[buildexe] ERROR: version stamping failed.", file=sys.stderr)
+        return stamped
 
     version = read_version()
     pe_version = to_pe_version(version)

@@ -17,11 +17,14 @@ Step 2 reads the standalone bundle produced by step 1, stages it (together with
 the LICENSE) as the installer payload, then compiles the installer UI into a
 single onefile executable.
 
+Like buildexe.py, this stamps the published site from VERSION before it builds,
+so stamping is a build rule rather than a step someone has to remember.
+
 The installer itself is the ``installer`` package, entered through the script
-named by INSTALLER_ENTRY below (installer_main.py at the repository root), and
-is out of scope here: this script only compiles and packages it. That program
-reads the bundled payload directory (PAYLOAD_DIR_NAME) and LICENSE, and deploys
-the app to a per-user location.
+named by INSTALLER_ENTRY below (installer_main.py at the repository root); it is
+out of scope here, since this script only compiles and packages it. That program
+reads the bundled payload directory (PAYLOAD_DIR_NAME) plus LICENSE, then
+deploys the app to a per-user location.
 """
 
 from __future__ import annotations
@@ -32,6 +35,8 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+
+import stamp_version
 
 # --- Project identity (single source of truth for installer metadata) -------
 APP_DISPLAY_NAME = "o7Debrief"
@@ -67,8 +72,10 @@ PAYLOAD_STAGE_DIR = INSTALLER_DIR / PAYLOAD_DIR_NAME
 FINAL_DIST_DIR = PROJECT_ROOT / "dist-installer"
 TEMP_DIST_DIR = PROJECT_ROOT / "dist-installer.build"
 
-# Structural defaults.
-DEFAULT_VERSION = "0.1.0"
+# Structural defaults. The version fallback is a sentinel rather than a
+# plausible number: if VERSION cannot be read, the build must ship something no
+# one mistakes for a release.
+DEFAULT_VERSION = "0.0.0-dev"
 DEFAULT_JOBS = 1
 PE_VERSION_PARTS = 4
 PE_VERSION_PAD_VALUE = "0"
@@ -80,7 +87,7 @@ UNLINK_DELAY_SECONDS = 0.15
 
 
 def read_version() -> str:
-    """Return the project version from the VERSION file, or a safe default."""
+    """Return the project version from the VERSION file, else a safe default."""
     try:
         version = VERSION_FILE.read_text(encoding="utf-8").strip()
     except OSError:
@@ -196,6 +203,10 @@ def build_installer() -> int:
             "Expected the PySide6 installer UI there. This build tooling "
             "compiles and packages it but does not create it."
         )
+
+    stamped = stamp_version.main([])
+    if stamped != 0:
+        raise SystemExit("[buildinstaller] Version stamping failed.")
 
     version = read_version()
     pe_version = to_pe_version(version)

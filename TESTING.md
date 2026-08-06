@@ -26,7 +26,7 @@ Four areas are deliberately excluded from the hard gate:
 
 - The rest of `o7debrief.infrastructure` is integration-tested. Its correctness is in reading real Journal bytes, discovering the Journal directory, tailing from the right offset and writing files; that is exercised against sample journal fixtures, not measured by branch coverage of glue code.
 - `o7debrief.ui` is exercised with light Qt tests under an offscreen platform. Its correctness is in wiring user actions to use cases, which is verified behaviourally rather than chased to 100%.
-- The rest of the setup program is outside the measured set: `installer.ui` is its Qt client, `installer/app.py` is its composition root and `installer/cli.py` and `installer/constants.py` are the command line the registered `UninstallString` re-invokes and the names shared across the package. They are excluded on the same grounds as `o7debrief.ui` and `main.py`.
+- The rest of the setup program is outside the measured set: `installer.ui` is its Qt client, `installer/app.py` is its composition root and `installer/cli.py` and `installer/constants.py` are the command line the registered `UninstallString` re-invokes and the names shared across the package. They are excluded on the same grounds as `o7debrief.ui` and `main.py`. One part of that client is tested anyway: `tests/installer/test_worker_shutdown.py` pins which thread the worker's results arrive on and that the thread is joined before the caller acts on them. A signal connected to a bare callable runs in the sending thread, so the teardown once asked the worker thread to wait for itself and the window hung. That is a defect no behavioural UI test would catch and no coverage figure would show, so it is pinned directly rather than left to the exclusion.
 - `main.py`, the composition root, is wiring. It is covered by the application running and by the structural composition-root test, not by a coverage target.
 
 Excluding these from the hard gate is a correctness decision, not a shortcut: a 100% target on IO and UI glue rewards mocking the real world, which is exactly where these layers must not be mocked.
@@ -39,7 +39,7 @@ Excluding these from the hard gate is a correctness decision, not a shortcut: a 
 | application | Unit tests with fakes | None | Use cases tested against fake implementations of the ports (journal source, clock, exporter, config). |
 | infrastructure | Integration tests | Yes (temp) | Journal discovery, byte-offset tail and parse run against sample journal fixtures; exporters write to a temp directory. |
 | ui | Light Qt tests | None | Real `QApplication` under `QT_QPA_PLATFORM=offscreen`; Qt is never mocked. No network. |
-| installer | Unit tests with hand-written fakes | Yes (temp, HKCU scratch keys) | The setup program's operations and state, against a redirected profile and a unique registry key that the fixture removes afterwards. |
+| installer | Unit tests with hand-written fakes | Yes (temp, HKCU scratch keys) | The setup program's operations and state, against a redirected profile and a unique registry key that the fixture removes afterwards, plus a thread-affinity guard on the Qt client's worker teardown. |
 | structural | AST and source scans | File reads | Enforce the architectural invariants as tests so they cannot decay into convention. |
 
 Alongside the per-layer split, a few behavioural guards pin the memory characteristics the app depends on (invariant I9): that a last-session debrief reads back only to the previous `Shutdown` rather than the whole journal, that the all-history debrief streams the journal one file at a time and that the live recorder retains only the current session. These live in the application and infrastructure suites next to the tests above.
@@ -56,7 +56,7 @@ The structural suite under `tests/structural/` scans the source as an AST or as 
 
 ## Running the suite and reading the result
 
-Because the gate uses `--cov-fail-under=100`, a run has two ways to fail and only one of them is a test failure. Coverage falling below the threshold fails the run while every test still passes, so pytest's usual summary line can read `562 passed` on a run that exited non-zero. The line is real; it is just not the whole answer.
+Because the gate uses `--cov-fail-under=100`, a run has two ways to fail and only one of them is a test failure. Coverage falling below the threshold fails the run while every test still passes, so pytest's usual summary line can read `635 passed` on a run that exited non-zero. The line is real; it is just not the whole answer.
 
 Reading the output needs the same care. The coverage table is printed after the test results and before that summary line, so any failure detail is well above both. Do not grep for `passed`, `failed` or `error` to decide the outcome: the table lists module paths, so a filename such as `errors.py` matches a grep for "error" on a completely clean run. Read the exit code.
 
