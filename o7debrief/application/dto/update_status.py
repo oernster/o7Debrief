@@ -1,8 +1,10 @@
 """UpdateStatus DTO: the outcome of a single update check.
 
-Returned by the UpdateService so the ui can decide whether to point the user at
-the releases page. ``latest`` is None when the release source could not be
-reached, in which case ``update_available`` is always False.
+Returned by the UpdateService so the ui can decide what to offer. ``latest``
+is None when the release source could not be reached, in which case
+``update_available`` is always False. ``download_url`` names the platform's
+own installer asset when the release carries one; ``page_url`` is the human
+releases page the ui falls back to.
 """
 
 from __future__ import annotations
@@ -19,3 +21,5 @@ class UpdateStatus:
     current: str
     latest: str | None
     update_available: bool
+    download_url: str | None = None
+    page_url: str | None = None

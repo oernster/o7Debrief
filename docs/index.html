@@ -301,7 +301,7 @@
         "Ship swaps and purchases recorded as session events, naming the ship moved from and to",
         "Completed missions and Operations named in the session log, with the Merc Coins an Operation pays tracked separately from credits",
         "Clearer session log shown most recent first, with each row's icon showing the activity rather than the control mode",
-        "Optional check for updates that points you to a newer release and never downloads or runs anything",
+        "Update check with download, skip and daily re-check that never installs anything without you choosing it",
         "Per-user setup needing no administrator rights, which reports its progress and offers to close a running copy when you upgrade",
         "Local-first with no cloud, no account and no telemetry"
       ],
@@ -393,7 +393,7 @@
           "name": "Does o7 Debrief check for updates?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes, optionally. The tray menu has a Check for updates entry that asks GitHub whether a newer release exists and opens the releases page in your browser when one does. It is the only network call the app makes, it runs only when you click it and nothing is ever downloaded or installed for you."
+            "text": "Yes. Shortly after launch and once a day while running, the app asks GitHub anonymously whether a newer published release exists; the tray's Check for updates entry does the same on demand. If one is found you choose Download, Skip this version or Later, and a skipped version never prompts again. This anonymous ask is the only network call the app makes and nothing is ever downloaded or installed without you choosing it."
           }
         },
         {
@@ -480,7 +480,7 @@
         <div class="card">
           <div class="icon">&#128260;</div>
           <h3>Check for updates</h3>
-          <p>An optional tray entry asks GitHub whether a newer release exists and opens the releases page when one does. It never downloads or runs anything for you.</p>
+          <p>Shortly after launch and once a day, the app asks GitHub anonymously whether a newer release exists; the tray entry does the same on demand. You choose Download, Skip this version or Later; it never downloads or runs anything without you choosing it.</p>
         </div>
         <div class="card">
           <div class="icon">&#128274;</div>
@@ -543,7 +543,7 @@
         </div>
         <div class="card">
           <h3>Does o7 Debrief check for updates?</h3>
-          <p>Yes, optionally. The tray menu has a Check for updates entry that asks GitHub whether a newer release exists and opens the releases page in your browser when one does. It is the only network call the app makes, it runs only when you click it and nothing is ever downloaded or installed for you.</p>
+          <p>Yes. Shortly after launch and once a day while running, the app asks GitHub anonymously whether a newer published release exists; the tray's Check for updates entry does the same on demand. If one is found you choose Download, Skip this version or Later, and a skipped version never prompts again. This anonymous ask is the only network call the app makes and nothing is ever downloaded or installed without you choosing it.</p>
         </div>
         <div class="card">
           <h3>Which Windows versions does o7 Debrief support?</h3>
@@ -562,7 +562,7 @@
       <p class="section-sub">Download the newest release with one click. Free and
         LGPL-3.0, local-first Windows software with no cloud, no account and no
         telemetry.</p>
-      <span class="dl-version" id="dl-version">Version <!--VERSION-->2.0.0<!--/VERSION--></span>
+      <span class="dl-version" id="dl-version">Version <!--VERSION-->2.1.0<!--/VERSION--></span>
       <div class="downloads">
         <div class="dl-card">
           <div class="ico">🪟</div>

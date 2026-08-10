@@ -106,9 +106,11 @@ class FakeUpdateService:
     def __init__(self, status: UpdateStatus) -> None:
         self._status = status
         self.calls = 0
+        self.skipped_versions: list[str | None] = []
 
-    def check(self) -> UpdateStatus:
+    def check(self, skipped_version: str | None = None) -> UpdateStatus:
         self.calls += 1
+        self.skipped_versions.append(skipped_version)
         return self._status
 
 

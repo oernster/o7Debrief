@@ -11,14 +11,12 @@ import pytest
 from PySide6.QtWidgets import QApplication, QMenu
 
 from o7debrief.application.dto.export_result import ExportResult
-from o7debrief.application.dto.update_status import UpdateStatus
 from o7debrief.application.errors import ApplicationError
 from o7debrief.ui.tray.tray_controller import TrayController
 from tests.ui.fakes import (
     FakeArchive,
     FakeOneShot,
     FakeRecorder,
-    FakeUpdateService,
     RecordingOpener,
 )
 
@@ -33,9 +31,6 @@ _MORE_TEXT = "More debriefs..."
 # Sample produced report paths used by the success-path tests.
 _HTML_PATH = "C:/out/debrief_2026.html"
 _MD_PATH = "C:/out/debrief_2026.md"
-
-# Releases page the update check opens when a newer release exists.
-_RELEASES_URL = "https://example.test/o7Debrief/releases/latest"
 
 
 @pytest.fixture
@@ -282,45 +277,3 @@ def test_notify_is_callable(qapp: QApplication, view_model) -> None:
     )
 
     controller._notify("Title", "Body")
-
-
-def test_check_updates_opens_releases_when_an_update_is_available(
-    qapp: QApplication, view_model
-) -> None:
-    """The update action notifies and opens the releases page when newer."""
-    web_opener = RecordingOpener()
-    controller = TrayController(
-        one_shot=FakeOneShot(),
-        session=view_model,
-        opener=RecordingOpener(),
-        update_service=FakeUpdateService(
-            UpdateStatus(current="1.1.0", latest="v9.9.9", update_available=True)
-        ),
-        releases_url=_RELEASES_URL,
-        web_opener=web_opener,
-    )
-
-    _action_named(_menu_of(controller), "Check for updates").trigger()
-
-    assert web_opener.opened == [_RELEASES_URL]
-
-
-def test_check_updates_opens_nothing_when_up_to_date(
-    qapp: QApplication, view_model
-) -> None:
-    """The update action opens no page when already on the latest version."""
-    web_opener = RecordingOpener()
-    controller = TrayController(
-        one_shot=FakeOneShot(),
-        session=view_model,
-        opener=RecordingOpener(),
-        update_service=FakeUpdateService(
-            UpdateStatus(current="1.1.0", latest="1.1.0", update_available=False)
-        ),
-        releases_url=_RELEASES_URL,
-        web_opener=web_opener,
-    )
-
-    _action_named(_menu_of(controller), "Check for updates").trigger()
-
-    assert web_opener.opened == []

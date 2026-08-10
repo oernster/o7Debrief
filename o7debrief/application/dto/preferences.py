@@ -31,8 +31,11 @@ class Preferences:
 
     ``export_format`` defaults to HTML. ``output_dir`` is the directory the
     generated debrief files are written to; an empty string means the
-    application's default location.
+    application's default location. ``skipped_update_version`` is the release
+    version the user chose to skip in the update prompt; an empty string
+    means no version is skipped.
     """
 
     export_format: str = DEFAULT_EXPORT_FORMAT
     output_dir: str = ""
+    skipped_update_version: str = ""

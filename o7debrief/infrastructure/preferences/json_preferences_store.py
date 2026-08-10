@@ -31,8 +31,11 @@ _ENCODING = "utf-8"
 # JSON keys for the stored preferences.
 _EXPORT_FORMAT_KEY = "export_format"
 _OUTPUT_DIR_KEY = "output_dir"
+_SKIPPED_UPDATE_KEY = "skipped_update_version"
 # Default output directory: empty means the application's default location.
 _DEFAULT_OUTPUT_DIR = ""
+# Default skipped update version: empty means no version is skipped.
+_DEFAULT_SKIPPED_UPDATE = ""
 
 
 def _format_from(data: object) -> str:
@@ -51,6 +54,15 @@ def _output_dir_from(data: object) -> str:
         if isinstance(value, str):
             return value
     return _DEFAULT_OUTPUT_DIR
+
+
+def _skipped_update_from(data: object) -> str:
+    """Return the stored skipped update version, else the default."""
+    if isinstance(data, dict):
+        value = data.get(_SKIPPED_UPDATE_KEY)
+        if isinstance(value, str):
+            return value
+    return _DEFAULT_SKIPPED_UPDATE
 
 
 class JsonPreferencesStore:
@@ -72,6 +84,7 @@ class JsonPreferencesStore:
         return Preferences(
             export_format=_format_from(data),
             output_dir=_output_dir_from(data),
+            skipped_update_version=_skipped_update_from(data),
         )
 
     def save(self, preferences: Preferences) -> None:
@@ -82,6 +95,7 @@ class JsonPreferencesStore:
         payload = {
             _EXPORT_FORMAT_KEY: preferences.export_format,
             _OUTPUT_DIR_KEY: preferences.output_dir,
+            _SKIPPED_UPDATE_KEY: preferences.skipped_update_version,
         }
         temporary.write_text(json.dumps(payload), encoding=_ENCODING)
         os.replace(temporary, path)

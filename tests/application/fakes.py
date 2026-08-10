@@ -13,6 +13,7 @@ from collections.abc import Iterator
 from o7debrief.application.dto.debrief_view import DebriefView
 from o7debrief.application.dto.preferences import Preferences
 from o7debrief.application.dto.rank_snapshot import RankSnapshot
+from o7debrief.application.dto.release_info import ReleaseInfo
 from o7debrief.application.services.value_formatter import NumberFormat
 from o7debrief.domain.model.raw_event import RawEvent
 from o7debrief.domain.rules.rollup_spec import RollupSpec, ThresholdSet
@@ -122,13 +123,13 @@ class FakeJournalSource:
 
 
 class FakeReleaseSource:
-    """A ReleaseSource returning a preset latest version (or None)."""
+    """A ReleaseSource returning a preset release (or None)."""
 
-    def __init__(self, latest: str | None = None) -> None:
-        self._latest = latest
+    def __init__(self, release: ReleaseInfo | None = None) -> None:
+        self._release = release
 
-    def latest_version(self) -> str | None:
-        return self._latest
+    def latest_release(self) -> ReleaseInfo | None:
+        return self._release
 
 
 class FakeConfigProvider:

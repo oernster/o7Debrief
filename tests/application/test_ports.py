@@ -9,6 +9,7 @@ cover the class and signature lines that remain.
 
 from __future__ import annotations
 
+from o7debrief.application.dto.release_info import ReleaseInfo
 from o7debrief.application.ports.clock import Clock
 from o7debrief.application.ports.config_provider import ConfigProvider
 from o7debrief.application.ports.debrief_archive import DebriefArchive
@@ -41,7 +42,9 @@ def test_fakes_conform_to_their_ports() -> None:
     store: RankSnapshotStore = FakeRankStore()
     preferences: PreferencesStore = FakePreferencesStore()
     clock: Clock = FixedClock("2026-06-15T00:00:00Z")
-    release: ReleaseSource = FakeReleaseSource("1.2.0")
+    release: ReleaseSource = FakeReleaseSource(
+        ReleaseInfo(version="1.2.0", page_url="https://example.test/rel")
+    )
 
     # Bound to their port types above; exercise one read on each to confirm
     # the shapes line up at runtime as well as for the type checker.
@@ -53,7 +56,8 @@ def test_fakes_conform_to_their_ports() -> None:
     assert store.load(_AnyCommander()) is None
     assert preferences.load().export_format == "html"
     assert clock.now_utc() == "2026-06-15T00:00:00Z"
-    assert release.latest_version() == "1.2.0"
+    latest = release.latest_release()
+    assert latest is not None and latest.version == "1.2.0"
 
 
 class _AnyCommander:
