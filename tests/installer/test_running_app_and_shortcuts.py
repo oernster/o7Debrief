@@ -89,10 +89,32 @@ def test_close_running_app_accepts_a_process_that_goes_on_the_final_check() -> N
 def test_launch_starts_the_app_detached_in_its_own_directory(tmp_path: Path) -> None:
     runner = FakeRunner()
     exe = tmp_path / EXE_NAME
+    exe.touch()
 
-    launch(exe, runner)
-
+    assert launch(exe, runner) is True
     assert runner.detached == [([str(exe)], str(tmp_path))]
+
+
+def test_launch_reports_a_start_the_system_refused(tmp_path: Path) -> None:
+    """A launch that never happened must be distinguishable from one that did.
+
+    It used to return nothing whether or not the application started, so the
+    setup program reported success, closed itself and left the user with no
+    application and no explanation.
+    """
+    runner = FakeRunner(detached_starts=False)
+    exe = tmp_path / EXE_NAME
+    exe.touch()
+
+    assert launch(exe, runner) is False
+
+
+def test_launch_reports_a_missing_executable_without_trying(tmp_path: Path) -> None:
+    """The one cause the setup program can name precisely, so it names it."""
+    runner = FakeRunner()
+
+    assert launch(tmp_path / EXE_NAME, runner) is False
+    assert runner.detached == []
 
 
 def test_the_shortcut_script_sets_target_and_working_directory(tmp_path: Path) -> None:

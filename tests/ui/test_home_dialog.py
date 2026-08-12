@@ -41,6 +41,7 @@ def _make(recent: tuple[str, ...] = ()):  # type: ignore[no-untyped-def]
         on_debrief_history=lambda: calls.append("history"),
         on_settings=lambda: calls.append("settings"),
         on_about=lambda: calls.append("about"),
+        on_check_updates=lambda: calls.append("updates"),
         on_open_recent=opened.append,
     )
     return dialog, calls, opened
@@ -306,3 +307,18 @@ def test_scrollable_recents_keep_visible_buttons(qapp: QApplication) -> None:
     dialog.close()
 
     assert painted, "scrolled recent buttons are not painted in the accent colour"
+
+
+def test_the_home_screen_offers_the_update_check() -> None:
+    """The check lived only in the right-click menu, which few users open.
+
+    The home screen is the front door, so it belongs here too. As with every
+    other control on this dialog, the button owns no behaviour: it reports
+    through the injected callable, so both entry points drive the same check.
+    """
+    dialog, calls, _opened = _make()
+
+    button = _buttons(dialog)["Check for updates"]
+    button.click()
+
+    assert calls == ["updates"]

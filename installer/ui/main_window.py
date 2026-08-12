@@ -21,6 +21,7 @@ from installer.ops.payload import app_version, licence_text
 from installer.ops.progress import COMPLETE_PCT, MINIMUM_PCT
 from installer.ops.running_app import close_running_app, is_app_running, launch
 from installer.ops.uninstall_ops import uninstall
+from installer.shared.logging_setup import log_step
 from installer.state.model import InstallState, detect
 from installer.state.registry import set_autostart
 from installer.ui._main_window_build import (
@@ -43,9 +44,28 @@ _CLOSE_ON_NEXT_TURN_MS = 0
 
 WINDOW_TITLE = f"Install {APP_DISPLAY_NAME}"
 INSTALLED_MESSAGE = "Installed to {path}."
+LAUNCH_FAILED_MESSAGE = (
+    f"Installed, but {APP_DISPLAY_NAME} could not be started. "
+    "Start it yourself from {path}."
+)
 REPAIRED_MESSAGE = "Repair complete."
 UNINSTALLED_MESSAGE = f"{APP_DISPLAY_NAME} has been uninstalled."
 CLOSE_FAILED_MESSAGE = "{detail}"
+
+# Step messages written to the installer log. They exist so a report of "it
+# quietly did nothing" can be answered from the machine rather than guessed at:
+# the log names which action was chosen, what the versions were, whether the
+# running application was closed and whether the launch afterwards worked.
+LOG_PRIMARY = "primary action: state={state} installed={installed} bundled={bundled}"
+LOG_NONE = "none"
+LOG_APP_NOT_RUNNING = "application was not running"
+LOG_CLOSE_DECLINED = "user declined to close the running application"
+LOG_CLOSED = "running application closed"
+LOG_CLOSE_FAILED = "could not close the running application: {detail}"
+LOG_OPERATION_OK = "operation finished"
+LOG_OPERATION_FAILED = "operation failed: {detail}"
+LOG_LAUNCH_FAILED = "launch failed: {path}"
+LOG_LAUNCHED = "launched {path}"
 
 
 class InstallerWindow(QWidget):
@@ -101,18 +121,29 @@ class InstallerWindow(QWidget):
     def _ensure_app_closed(self) -> bool:
         """Return True when it is safe to proceed, offering to close the app."""
         if not is_app_running():
+            log_step(LOG_APP_NOT_RUNNING)
             return True
         if CloseAppDialog(self).exec() != QDialog.DialogCode.Accepted:
+            log_step(LOG_CLOSE_DECLINED)
             return False
         try:
             close_running_app()
         except InstallerError as error:
+            log_step(LOG_CLOSE_FAILED.format(detail=error))
             self._widgets.status.setText(CLOSE_FAILED_MESSAGE.format(detail=error))
             return False
+        log_step(LOG_CLOSED)
         return True
 
     def _on_primary(self) -> None:
         """Install, upgrade or reinstall, then optionally launch the app."""
+        log_step(
+            LOG_PRIMARY.format(
+                state=self._snapshot.state,
+                installed=self._snapshot.installed_version or LOG_NONE,
+                bundled=self._snapshot.bundled_version,
+            )
+        )
         if not self._ensure_app_closed():
             return
         widgets = self._widgets
@@ -154,7 +185,19 @@ class InstallerWindow(QWidget):
             return
         self._widgets.status.setText(INSTALLED_MESSAGE.format(path=exe_path.parent))
         if self._widgets.launch_on_finish.isChecked():
-            launch(exe_path)
+            if not launch(exe_path):
+                log_step(LOG_LAUNCH_FAILED.format(path=exe_path))
+                # The install itself succeeded, so this is not an install
+                # failure and must not read as one. It does mean the window
+                # must stay open: closing on a launch that never happened left
+                # the user with no application, no setup window and nothing
+                # said, which is indistinguishable from a crash.
+                self._widgets.status.setText(
+                    LAUNCH_FAILED_MESSAGE.format(path=exe_path)
+                )
+                self._refresh()
+                return
+            log_step(LOG_LAUNCHED.format(path=exe_path))
             # Close on the next turn of the event loop rather than inside this
             # callback. The runner has already released its worker thread by
             # the time this runs, so closing here would be safe; posting it
@@ -195,8 +238,10 @@ class InstallerWindow(QWidget):
         """Restore the window, then either report the failure or the success."""
         self._set_busy(False)
         if error:
+            log_step(LOG_OPERATION_FAILED.format(detail=error))
             self._widgets.status.setText(error)
             return
+        log_step(LOG_OPERATION_OK)
         on_success(result)
 
     def _set_busy(self, busy: bool) -> None:

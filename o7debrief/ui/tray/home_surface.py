@@ -48,6 +48,7 @@ class HomeSurface:
         on_debrief_history: Callable[[], None],
         on_settings: Callable[[], None],
         on_about: Callable[[], None],
+        on_check_updates: Callable[[], None],
     ) -> None:
         self._pager = pager
         self._recent_menu = recent_menu
@@ -59,6 +60,7 @@ class HomeSurface:
         self._on_debrief_history = on_debrief_history
         self._on_settings = on_settings
         self._on_about = on_about
+        self._on_check_updates = on_check_updates
         self._home: HomeDialog | None = None
 
     # ------------------------------------------------------------- recents menu
@@ -119,6 +121,7 @@ class HomeSurface:
             on_debrief_history=self._on_debrief_history,
             on_settings=self._on_settings,
             on_about=self._on_about,
+            on_check_updates=self._on_check_updates,
             on_open_recent=self._opener,
             on_prev_page=self._on_recent_prev,
             on_next_page=self._on_recent_next,

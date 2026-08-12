@@ -168,6 +168,7 @@ class TrayController(QObject):
             on_debrief_history=self._on_debrief_history,
             on_settings=self._on_settings_triggered,
             on_about=self._on_about_triggered,
+            on_check_updates=self._on_check_updates,
         )
         self._build_menu()
         for menu in (self._menu, self._recent_menu, self._help_menu):

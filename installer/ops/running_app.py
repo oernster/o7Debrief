@@ -82,7 +82,14 @@ def close_running_app(
         )
 
 
-def launch(exe_path: Path, runner: CommandRunner | None = None) -> None:
-    """Start the installed application detached, so it outlives the installer."""
+def launch(exe_path: Path, runner: CommandRunner | None = None) -> bool:
+    """Start the installed application detached, so it outlives the installer.
+
+    Returns whether it started. A missing executable is reported as a failure
+    without attempting the launch, because that is the one cause the setup
+    program can name precisely rather than leaving to the operating system.
+    """
+    if not exe_path.exists():
+        return False
     active = runner or default_runner()
-    active.start_detached([str(exe_path)], cwd=str(exe_path.parent))
+    return active.start_detached([str(exe_path)], cwd=str(exe_path.parent))

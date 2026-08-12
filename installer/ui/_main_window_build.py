@@ -65,7 +65,12 @@ LAUNCH_LABEL = f"Launch {APP_DISPLAY_NAME} when finished"
 AUTOSTART_LABEL = f"Start {APP_DISPLAY_NAME} when I sign in to Windows"
 
 WELCOME_SUBTITLE = f"Welcome to the {APP_DISPLAY_NAME} installer"
-INSTALLED_SUBTITLE = f"{APP_DISPLAY_NAME} is already installed"
+# Naming the installed version matters most on the upgrade path, where the
+# question the reader actually has is what they are moving from. The header
+# states the bundled version, so without this the window showed the version
+# being installed and stayed silent about the one being replaced.
+INSTALLED_SUBTITLE = f"{APP_DISPLAY_NAME} {{version}} is already installed"
+INSTALLED_SUBTITLE_UNKNOWN = f"{APP_DISPLAY_NAME} is already installed"
 INSTALL_PATH_TEXT = "Install location: {path}"
 VERSION_TEXT = "v{version}"
 TITLE_TEXT = f"{APP_DISPLAY_NAME} Setup"
@@ -105,10 +110,17 @@ def primary_label(snapshot: StateSnapshot) -> str:
 
 
 def subtitle_text(snapshot: StateSnapshot) -> str:
-    """Return the subtitle reflecting whether this is a fresh install."""
-    if snapshot.installed:
-        return INSTALLED_SUBTITLE
-    return WELCOME_SUBTITLE
+    """Return the subtitle, naming the installed version where one is known.
+
+    A registration can exist with no recorded version, so the version is stated
+    only when it was actually read. Printing an empty one would read as an
+    installed version of nothing.
+    """
+    if not snapshot.installed:
+        return WELCOME_SUBTITLE
+    if not snapshot.installed_version:
+        return INSTALLED_SUBTITLE_UNKNOWN
+    return INSTALLED_SUBTITLE.format(version=snapshot.installed_version)
 
 
 def _build_header(widgets_licence: QPushButton, version: str) -> QHBoxLayout:

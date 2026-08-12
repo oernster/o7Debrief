@@ -42,6 +42,7 @@ _TAGLINE = "Commander Mission Debrief"
 _LAST_SESSION_TEXT = "Debrief my last session"
 _HISTORY_TEXT = "Debrief my history to date"
 _SETTINGS_TEXT = "Settings"
+_CHECK_UPDATES_TEXT = "Check for updates"
 _ABOUT_TEXT = "About"
 _CLOSE_TEXT = "Close"
 _RECENT_HEADING = "Recent debriefs"
@@ -106,6 +107,7 @@ class HomeDialog(QDialog):
         on_debrief_history: Callable[[], None],
         on_settings: Callable[[], None],
         on_about: Callable[[], None],
+        on_check_updates: Callable[[], None] = _noop,
         on_open_recent: Callable[[str], None],
         on_prev_page: Callable[[], None] = _noop,
         on_next_page: Callable[[], None] = _noop,
@@ -149,7 +151,7 @@ class HomeDialog(QDialog):
         self._update_pager(page_index, page_count)
 
         layout.addWidget(_divider())
-        layout.addLayout(self._build_footer(on_settings, on_about))
+        layout.addLayout(self._build_footer(on_settings, on_about, on_check_updates))
 
     def set_status(self, status_text: str) -> None:
         """Update the live status caption of an already-open dialog."""
@@ -297,17 +299,28 @@ class HomeDialog(QDialog):
         self._next_button.setEnabled(page_index < page_count - 1)
 
     def _build_footer(
-        self, on_settings: Callable[[], None], on_about: Callable[[], None]
+        self,
+        on_settings: Callable[[], None],
+        on_about: Callable[[], None],
+        on_check_updates: Callable[[], None],
     ) -> QHBoxLayout:
-        """Build the footer row: Settings, About and Close."""
+        """Build the footer row: Settings, Check for updates, About and Close.
+
+        The update check lived only in the right-click tray menu, which is the
+        surface a user is least likely to open. The home screen is the front
+        door, so the check belongs here too; both routes call the same handler.
+        """
         row = QHBoxLayout()
         settings_button = QPushButton(_SETTINGS_TEXT)
         settings_button.clicked.connect(lambda _checked=False: on_settings())
+        updates_button = QPushButton(_CHECK_UPDATES_TEXT)
+        updates_button.clicked.connect(lambda _checked=False: on_check_updates())
         about_button = QPushButton(_ABOUT_TEXT)
         about_button.clicked.connect(lambda _checked=False: on_about())
         close_button = QPushButton(_CLOSE_TEXT)
         close_button.clicked.connect(self.accept)
         row.addWidget(settings_button)
+        row.addWidget(updates_button)
         row.addWidget(about_button)
         row.addStretch()
         row.addWidget(close_button)

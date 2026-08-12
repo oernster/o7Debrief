@@ -20,9 +20,14 @@ class FakeRunner:
         self,
         results: Sequence[CommandResult] | None = None,
         default: CommandResult | None = None,
+        *,
+        detached_starts: bool = True,
     ) -> None:
         self.calls: list[tuple[list[str], float]] = []
         self.detached: list[tuple[list[str], str | None]] = []
+        # Whether a detached start is reported as having succeeded, so a launch
+        # that the operating system refuses can be exercised.
+        self.detached_starts = detached_starts
         self._results = list(results or ())
         self._default = default if default is not None else CommandResult(0, "")
 
@@ -33,9 +38,10 @@ class FakeRunner:
             return self._results.pop(0)
         return self._default
 
-    def start_detached(self, args: Sequence[str], *, cwd: str | None = None) -> None:
-        """Record a detached start."""
+    def start_detached(self, args: Sequence[str], *, cwd: str | None = None) -> bool:
+        """Record a detached start and report whether it was allowed to start."""
         self.detached.append((list(args), cwd))
+        return self.detached_starts
 
     @property
     def commands(self) -> list[list[str]]:
