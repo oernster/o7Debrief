@@ -103,6 +103,10 @@ Three seams keep the privileged work testable, which is what allows `installer.o
 - the HKCU locations are a `RegistryKeys` value rather than constants baked into each function, so a test writes to a scratch key instead of the user's own registration;
 - the per-user directories come from environment variables, so the suite redirects the profile into a temporary tree.
 
+`shared` also holds the setup program's diagnostics, which cover more than crashes. The worst failures here are the quiet ones: an install that reports success and starts nothing; a window that closes with the work half done. Neither raises, so neither leaves a traceback; by the time a user reports it the machine has usually been changed again and the evidence has gone. So each step is appended to a log as it happens (which action was chosen, the installed and bundled versions, whether the running application was closed, whether the launch afterwards worked) alongside the unhandled-exception hook. Logging is best effort throughout: a log that cannot be written never becomes the reason an install fails.
+
+The launch that follows an install is reported rather than assumed. It used to swallow any failure to start the application and return nothing, so the setup program could not tell a launch that happened from one that did not; it reported success and closed itself, leaving the user with no application, no window and no explanation. The runner now returns whether the process started and the window stays open and says so when it did not. The install itself succeeded in that case, so the wording separates the two.
+
 The entry point is `installer_main.py` at the repository root rather than a script inside the package. A script is compiled with its own directory on the module search path, so compiling `installer/app.py` directly would leave the `installer.*` imports unresolvable. Compiling from the root also gives the payload one anchor that holds in both source and compiled runs: it is resolved relative to the `installer` package directory; `buildinstaller.py` includes the staged payload at that same relative location.
 
 ## Execution flow

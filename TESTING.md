@@ -56,7 +56,7 @@ The structural suite under `tests/structural/` scans the source as an AST or as 
 
 ## Running the suite and reading the result
 
-Because the gate uses `--cov-fail-under=100`, a run has two ways to fail and only one of them is a test failure. Coverage falling below the threshold fails the run while every test still passes, so pytest's usual summary line can read `676 passed` on a run that exited non-zero. The line is real; it is just not the whole answer.
+Because the gate uses `--cov-fail-under=100`, a run has two ways to fail and only one of them is a test failure. Coverage falling below the threshold fails the run while every test still passes, so pytest's usual summary line can read `686 passed` on a run that exited non-zero. The line is real; it is just not the whole answer.
 
 Reading the output needs the same care. The coverage table is printed after the test results and before that summary line, so any failure detail is well above both. Do not grep for `passed`, `failed` or `error` to decide the outcome: the table lists module paths, so a filename such as `errors.py` matches a grep for "error" on a completely clean run. Read the exit code.
 
