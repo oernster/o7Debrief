@@ -9,6 +9,7 @@ appear anywhere.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from html import escape
 
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import (
@@ -32,13 +33,14 @@ from installer.ui.themes import (
     DIVIDER_PX,
     HEADER_SPACING,
     HEADER_TITLE,
-    HEADER_VERSION,
+    HEADER_VERSION_PX,
     ICON_PX,
     INSTALL_PATH,
     LICENCE_BUTTON,
     MARGIN_BOTTOM,
     MARGIN_SIDE,
     MARGIN_TOP,
+    MUTED,
     PRIMARY_ACTION,
     PROGRESS_BAR,
     PROGRESS_HEIGHT_PX,
@@ -74,6 +76,29 @@ INSTALLED_SUBTITLE_UNKNOWN = f"{APP_DISPLAY_NAME} is already installed"
 INSTALL_PATH_TEXT = "Install location: {path}"
 VERSION_TEXT = "v{version}"
 TITLE_TEXT = f"{APP_DISPLAY_NAME} Setup"
+# The title and its version suffix as one rich-text line. Two widgets could
+# never be baseline-aligned by a Qt layout, so the version rode the bottom of a
+# row sized by the icon and sat thirteen pixels low. Inline spans share a
+# baseline by construction. A non-breaking space keeps the suffix with the title
+# rather than letting it wrap alone.
+_TITLE_HTML = '<span>{title}</span>&nbsp;<span style="{style}">{version}</span>'
+_VERSION_STYLE = "font-size: {size}px; color: {colour};"
+
+
+def header_title_html(version: str) -> str:
+    """Return the header title, with the version inline when one is known.
+
+    Escaped because both parts are display strings the caller supplies; the
+    version arrives from the payload rather than being a literal here.
+    """
+    if not version:
+        return escape(TITLE_TEXT)
+    style = _VERSION_STYLE.format(size=HEADER_VERSION_PX, colour=MUTED)
+    return _TITLE_HTML.format(
+        title=escape(TITLE_TEXT),
+        style=style,
+        version=escape(VERSION_TEXT.format(version=version)),
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -134,17 +159,10 @@ def _build_header(widgets_licence: QPushButton, version: str) -> QHBoxLayout:
         badge.setPixmap(icon.pixmap(QSize(ICON_PX, ICON_PX)))
         header.addWidget(badge)
 
-    title = QLabel(TITLE_TEXT)
+    title = QLabel(header_title_html(version))
     title.setObjectName(HEADER_TITLE)
+    title.setTextFormat(Qt.TextFormat.RichText)
     header.addWidget(title)
-
-    if version:
-        version_label = QLabel(VERSION_TEXT.format(version=version))
-        version_label.setObjectName(HEADER_VERSION)
-        version_label.setAlignment(
-            Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignLeft
-        )
-        header.addWidget(version_label)
 
     header.addStretch()
     header.addWidget(widgets_licence)

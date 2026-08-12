@@ -18,6 +18,7 @@ from installer.state.model import InstallState, StateSnapshot
 from installer.ui._main_window_build import (
     INSTALLED_SUBTITLE_UNKNOWN,
     WELCOME_SUBTITLE,
+    header_title_html,
     subtitle_text,
 )
 
@@ -82,3 +83,34 @@ def test_a_fresh_install_is_welcomed_rather_than_told_what_it_replaces() -> None
     text = subtitle_text(_snapshot(InstallState.NOT_INSTALLED, ""))
 
     assert text == WELCOME_SUBTITLE
+
+
+def test_the_header_puts_the_version_on_the_title_baseline() -> None:
+    """The regression this pins: the version hung below the title.
+
+    Two labels cannot be baseline-aligned by a Qt layout, so the version was
+    bottom-aligned in a row whose height the icon sets and sat thirteen pixels
+    low. One rich-text label puts both on a shared baseline by construction, so
+    the title and the version must stay in the same label.
+    """
+    html = header_title_html("2.2.3")
+
+    assert "o7 Debrief Setup" in html
+    assert "v2.2.3" in html
+    # One label, two spans: that is what guarantees the shared baseline.
+    assert html.count("<span") == 2
+
+
+def test_the_header_omits_the_version_when_none_is_known() -> None:
+    html = header_title_html("")
+
+    assert html == "o7 Debrief Setup"
+    assert "<span" not in html
+
+
+def test_the_header_escapes_the_version_it_is_given() -> None:
+    """It is rendered as rich text, so a stray angle bracket must not inject."""
+    html = header_title_html("<b>1.0")
+
+    assert "<b>" not in html
+    assert "&lt;b&gt;" in html

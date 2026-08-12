@@ -240,3 +240,7 @@ BUILD_ID
 # Private / local files (not for distribution)
 discord-advert.txt
 NOTES.md
+
+# Setup-window captures from tools/capture_installer_window.py (local previews).
+installer-window-live.png
+installer-window-fresh.png

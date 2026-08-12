@@ -39,13 +39,19 @@ MARGIN_BOTTOM = 24
 DIALOG_MARGIN = 20
 SECTION_SPACING = 14
 HEADER_SPACING = 14
+# The version suffix rendered inline beside the header title. It is a rich-text
+# span inside the title's own label rather than a second widget, because a Qt
+# layout cannot align two widgets on a shared text baseline: the version sat
+# thirteen pixels below the title, dropped to the bottom of a row whose height
+# the icon sets. Inline spans share a baseline by construction, so the whole
+# class of misalignment goes away rather than being nudged into place.
+HEADER_VERSION_PX = 13
 BUTTON_GAP = 10
 PROGRESS_HEIGHT_PX = 10
 
 # --- object names, so the stylesheet and the widgets agree ------------------
 
 HEADER_TITLE = "HeaderTitle"
-HEADER_VERSION = "HeaderVersion"
 SUBTITLE = "SubTitle"
 TAGLINE = "Tagline"
 INSTALL_PATH = "InstallPath"
@@ -61,7 +67,6 @@ PROGRESS_BAR = "InstallProgress"
 STYLESHEET = f"""
 QWidget {{ background: {BACKGROUND}; color: {TEXT}; font-family: 'Segoe UI'; }}
 QLabel#{HEADER_TITLE} {{ font-size: 30px; font-weight: 700; color: {ACCENT}; }}
-QLabel#{HEADER_VERSION} {{ font-size: 13px; color: {MUTED}; }}
 QLabel#{SUBTITLE} {{ font-size: 18px; font-weight: 700; color: {ACCENT}; }}
 QLabel#{TAGLINE} {{ font-size: 13px; color: {MUTED}; }}
 QLabel#{INSTALL_PATH} {{ font-size: 12px; color: {MUTED}; }}
