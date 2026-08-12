@@ -31,7 +31,12 @@ class SessionDebrief:
     window: SessionWindow
     start_system: SystemName | None
     end_system: SystemName | None
-    net_credits_delta: Credits
+    # The signed change in the commander's balance across the session, else
+    # None when the journal stated too few balances to measure one. Signed and
+    # so not a Credits, which is non-negative by construction: a session that
+    # ends poorer than it started is ordinary and must be reportable. None is
+    # deliberately not zero, for the same reason credits_balance below is.
+    net_credits_delta: int | None
     moments: tuple[ConceptualMoment, ...]
     activity: ActivityRollup
     rank_progression: tuple[RankDelta, ...]

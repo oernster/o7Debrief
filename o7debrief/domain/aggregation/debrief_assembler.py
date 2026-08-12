@@ -13,6 +13,8 @@ name four systems and still report none.
 
 from __future__ import annotations
 
+import math
+
 from o7debrief.domain.model.conceptual_moment import ConceptualMoment
 from o7debrief.domain.model.rank_delta import RankDelta
 from o7debrief.domain.model.rollups import (
@@ -43,12 +45,24 @@ from o7debrief.domain.value_objects.enums import (
 from o7debrief.domain.value_objects.session_window import SessionWindow
 from o7debrief.domain.value_objects.system_name import SystemName
 
-__all__ = ["STAR_SYSTEM_FIELD", "assemble"]
+__all__ = ["STAR_POS_FIELD", "STAR_SYSTEM_FIELD", "assemble"]
 
 # Raw-event/detail field naming the star system a moment occurred in.
 STAR_SYSTEM_FIELD = "StarSystem"
+# Raw-event/detail field carrying a system's galactic coordinates, as three
+# numbers in light years. A carrier jump states this but no distance, so it is
+# the only evidence a carrier's distance travelled can be derived from.
+STAR_POS_FIELD = "StarPos"
 # Count contributed by a single moment occurrence.
 _ONE_OCCURRENCE = 1
+# Indices into the ordered star positions: the first reading, whose shape every
+# later one must match, and the second, from which each position is paired with
+# its predecessor to form a leg.
+_FIRST_POSITION = 0
+_SECOND_POSITION = 1
+# Starting values for the distance and leg-count accumulators.
+_NO_MAGNITUDE = 0.0
+_NO_LEGS = 0
 # Canonical order in which control modes are reported.
 _MODE_ORDER: tuple[ActivityMode, ...] = (
     ActivityMode.SHIP,
@@ -64,9 +78,61 @@ def _count(moments: tuple[ConceptualMoment, ...], kind: MomentKind) -> int:
     return sum(_ONE_OCCURRENCE for moment in moments if moment.kind == kind)
 
 
-def _sum_magnitude(moments: tuple[ConceptualMoment, ...], kind: MomentKind) -> int:
+def _sum_magnitude(moments: tuple[ConceptualMoment, ...], kind: MomentKind) -> float:
     """Sum the magnitude of moments of a given kind."""
-    return sum(moment.magnitude for moment in moments if moment.kind == kind)
+    return sum(
+        (moment.magnitude for moment in moments if moment.kind == kind),
+        _NO_MAGNITUDE,
+    )
+
+
+def _is_coordinate(axis: object) -> bool:
+    """Return whether one element of a star position is a usable number.
+
+    A bool is rejected explicitly because bool subclasses int and a stray True
+    would otherwise read as a coordinate of one light year.
+    """
+    return isinstance(axis, (int, float)) and not isinstance(axis, bool)
+
+
+def _star_positions(
+    moments: tuple[ConceptualMoment, ...], kind: MomentKind
+) -> tuple[tuple[float, ...], ...]:
+    """Return the well-formed star positions stated by moments of a kind.
+
+    A position must be a non-empty sequence of numbers, all positions the same
+    length as the first, so the gaps between them are measurable at all. What
+    that length is does not matter here: the requirement is that the readings
+    are commensurable, not that space has any particular number of axes.
+    Anything malformed is dropped rather than guessed at, so a bad payload
+    shortens the measured legs instead of contributing a fictional distance.
+    """
+    positions: list[tuple[float, ...]] = []
+    for moment in moments:
+        if moment.kind != kind:
+            continue
+        raw = dict(moment.detail).get(STAR_POS_FIELD)
+        if not isinstance(raw, (list, tuple)) or not raw:
+            continue
+        if not all(_is_coordinate(axis) for axis in raw):
+            continue
+        axes = tuple(float(axis) for axis in raw)
+        if positions and len(axes) != len(positions[_FIRST_POSITION]):
+            continue
+        positions.append(axes)
+    return tuple(positions)
+
+
+def _leg_distances(positions: tuple[tuple[float, ...], ...]) -> tuple[float, int]:
+    """Return the total straight-line distance between consecutive positions.
+
+    Also returns how many legs that total covers, which is one fewer than the
+    number of positions: the first arrival has no stated origin to measure from.
+    """
+    total = _NO_MAGNITUDE
+    for start, end in zip(positions, positions[_SECOND_POSITION:]):
+        total += math.dist(start, end)
+    return total, max(_NO_LEGS, len(positions) - _ONE_OCCURRENCE)
 
 
 def _sum_credits(moments: tuple[ConceptualMoment, ...], kind: MomentKind) -> Credits:
@@ -123,10 +189,19 @@ def _combat(moments: tuple[ConceptualMoment, ...]) -> CombatRollup:
 
 
 def _trade(moments: tuple[ConceptualMoment, ...]) -> TradeRollup:
+    """Build the trade rollup.
+
+    ``spent`` comes from the buy moment's magnitude rather than its credit
+    delta. The journal states the cost outright in ``TotalCost``, but a buy
+    deliberately carries no credit delta so that spending never inflates an
+    income total. Routing the stated cost through the magnitude channel keeps
+    that separation while ending a real defect: ten purchases used to report
+    nought credits spent.
+    """
     return TradeRollup(
         buys=_count(moments, MomentKind.MARKET_BUY),
         sells=_count(moments, MomentKind.MARKET_SELL),
-        spent=_sum_credits(moments, MomentKind.MARKET_BUY),
+        spent=Credits(round(_sum_magnitude(moments, MomentKind.MARKET_BUY))),
         earned=_sum_credits(moments, MomentKind.MARKET_SELL),
     )
 
@@ -148,7 +223,18 @@ def _engineering(moments: tuple[ConceptualMoment, ...]) -> EngineeringRollup:
 
 
 def _carrier(moments: tuple[ConceptualMoment, ...]) -> CarrierRollup:
-    return CarrierRollup(jumps=_count(moments, MomentKind.CARRIER_JUMP))
+    jumps = _count(moments, MomentKind.CARRIER_JUMP)
+    positions = _star_positions(moments, MomentKind.CARRIER_JUMP)
+    distance, measured = _leg_distances(positions)
+    # Every jump is a leg flown, so the total is the jump count. Only the legs
+    # between two stated positions can be measured, which is why the first jump
+    # of a session is always short of the total.
+    return CarrierRollup(
+        jumps=jumps,
+        distance_ly=distance,
+        legs_measured=measured,
+        legs_total=jumps,
+    )
 
 
 def _exobiology(moments: tuple[ConceptualMoment, ...]) -> ExobiologyRollup:
@@ -179,14 +265,6 @@ def _on_foot(moments: tuple[ConceptualMoment, ...]) -> OnFootRollup:
         disembarks=_count(moments, MomentKind.DISEMBARK),
         settlements=_count(moments, MomentKind.SETTLEMENT_VISIT),
     )
-
-
-def _net_credits(moments: tuple[ConceptualMoment, ...]) -> Credits:
-    """Sum the credit delta across every moment."""
-    total = Credits.zero()
-    for moment in moments:
-        total = total + moment.credits_delta
-    return total
 
 
 def _modes_used(moments: tuple[ConceptualMoment, ...]) -> tuple[ActivityMode, ...]:
@@ -232,21 +310,30 @@ def assemble(
     start_system: SystemName | None = None,
     end_system: SystemName | None = None,
     systems_visited: int | None = None,
+    net_credits_delta: int | None = None,
 ) -> SessionDebrief:
     """Fold the session's moments into a complete SessionDebrief.
 
-    ``credits_balance``, the systems and the ship are readings rather than
-    totals the domain computes: each is a level the journal states outright,
-    so they are passed in and carried through untouched. None means no reading
-    was seen and must stay distinguishable from a balance of zero, a count of
-    no systems or a commander who is nowhere.
+    ``credits_balance``, ``net_credits_delta``, the systems and the ship are
+    readings rather than totals the domain computes: each is a level the
+    journal states outright, so they are passed in and carried through
+    untouched. None means no reading was seen and must stay distinguishable
+    from a balance of zero, a change of nothing, a count of no systems or a
+    commander who is nowhere.
+
+    The net change used to be summed from the moments, which counted income
+    only and so reported a session that lost twenty million credits as a gain
+    of two hundred thousand. It is now the difference between the balances the
+    journal states at each end of the session, which is the only figure that is
+    actually true: it captures rebuys, outfitting and every other outgoing the
+    moment rules deliberately do not price.
     """
     return SessionDebrief(
         commander=commander,
         window=window,
         start_system=start_system,
         end_system=end_system,
-        net_credits_delta=_net_credits(moments),
+        net_credits_delta=net_credits_delta,
         moments=moments,
         activity=_activity(moments),
         rank_progression=rank_progression,

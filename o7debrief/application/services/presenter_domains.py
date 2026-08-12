@@ -43,6 +43,13 @@ _REWARDS = ("missions.rewards", "Rewards")
 _MERC_COINS = ("missions.merc_coins", "Merc Coins")
 _CRAFTED = ("engineering.crafted", "Modifications")
 _CARRIER_JUMPS = ("carrier.jumps", "Carrier jumps")
+_CARRIER_DISTANCE = ("carrier.distance", "Distance")
+# Template used when the carrier distance covers only some of the jumps made,
+# because the first jump of a session has no stated origin to measure from.
+_CARRIER_PARTIAL = (
+    "carrier.distance_partial",
+    "{distance} (over {measured} of {total} jumps)",
+)
 _SAMPLES = ("exobiology.samples", "Samples")
 _SOLD = ("exobiology.sold", "Organic data sold")
 _DEPLOYMENTS = ("srv.deployments", "Deployments")
@@ -128,8 +135,31 @@ def _engineering_stats(rollup, fmt, resolver) -> tuple[DomainStat, ...]:
     return (_stat(resolver, _CRAFTED, fmt.integer(rollup.crafted)),)
 
 
+def _carrier_distance(rollup, fmt, resolver) -> str:
+    """Return the carrier distance, qualified when some legs were unmeasurable.
+
+    A carrier jump states its destination but not how far it came, so a leg is
+    only measurable between two stated positions and the first jump of a
+    session has no stated origin. Where that leaves the total short, the display
+    says which legs it covers rather than passing an incomplete figure off as
+    the whole distance.
+    """
+    distance = fmt.distance(rollup.distance_ly)
+    if rollup.legs_measured >= rollup.legs_total:
+        return distance
+    template = resolver.generic(*_CARRIER_PARTIAL)
+    return template.format(
+        distance=distance,
+        measured=fmt.integer(rollup.legs_measured),
+        total=fmt.integer(rollup.legs_total),
+    )
+
+
 def _carrier_stats(rollup, fmt, resolver) -> tuple[DomainStat, ...]:
-    return (_stat(resolver, _CARRIER_JUMPS, fmt.integer(rollup.jumps)),)
+    return (
+        _stat(resolver, _CARRIER_JUMPS, fmt.integer(rollup.jumps)),
+        _stat(resolver, _CARRIER_DISTANCE, _carrier_distance(rollup, fmt, resolver)),
+    )
 
 
 def _exobiology_stats(rollup, fmt, resolver) -> tuple[DomainStat, ...]:

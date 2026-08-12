@@ -233,6 +233,11 @@ event = "MarketBuy"
 domain = "trade"
 mode = "ship"
 kind = "market_buy"
+# The cost rides the magnitude channel rather than credits_field on purpose.
+# The journal states it outright in TotalCost, so reporting nought spent beside
+# ten purchases was a defect; but routing it through credits would fold
+# spending into an income total, which is exactly what that channel avoids.
+magnitude_field = "TotalCost"
 text = "Bought {{ Count }} t of {{ Type }} at {{ BuyPrice }} Cr each."
 
 [[moment]]
@@ -432,137 +437,6 @@ domain = "missions"
 mode = "ship"
 kind = "promotion"
 text = "Earned a rank promotion."
-
-# ---------------------------------------------------------------------------
-# Aggregates: rollup rules producing the headline metrics. domain matches a
-# [[domain]] key; op is one of count, sum, sum_distinct, max; event matches the
-# journal event type to roll up. field names the numeric payload key for sum and
-# max; unit is an optional display suffix; where_flag, when present, names a
-# boolean payload key that must be truthy for the row to be counted.
-# ---------------------------------------------------------------------------
-
-[[aggregate]]
-domain = "travel"
-label = "Jumps"
-op = "count"
-event = "FSDJump"
-
-[[aggregate]]
-domain = "travel"
-label = "Distance travelled"
-op = "sum"
-event = "FSDJump"
-field = "JumpDist"
-unit = "ly"
-
-[[aggregate]]
-domain = "travel"
-label = "Systems visited"
-op = "sum_distinct"
-event = "FSDJump"
-field = "StarSystem"
-
-[[aggregate]]
-domain = "exploration"
-label = "Bodies scanned"
-op = "count"
-event = "Scan"
-
-[[aggregate]]
-domain = "exploration"
-label = "First discoveries"
-op = "count"
-event = "Scan"
-where_flag = "WasDiscovered"
-
-[[aggregate]]
-domain = "exploration"
-label = "Bodies mapped"
-op = "count"
-event = "SAAScanComplete"
-
-[[aggregate]]
-domain = "combat"
-label = "Bounties claimed"
-op = "count"
-event = "Bounty"
-
-[[aggregate]]
-domain = "combat"
-label = "Combat bonds"
-op = "count"
-event = "FactionKillBond"
-
-[[aggregate]]
-domain = "trade"
-label = "Trade profit"
-op = "sum"
-event = "MarketSell"
-field = "TotalSale"
-unit = "Cr"
-
-[[aggregate]]
-domain = "mining"
-label = "Tonnes refined"
-op = "count"
-event = "MiningRefined"
-
-[[aggregate]]
-domain = "missions"
-label = "Missions completed"
-op = "count"
-event = "MissionCompleted"
-
-[[aggregate]]
-domain = "exobiology"
-label = "Organic samples"
-op = "count"
-event = "ScanOrganic"
-
-[[aggregate]]
-domain = "exobiology"
-label = "Exobiology credits"
-op = "sum"
-event = "SellOrganicData"
-field = "TotalValue"
-unit = "Cr"
-
-[[aggregate]]
-domain = "on_foot"
-label = "Settlements visited"
-op = "sum_distinct"
-event = "ApproachSettlement"
-field = "Name"
-
-[[aggregate]]
-domain = "srv"
-label = "SRV deployments"
-op = "count"
-event = "LaunchSRV"
-
-[[aggregate]]
-domain = "slv"
-label = "Vessel deployments"
-op = "count"
-event = "LaunchFighter"
-
-[[aggregate]]
-domain = "slv"
-label = "Vessel hangars bought"
-op = "count"
-event = "ModuleBuy"
-
-[[aggregate]]
-domain = "slv"
-label = "Vessel hangars sold"
-op = "count"
-event = "ModuleSell"
-
-[[aggregate]]
-domain = "slf"
-label = "Fighter deployments"
-op = "count"
-event = "LaunchFighter"
 
 # ---------------------------------------------------------------------------
 # Thresholds: named numeric values the domain compares against. Keeping them

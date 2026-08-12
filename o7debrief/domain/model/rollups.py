@@ -32,10 +32,15 @@ __all__ = [
 
 @dataclass(frozen=True, slots=True)
 class FlightRollup:
-    """Travel summary: jumps made and total distance covered."""
+    """Travel summary: jumps made and total distance covered.
+
+    ``distance_ly`` is a float because the journal states each jump distance as
+    one (``"JumpDist": 12.129``). Truncating to int would quietly shed a
+    fraction of a light year on every jump.
+    """
 
     jumps: int = 0
-    distance_ly: int = 0
+    distance_ly: float = 0.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -96,9 +101,22 @@ class EngineeringRollup:
 
 @dataclass(frozen=True, slots=True)
 class CarrierRollup:
-    """Fleet carrier summary: carrier jumps performed."""
+    """Fleet carrier summary: jumps performed and the distance they covered.
+
+    A ``CarrierJump`` states no ``JumpDist``, so unlike a ship jump the distance
+    is not read but derived: each jump states the destination ``StarPos``, and
+    the straight-line gap between consecutive positions is the leg flown. That
+    leaves the very first jump of a session with no measurable origin, because
+    the carrier's position before it is not stated anywhere in the session.
+    ``legs_measured`` and ``legs_total`` carry that gap explicitly so the report
+    can say the distance covers eight of nine jumps rather than presenting a
+    short total as though it were complete.
+    """
 
     jumps: int = 0
+    distance_ly: float = 0.0
+    legs_measured: int = 0
+    legs_total: int = 0
 
 
 @dataclass(frozen=True, slots=True)

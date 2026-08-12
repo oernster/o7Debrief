@@ -72,7 +72,11 @@ _DATE = "2026-06-15"
 # runs on plus what the journal writes, so the sample states the same thing a
 # real report does without anchoring the page to a day.
 _SAMPLE_DATETIME_FORMAT = "%H:%M:%S GMT"
-_NET_CREDITS = 7677000
+# The session's net change: the difference between the balances the journal
+# stated at each end, so it prices spending as well as income. Negative here on
+# purpose, because a session can and often does end poorer than it started and
+# the specimen should show that the report says so.
+_NET_CREDITS = -2323000
 # The balance the sample commander is left holding, plus how many systems the
 # sample session touched. Both are levels the journal states outright, so the
 # sample states them too: leaving them unset would make the specimen advertise
@@ -164,7 +168,7 @@ def _moments() -> tuple[ConceptualMoment, ...]:
 def _activity() -> ActivityRollup:
     """A populated rollup across the domains, driving the headline and cards."""
     return ActivityRollup(
-        flight=FlightRollup(jumps=2, distance_ly=55),
+        flight=FlightRollup(jumps=2, distance_ly=55.4),
         exploration=ExplorationRollup(
             bodies_scanned=2,
             bodies_mapped=1,
@@ -172,7 +176,9 @@ def _activity() -> ActivityRollup:
             data_sold=Credits(1840000),
         ),
         combat=CombatRollup(kills=3, bounties=Credits(725000), bonds=Credits(120000)),
-        trade=TradeRollup(buys=1, sells=1, spent=Credits(0), earned=Credits(512000)),
+        trade=TradeRollup(
+            buys=1, sells=1, spent=Credits(384000), earned=Credits(512000)
+        ),
         mining=MiningRollup(refined=1),
         missions=MissionRollup(completed=1, rewards=Credits(680000)),
         engineering=EngineeringRollup(crafted=1),
@@ -220,7 +226,7 @@ def _debrief() -> SessionDebrief:
         ),
         start_system=SystemName("LHS 3447"),
         end_system=SystemName("Diaguandri"),
-        net_credits_delta=Credits(_NET_CREDITS),
+        net_credits_delta=_NET_CREDITS,
         credits_balance=Credits(_CREDIT_BALANCE),
         systems_visited=_SYSTEMS_VISITED,
         moments=_moments(),

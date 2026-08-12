@@ -78,3 +78,34 @@ def test_the_absent_reading_wording_is_configurable() -> None:
     )
 
     assert net["value_display"] == "Balance unknown"
+
+
+def test_a_loss_reads_as_a_loss() -> None:
+    """The defect this closes: a session that lost twenty million read as a gain.
+
+    The change used to be summed from the moments, which priced income and
+    nothing else, so an eleven million credit rebuy left no mark on it. It is
+    now the difference between the balances the journal states at each end,
+    which is negative when the commander ended the session poorer.
+    """
+    net = _credits_headline(_quiet_debrief(net_credits=-20_110_001))
+
+    assert net["delta_class"] == "negative"
+    assert net["delta_display"] == "-20,110,001 Cr"
+
+
+def test_an_unmeasurable_change_is_never_rendered_as_a_zero() -> None:
+    """A session stating too few balances says so, rather than breaking even."""
+    net = _credits_headline(_quiet_debrief(net_credits=None))
+
+    assert net["delta_display"] == "Change unread"
+    assert net["delta_class"] == "neutral"
+
+
+def test_the_unread_change_wording_is_configurable() -> None:
+    net = _credits_headline(
+        _quiet_debrief(net_credits=None),
+        labels=(("label.credits.change_unknown", "Not stated"),),
+    )
+
+    assert net["delta_display"] == "Not stated"

@@ -30,7 +30,9 @@ __all__ = [
 ]
 
 # Magnitude used when a rule names no magnitude field or the field is absent.
-_DEFAULT_MAGNITUDE = 0
+# A float because magnitudes are real quantities: a jump distance is stated as
+# 12.129, not 12.
+_DEFAULT_MAGNITUDE = 0.0
 
 # The journal event fired when the commander triggers a self-destruct. It is a
 # signal rather than a moment of its own: it marks the death that follows as
@@ -62,13 +64,21 @@ _VEHICLE_ID_FIELD = "ID"
 VESSEL_TYPE_MARK = "VesselType"
 
 
-def _magnitude_from(event: RawEvent, rule: MomentRule) -> int:
-    """Read the integer magnitude named by the rule, else the default."""
+def _magnitude_from(event: RawEvent, rule: MomentRule) -> float:
+    """Read the numeric magnitude named by the rule, else the default.
+
+    Both int and float are accepted. Rejecting floats was a real defect: the
+    journal states a jump distance as ``"JumpDist": 12.129``, so an int-only
+    guard sent every jump to the zero default and a session of five jumps
+    reported nought light years travelled. A bool is rejected explicitly
+    because bool subclasses int and a stray True would read as a magnitude
+    of one.
+    """
     if rule.magnitude_field is None:
         return _DEFAULT_MAGNITUDE
     raw = event.get(rule.magnitude_field)
-    if isinstance(raw, int) and not isinstance(raw, bool):
-        return raw
+    if isinstance(raw, (int, float)) and not isinstance(raw, bool):
+        return float(raw)
     return _DEFAULT_MAGNITUDE
 
 

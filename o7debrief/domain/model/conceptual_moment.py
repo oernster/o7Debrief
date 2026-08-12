@@ -31,7 +31,7 @@ class ConceptualMoment:
     mode: ActivityMode
     occurred_at: EventTime
     label: str
-    magnitude: int
+    magnitude: float
     credits_delta: Credits
     detail: tuple[tuple[str, object], ...]
     # A second, distinct currency delta (Operations pay Merc Coins). It rides

@@ -37,9 +37,15 @@ from o7debrief.infrastructure.render.html_renderer import HtmlDebriefExporter
 from o7debrief.infrastructure.render.markdown_renderer import MarkdownDebriefExporter
 from o7debrief.infrastructure.sink.filesystem_sink import FilesystemSink
 
-# Credit values the latest session earns; net credits is their sum.
+# Credit values the latest session earns.
 _BOUNTY = 500000
 _TRADE = 300000
+# The balances the latest session states at each end. The net change is their
+# difference, which is what the report shows: the journal states both outright,
+# so it captures spending and rebuys that no income total ever could.
+_OPENING_BALANCE = 1000000
+_CLOSING_BALANCE = 1800000
+_NET_CHANGE = _CLOSING_BALANCE - _OPENING_BALANCE
 
 _OLDER_SESSION = [
     {
@@ -62,6 +68,7 @@ _LATEST_SESSION = [
         "event": "LoadGame",
         "Commander": "Jameson",
         "FID": "F90",
+        "Credits": _OPENING_BALANCE,
     },
     {
         "timestamp": "2026-06-15T20:05:00Z",
@@ -81,6 +88,16 @@ _LATEST_SESSION = [
         "Type": "Gold",
         "Count": 5,
         "TotalSale": _TRADE,
+    },
+    # A relog part way through the run. Elite fires a fresh LoadGame whenever
+    # the commander drops to the menu and back, so this stays inside the same
+    # session and gives the run a closing balance to measure against.
+    {
+        "timestamp": "2026-06-15T20:20:00Z",
+        "event": "LoadGame",
+        "Commander": "Jameson",
+        "FID": "F90",
+        "Credits": _CLOSING_BALANCE,
     },
     {"timestamp": "2026-06-15T20:30:00Z", "event": "Shutdown"},
 ]
@@ -177,7 +194,7 @@ def test_one_shot_writes_the_default_html_format(
     assert Path(result.paths[0]).exists()
 
 
-def test_one_shot_isolates_latest_session_and_sums_credits(
+def test_one_shot_isolates_latest_session_and_reports_the_net_change(
     tmp_path, journal_dir_factory, write_journal_lines
 ) -> None:
     journal_dir = journal_dir_factory()
@@ -191,7 +208,9 @@ def test_one_shot_isolates_latest_session_and_sums_credits(
     )
 
     assert "Jameson" in html
-    assert "800,000" in html  # net credits = bounty + trade, digit-grouped
+    # The net change is the difference between the stated balances, not a sum
+    # of the session's income, digit-grouped for display.
+    assert f"{_NET_CHANGE:,}" in html
     assert "Sol" in html  # the latest session's system
     assert "Lave" not in html  # the older session is excluded
     # Activity icons reach the page: the bounty shows the combat swords and the

@@ -32,6 +32,8 @@ _POSITIVE_SIGN = "+"
 _MINUS_SIGN = "-"
 _PERCENT_SIGN = "%"
 _CREDIT_ZERO = 0
+# Format mini-language precision for a distance: one decimal place.
+_ONE_DECIMAL_PLACE = ".1f"
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,9 +71,15 @@ class ValueFormatter:
         """Return a Merc Coins amount grouped and suffixed (for example Merc Coins)."""
         return f"{self.integer(value)}{_SUFFIX_SEPARATOR}{self._fmt.coins_suffix}"
 
-    def distance(self, value: int) -> str:
-        """Return a distance grouped and suffixed (for example ly)."""
-        return f"{self.integer(value)}{_SUFFIX_SEPARATOR}{self._fmt.distance_suffix}"
+    def distance(self, value: float) -> str:
+        """Return a distance grouped, rounded and suffixed (for example ly).
+
+        Distances are real quantities: the journal states a jump as 12.129 ly.
+        One decimal place is kept so a short hop reads as 7.8 ly rather than
+        collapsing to 8, while a long carrier run stays readable.
+        """
+        body = format(value, f"{self._grouping()}{_ONE_DECIMAL_PLACE}")
+        return f"{body}{_SUFFIX_SEPARATOR}{self._fmt.distance_suffix}"
 
     def signed_credits(self, value: int) -> str:
         """Return a credit delta with an explicit sign, grouped and suffixed.

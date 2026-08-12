@@ -136,3 +136,59 @@ def test_a_clean_reading_produces_no_notices() -> None:
     debrief = build.debrief(moments=(), activity=ActivityRollup(modes_used=()))
     view = DebriefPresenter(_spec(_rule()), number_format()).present(debrief)
     assert view.to_context()["notices"] == []
+
+
+_JUMP = "FSDJump"
+_DISTANCE_FIELD = "JumpDist"
+
+
+def _jump_rule(**overrides) -> MomentRule:
+    fields = {
+        "event_type": _JUMP,
+        "kind": MomentKind.JUMP,
+        "domain": ActivityDomain.TRAVEL,
+        "mode": ActivityMode.SHIP,
+        "magnitude_field": _DISTANCE_FIELD,
+        "credits_field": None,
+        "coins_field": None,
+    }
+    fields.update(overrides)
+    return MomentRule(**fields)
+
+
+def test_a_magnitude_field_the_event_omits_is_noticed() -> None:
+    """The guard the jump-distance defect went undetected for years without."""
+    events = (event(_JUMP, _FIRST, StarSystem="Sol"),)
+
+    assert missing_currency_fields(events, _spec(_jump_rule())) == (
+        (_JUMP, _DISTANCE_FIELD),
+    )
+
+
+def test_a_fractional_magnitude_is_read_and_never_noticed() -> None:
+    """A jump distance is stated as a real quantity, which is perfectly usable."""
+    events = (event(_JUMP, _FIRST, JumpDist=12.129),)
+
+    assert missing_currency_fields(events, _spec(_jump_rule())) == ()
+
+
+def test_a_whole_magnitude_is_read_and_never_noticed() -> None:
+    events = (event(_JUMP, _FIRST, JumpDist=12),)
+
+    assert missing_currency_fields(events, _spec(_jump_rule())) == ()
+
+
+def test_a_boolean_never_passes_for_a_magnitude() -> None:
+    events = (event(_JUMP, _FIRST, JumpDist=True),)
+
+    assert missing_currency_fields(events, _spec(_jump_rule())) == (
+        (_JUMP, _DISTANCE_FIELD),
+    )
+
+
+def test_a_rule_naming_no_magnitude_field_is_never_noticed() -> None:
+    events = (event(_JUMP, _FIRST),)
+
+    assert (
+        missing_currency_fields(events, _spec(_jump_rule(magnitude_field=None))) == ()
+    )

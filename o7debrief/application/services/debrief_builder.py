@@ -49,6 +49,11 @@ _ONE_SYSTEM = 1
 # (through SHIP_EVENTS), so the all-history fold needs no extra retention.
 _BALANCE_EVENTS = ("LoadGame",)
 _BALANCE_FIELD = "Credits"
+# Indices into the ordered balance readings, and how many are needed before a
+# change between them can be measured at all.
+_FIRST_READING = 0
+_LAST_READING = -1
+_READINGS_FOR_A_CHANGE = 2
 
 # Journal events that name the commander, rank standing or active ship. The
 # streaming history fold keeps only these (with the derived moments and the
@@ -91,23 +96,49 @@ def _is_before(earlier: RawEvent, later: RawEvent) -> bool:
     return earlier.event_time.epoch_s < later.event_time.epoch_s
 
 
+def _balance_readings(events: tuple[RawEvent, ...]) -> tuple[int, ...]:
+    """Return every credit balance stated in ``events``, in order.
+
+    A boolean is rejected explicitly because bool is a subclass of int and a
+    stray True would otherwise read as a balance of one credit.
+    """
+    return tuple(
+        value
+        for event in events
+        if event.event_type in _BALANCE_EVENTS
+        for value in (event.get(_BALANCE_FIELD),)
+        if isinstance(value, int) and not isinstance(value, bool)
+    )
+
+
 def _latest_balance(events: tuple[RawEvent, ...]) -> Credits | None:
     """Return the newest credit balance stated in ``events``, else None.
 
     None means the journal offered no reading, which the report has to be able
     to say. Returning zero instead would make "no reading" indistinguishable
-    from "no money", which is exactly the confusion this exists to remove. A
-    boolean is rejected explicitly because bool is a subclass of int and a
-    stray True would otherwise read as a balance of one credit.
+    from "no money", which is exactly the confusion this exists to remove.
     """
-    balance: Credits | None = None
-    for event in events:
-        if event.event_type not in _BALANCE_EVENTS:
-            continue
-        value = event.get(_BALANCE_FIELD)
-        if isinstance(value, int) and not isinstance(value, bool):
-            balance = Credits(value)
-    return balance
+    readings = _balance_readings(events)
+    return Credits(readings[_LAST_READING]) if readings else None
+
+
+def _net_change(events: tuple[RawEvent, ...]) -> int | None:
+    """Return the signed change between the first and last stated balance.
+
+    This is the only honest net figure available. Summing the moments counted
+    income alone, so a session whose commander paid an eleven million credit
+    rebuy still reported a gain; and summing the priced outgoings instead would
+    still miss every purchase the journal does not itemise. Both ends of the
+    balance are stated outright, so their difference captures the lot.
+
+    Fewer than two readings means the change was never stated and cannot be
+    derived. That returns None so the report can say the figure is unread,
+    rather than a zero the reader would take for a session that broke even.
+    """
+    readings = _balance_readings(events)
+    if len(readings) < _READINGS_FOR_A_CHANGE:
+        return None
+    return readings[_LAST_READING] - readings[_FIRST_READING]
 
 
 def _location_readings(
@@ -181,6 +212,7 @@ class DebriefBuilder:
             start_system,
             end_system,
             visited,
+            _net_change(events),
         )
 
     def collect_history(
@@ -256,4 +288,5 @@ class DebriefBuilder:
             start_system,
             end_system,
             visited,
+            _net_change(collection.state_events),
         )

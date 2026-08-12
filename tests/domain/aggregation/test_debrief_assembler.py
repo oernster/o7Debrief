@@ -29,7 +29,7 @@ def _moment(
     sec: int,
     *,
     mode: ActivityMode = ActivityMode.SHIP,
-    magnitude: int = 0,
+    magnitude: float = 0.0,
     credits: int = 0,
     coins: int = 0,
     detail: tuple = (),
@@ -68,13 +68,15 @@ def _commander() -> CommanderId:
     return CommanderId(fid="F1", name="Jameson")
 
 
-def test_empty_session_has_no_domains_no_systems_zero_credits() -> None:
+def test_empty_session_has_no_domains_no_systems_unread_credit_change() -> None:
     debrief = assemble(_commander(), _window(), (), (), _spec())
     assert debrief.activity.active_domains == ()
     assert debrief.activity.modes_used == ()
     assert debrief.start_system is None
     assert debrief.end_system is None
-    assert debrief.net_credits_delta.value == 0
+    # None, never zero: a change that was never stated must stay tellable
+    # apart from a session that genuinely broke even.
+    assert debrief.net_credits_delta is None
     assert debrief.config_schema_version == _SCHEMA
     assert debrief.commander == _commander()
 
@@ -99,7 +101,9 @@ def test_full_session_populates_every_rollup() -> None:
         ),
         _moment(MomentKind.BOUNTY, ActivityDomain.COMBAT, 6, credits=50000),
         _moment(MomentKind.BOND, ActivityDomain.COMBAT, 7, credits=20000),
-        _moment(MomentKind.MARKET_BUY, ActivityDomain.TRADE, 8, credits=1000),
+        # A buy states its cost on the magnitude channel, never on credits, so
+        # spending stays out of every income total.
+        _moment(MomentKind.MARKET_BUY, ActivityDomain.TRADE, 8, magnitude=1000),
         _moment(MomentKind.MARKET_SELL, ActivityDomain.TRADE, 9, credits=4000),
         _moment(MomentKind.REFINE, ActivityDomain.MINING, 10),
         _moment(
@@ -211,8 +215,9 @@ def test_full_session_populates_every_rollup() -> None:
         ActivityMode.SLF,
         ActivityMode.ON_FOOT,
     )
-    expected_net = 30000 + 50000 + 20000 + 1000 + 4000 + 15000 + 9000
-    assert debrief.net_credits_delta.value == expected_net
+    # The net change is a reading passed in, not a total folded from the
+    # moments, so a session that states none reports none.
+    assert debrief.net_credits_delta is None
 
 
 def test_partial_session_leaves_unused_rollups_none() -> None:
@@ -260,9 +265,10 @@ def test_absent_location_readings_stay_none_rather_than_zero() -> None:
     assert debrief.systems_visited is None
 
 
-def test_mission_coins_total_on_rollup_and_excluded_from_net_credits() -> None:
+def test_mission_coins_total_separately_from_the_credit_rewards() -> None:
     # Two completed Operations each pay credits and Merc Coins. The coins total
-    # on the missions rollup, while net credits count only the credit rewards.
+    # on their own channel and never join the credit rewards, because they are
+    # a different currency.
     moments = (
         _moment(
             MomentKind.MISSION_COMPLETE,
@@ -283,5 +289,3 @@ def test_mission_coins_total_on_rollup_and_excluded_from_net_credits() -> None:
     assert debrief.activity.missions.completed == 2
     assert debrief.activity.missions.rewards.value == 20000
     assert debrief.activity.missions.coin_rewards.value == 750
-    # The coins must not inflate the credit figure.
-    assert debrief.net_credits_delta.value == 20000

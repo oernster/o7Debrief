@@ -39,7 +39,11 @@ def test_credits_and_distance_carry_suffixes() -> None:
     fmt = _grouped()
 
     assert fmt.credits(14320500) == "14,320,500 Cr"
-    assert fmt.distance(120) == "120 ly"
+    # A distance keeps one decimal place: the journal states jumps as real
+    # quantities, so 7.773 must not collapse to 8.
+    assert fmt.distance(120) == "120.0 ly"
+    assert fmt.distance(7.773) == "7.8 ly"
+    assert fmt.distance(3296.15) == "3,296.2 ly"
 
 
 def test_coins_carry_their_own_suffix() -> None:

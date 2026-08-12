@@ -49,7 +49,7 @@ def moment(
     second: int,
     *,
     mode: ActivityMode = ActivityMode.SHIP,
-    magnitude: int = 0,
+    magnitude: float = 0.0,
     credits: int = 0,
     coins: int = 0,
     detail: tuple[tuple[str, object], ...] = (),
@@ -86,7 +86,12 @@ def full_activity() -> ActivityRollup:
         mining=MiningRollup(refined=7),
         missions=MissionRollup(completed=3, rewards=Credits(9000)),
         engineering=EngineeringRollup(crafted=2),
-        carrier=CarrierRollup(jumps=1),
+        # Two jumps but only one measurable leg, which is the ordinary case: a
+        # carrier jump states its destination and not its origin, so the first
+        # jump of a session can never be measured.
+        carrier=CarrierRollup(
+            jumps=2, distance_ly=499.9, legs_measured=1, legs_total=2
+        ),
         exobiology=ExobiologyRollup(samples=6, sold=Credits(40000)),
         srv=SrvRollup(deployments=2),
         slv=SlvRollup(deployments=1, hangars_bought=1, hangars_sold=1),
@@ -134,7 +139,7 @@ def debrief(
     ranks: tuple[RankDelta, ...] = (),
     start_system: str | None = "Sol",
     end_system: str | None = "Achenar",
-    net_credits: int = 0,
+    net_credits: int | None = 0,
     schema_version: str = "1",
     ship: str = "",
     ship_name: str = "",
@@ -149,7 +154,7 @@ def debrief(
         window=window(),
         start_system=start,
         end_system=end,
-        net_credits_delta=Credits(net_credits),
+        net_credits_delta=net_credits,
         moments=moments,
         activity=activity,
         rank_progression=ranks,
