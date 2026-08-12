@@ -8,7 +8,7 @@ This is the most rigorously enforced project in the portfolio. `tests/structural
 
 ## 1. The Merc Coins journal field name is an assumption; a wrong guess reads as zero
 
-`config/debrief_taxonomy.toml:264` sets `coins_field = "MercCoins"`, naming the key the Operations reward is read from in the Elite Dangerous journal. That name was inferred, not confirmed against a real completed-Operation journal entry.
+`config/debrief_taxonomy.toml` sets `coins_field = "MercCoins"` on the `MissionCompleted` rule, naming the key the Operations reward is read from in the Elite Dangerous journal. That name was inferred, not confirmed against a real completed-Operation journal entry.
 
 `o7debrief/domain/aggregation/moment_factory.py` reads it as designed:
 
@@ -46,9 +46,9 @@ This is a verification gap rather than a defect and it closes with evidence rath
 
 `addopts` gates `o7debrief.domain`, `o7debrief.application`, five infrastructure sub-packages (`archive`, `autostart`, `clock`, `sink`, `update`), `installer.ops` and `installer.state` at 100% branch coverage. Those five joined because they already stood at 100% with no unreachable branch. The other five (`config`, `journal`, `preferences`, `rank`, `render`) did not; the reason is structural rather than a lack of effort.
 
-Infrastructure as a whole measures **79%** branch coverage. The shortfall is concentrated and explicable: `journal/windows_paths.py` is at 0% and `journal/paths.py` at 34%, both being OS-specific path discovery that a test on one machine cannot walk; `line_parser.py` (70%) and `event_mapper.py` (75%) carry malformed-input branches.
+Infrastructure as a whole measures **81%** branch coverage. The shortfall is concentrated and explicable: `journal/windows_paths.py` is at 0% and `journal/paths.py` at 34%, both being OS-specific path discovery that a test on one machine cannot walk; `line_parser.py` (70%) and `event_mapper.py` (75%) carry malformed-input branches.
 
-The blocker is that coverage.py has a single `fail-under`. Gating a layer measured at 79% alongside layers held at 100% would drag the one threshold down to 79% and quietly end the hard gate on the pure layers, which is a far worse outcome than the drift it would prevent. So the options are:
+The blocker is that coverage.py has a single `fail-under`. Gating a layer measured at 81% alongside layers held at 100% would drag the one threshold down to match it and quietly end the hard gate on the pure layers, which is a far worse outcome than the drift it would prevent. So the options are:
 
 - Raise the remaining sub-packages to 100% with fakes for the OS-specific discovery, then add them to `addopts`. Honest; the work is mostly in `journal/paths.py`.
 - Or run a second, separately floored coverage pass for infrastructure and wire it into the verification routine. That keeps the pure gate intact but adds a second command to remember, which is the kind of remembered step this project deliberately converts into rules.
@@ -59,7 +59,7 @@ The UI omission is correct and should stay.
 
 ## Looks like debt, not worth touching
 
-- `tests/domain/aggregation/test_moment_factory.py` (399) and `o7debrief/ui/tray/tray_controller.py` (396). Both are inside the 381 to 399 danger band, so each wants taking to 350 when next touched. The size test covers `o7debrief/`, `installer/`, `tests/` and the repository root, so it will catch them the moment they grow.
+- `tests/domain/aggregation/test_moment_factory.py` (399). It sits at the top of the 381 to 399 danger band, so it wants taking to 350 when next touched. The size test covers `o7debrief/`, `installer/`, `tests/` and the repository root, so it will catch it the moment it grows.
 - The `tools/` scripts (`capture_home_dialog.py`, `capture_tray_menu.py`, `generate_example_report.py`, `make_icon.py`) printing to stdout. Development instruments, correctly separated from the package.
 - The very large number of single-name `__all__` declarations across `application/ports/` and `application/dto/`. Repetitive and correct: one port or DTO per module, each exporting exactly one name.
 - `schema_version="1.0.0"` appearing as a literal in a test fixture. Test data, not a version source.
@@ -71,7 +71,7 @@ These look like candidates but are correct as they stand; changing them would re
 - **`tests/structural/test_no_magic_numbers.py`.** No other project in the portfolio has one. For an application that aggregates credits, ranks and rewards, a test that forbids unexplained numeric literals in the domain is the single most appropriate invariant available. Do not weaken it for convenience.
 - **`test_domain_never_reads_the_clock()`.** The domain assembles moments from journal timestamps; letting it read the wall clock would make debriefs non-reproducible. Load-bearing.
 - **The eleven ports in `application/ports/` with one Protocol each.** It looks like ceremony for a desktop app. It is what lets the domain and application layers hold a 100% branch gate with no I/O and it is why the infrastructure tests can use real temporary files rather than mocks.
-- **`_coins_from()` returning zero rather than raising on a missing field.** Correct domain behaviour and stated in its docstring. Item 1 is about verifying the field name, not about changing this rule. Making a mismatch observable is done: `application/services/field_diagnostics.py` reports an unread currency field as a notice in the report itself.
+- **`_coins_from()` returning zero rather than raising on a missing field.** Correct domain behaviour and stated in its docstring. Item 1 is about verifying the field name, not about changing this rule. Making a mismatch observable is done: `application/services/field_diagnostics.py` reports an unread currency or magnitude field as a notice in the report itself.
 - **`config/debrief_taxonomy.toml` holding the event taxonomy and its text templates as data.** The rules the application applies are configuration, not code. This is why adding a new journal event does not mean editing the domain.
 - **`VERSION` at root with `o7debrief/__init__.py` exposing `__version__`.** Single source of truth, correctly implemented, with no literal anywhere else in the tree.
 - **The two `# noqa: BLE001` handlers in `journal/paths.py` and `journal/windows_paths.py`.** Each has a written reason ("a stubbed environ may misbehave", "any WinAPI failure falls back below"). This is the house style done correctly.
