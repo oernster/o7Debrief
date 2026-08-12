@@ -7,6 +7,7 @@ spelling is used in comments. No em dashes appear anywhere.
 
 from __future__ import annotations
 
+import os
 from dataclasses import replace
 from pathlib import Path
 
@@ -58,7 +59,10 @@ CLOSE_FAILED_MESSAGE = "{detail}"
 # running application was closed and whether the launch afterwards worked.
 LOG_PRIMARY = "primary action: state={state} installed={installed} bundled={bundled}"
 LOG_NONE = "none"
+LOG_IDENTITY = "setup process pid={pid} parent={parent}"
 LOG_APP_NOT_RUNNING = "application was not running"
+LOG_APP_RUNNING = "application is running, asking whether to close it"
+LOG_CLOSING = "terminating the running application"
 LOG_CLOSE_DECLINED = "user declined to close the running application"
 LOG_CLOSED = "running application closed"
 LOG_CLOSE_FAILED = "could not close the running application: {detail}"
@@ -120,12 +124,19 @@ class InstallerWindow(QWidget):
 
     def _ensure_app_closed(self) -> bool:
         """Return True when it is safe to proceed, offering to close the app."""
+        log_step(LOG_IDENTITY.format(pid=os.getpid(), parent=os.getppid()))
         if not is_app_running():
             log_step(LOG_APP_NOT_RUNNING)
             return True
+        log_step(LOG_APP_RUNNING)
         if CloseAppDialog(self).exec() != QDialog.DialogCode.Accepted:
             log_step(LOG_CLOSE_DECLINED)
             return False
+        # Logged either side of the kill on purpose. The setup program twice
+        # died between these two lines, so a run that reaches the first and not
+        # the second says the terminate itself took it down rather than any
+        # code around it.
+        log_step(LOG_CLOSING)
         try:
             close_running_app()
         except InstallerError as error:

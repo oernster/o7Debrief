@@ -58,6 +58,27 @@ def test_close_running_app_ends_the_process_and_waits_for_the_lock() -> None:
     assert len(recorded) == 1
 
 
+def test_the_terminate_never_ends_a_process_tree() -> None:
+    """The regression this pins: /t took the setup program down with the app.
+
+    The tree flag ends the target and everything descended from it. The setup
+    program twice died at exactly this call while the application closed
+    perfectly, so the kill was reaching further than the process it named. The
+    application starts no children that need terminating, so the flag bought
+    nothing and must not come back.
+    """
+    runner = FakeRunner(default=idle_result())
+    _recorded, sleeper = _sleeps()
+
+    close_running_app(runner, sleep=sleeper)
+
+    terminate = runner.commands[0]
+    assert "/t" not in [argument.lower() for argument in terminate]
+    # The force flag is still wanted: the application intercepts a window close
+    # to minimise to the tray, so a polite request leaves the files locked.
+    assert "/f" in [argument.lower() for argument in terminate]
+
+
 def test_close_running_app_returns_at_once_when_it_has_already_gone() -> None:
     runner = FakeRunner(default=idle_result())
     recorded, sleeper = _sleeps()

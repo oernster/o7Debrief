@@ -27,7 +27,12 @@ _TASKLIST_NO_HEADER = "/nh"
 _TASKKILL = "taskkill"
 _TASKKILL_IMAGE = "/im"
 _TASKKILL_FORCE = "/f"
-_TASKKILL_TREE = "/t"
+# There is deliberately no /t here. That flag ends the target's whole process
+# tree, and the setup program twice died at exactly this call with the running
+# application closing successfully: the kill reached something it should never
+# have reached. The application is a single standalone process that starts no
+# children needing termination, so the tree flag bought nothing and cost the
+# setup program its own life. Terminate the named image and nothing else.
 
 TASKLIST_TIMEOUT_S = 10.0
 TASKKILL_TIMEOUT_S = 15.0
@@ -68,7 +73,7 @@ def close_running_app(
     active = runner or default_runner()
     wait = sleep or time.sleep
     active.run(
-        [_TASKKILL, _TASKKILL_FORCE, _TASKKILL_TREE, _TASKKILL_IMAGE, EXE_NAME],
+        [_TASKKILL, _TASKKILL_FORCE, _TASKKILL_IMAGE, EXE_NAME],
         timeout=TASKKILL_TIMEOUT_S,
     )
     for _ in range(CLOSE_POLL_ATTEMPTS):

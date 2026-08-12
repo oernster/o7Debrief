@@ -9,8 +9,10 @@ spelling is used in comments. No em dashes appear anywhere.
 
 from __future__ import annotations
 
+import faulthandler
 import sys
 import tempfile
+import threading
 import traceback
 from datetime import datetime, timezone
 from pathlib import Path
@@ -73,5 +75,31 @@ def install_crash_logging(log_path: Path | None = None) -> Path:
         write_crash(path, exc_type, exc, tb)
         sys.__excepthook__(exc_type, exc, tb)
 
+    def _thread_hook(args: threading.ExceptHookArgs) -> None:
+        """Log a worker-thread failure, which ``sys.excepthook`` never sees."""
+        write_crash(path, args.exc_type, args.exc_value, args.exc_traceback)
+
     sys.excepthook = _hook
+    threading.excepthook = _thread_hook
+    _enable_native_crash_dump(path)
     return path
+
+
+def _enable_native_crash_dump(path: Path) -> None:
+    """Write a native traceback if the process dies below the Python level.
+
+    An access violation or an abort inside Qt raises no Python exception, so
+    neither hook above ever runs and the process simply vanishes. That is the
+    exact signature of the failure this exists for: a setup program that
+    disappeared with no traceback, no log line and no Windows error report. The
+    handle is deliberately left open for the life of the process, because the
+    whole point is that it is still usable at the moment of the crash.
+    """
+    try:
+        handle = path.open("a", encoding="utf-8")
+    except OSError:
+        return
+    try:
+        faulthandler.enable(file=handle, all_threads=True)
+    except (OSError, ValueError, RuntimeError):
+        handle.close()
