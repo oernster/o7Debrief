@@ -76,6 +76,7 @@ The second is the better shape and should follow the first rather than lead it. 
 - The `tools/` scripts (`capture_home_dialog.py`, `capture_tray_menu.py`, `generate_example_report.py`, `make_icon.py`) printing to stdout. Development instruments, correctly separated from the package.
 - The very large number of single-name `__all__` declarations across `application/ports/` and `application/dto/`. Repetitive and correct: one port or DTO per module, each exporting exactly one name.
 - `schema_version="1.0.0"` appearing as a literal in a test fixture. Test data, not a version source.
+- `[humanise.words]` holding one entry per token part, so a part cannot mean different things on different modules. `fast` is Bi-Weave on a shield generator and Enhanced Performance on a thruster; mapping it would be right in one report and wrong in the other, so it is left out and reads as "Fast" on both. That is imprecise about each and false about neither, which is the right side to err on here. Module-aware entries are the fix if the imprecision ever matters; the cost is a second lookup layer for two or three words.
 
 ## Not debt (do not "fix" these)
 

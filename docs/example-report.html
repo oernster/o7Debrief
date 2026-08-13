@@ -27,9 +27,15 @@ h2 { color: var(--accent-soft); font-size: 1.05rem; text-transform: uppercase;
   border-radius: 6px; padding: 1rem 1.2rem; }
 .meta { display: grid;
   grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 0.6rem 1.5rem; }
-.meta span { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; }
+.meta span { color: var(--muted); font-size: 0.78rem; text-transform: uppercase;
+  display: block; }
+/* The route is one cell, not a From cell and a To cell. As two they wrapped
+   apart, leaving the origin at the end of one row and the destination at the
+   start of the next, which read as two unrelated facts. */
+.meta .route .arrow { display: inline; color: var(--muted); padding: 0 0.4rem;
+  font-size: 1rem; text-transform: none; }
 .grid { display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 1rem; }
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 1rem; }
 .metric { background: var(--panel); border: 1px solid var(--edge);
   border-radius: 6px; padding: 0.9rem 1rem; }
 .metric .label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; }
@@ -39,9 +45,16 @@ h2 { color: var(--accent-soft); font-size: 1.05rem; text-transform: uppercase;
 .neutral { color: var(--neutral); }
 .card .title { color: var(--accent-soft); font-size: 1rem; margin-bottom: 0.5rem; }
 .stats { list-style: none; margin: 0; padding: 0; }
-.stats li { display: flex; justify-content: space-between;
-  border-bottom: 1px dotted var(--edge); padding: 0.2rem 0; }
-.stats li span:first-child { color: var(--muted); }
+/* A stat row is a label and a figure on one line. The gap stops them touching
+   when the label is long ("Modifications261"); the figure never wraps, because a
+   value broken across two lines ("766.5" then "ly") stops reading as one
+   quantity and no longer lines up with the figures above and below it. The
+   label may wrap instead, since prose survives wrapping and a number does not. */
+.stats li { display: flex; justify-content: space-between; align-items: baseline;
+  gap: 0.9rem; border-bottom: 1px dotted var(--edge); padding: 0.25rem 0; }
+.stats li span:first-child { color: var(--muted); min-width: 0; }
+.stats li span:last-child { white-space: nowrap; text-align: right;
+  flex: 0 0 auto; font-variant-numeric: tabular-nums; }
 .note { color: var(--muted); font-style: italic; margin-top: 0.5rem; }
 .timeline { list-style: none; margin: 0; padding: 0; }
 .timeline li { display: grid; grid-template-columns: 5.5rem 2rem 1fr; gap: 0.5rem;
@@ -120,12 +133,11 @@ footer { color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem;
   <p class="sub">CMDR Jameson &middot; Cobra Mk III &middot; &ldquo;Stardust&rdquo;</p>
 
   <div class="panel meta">
-    <div><span>Session start</span><br>19:00:00 GMT</div>
-    <div><span>Session end</span><br>21:00:00 GMT</div>
-    <div><span>Duration</span><br>2h 0m</div>
-    <div><span>From</span><br>LHS 3447</div>
-    <div><span>To</span><br>Diaguandri</div>
-    <div><span>Systems visited</span><br>2</div>
+    <div><span>Session start</span>19:00:00 GMT</div>
+    <div><span>Session end</span>21:00:00 GMT</div>
+    <div><span>Duration</span>2h 0m</div>
+    <div class="route"><span>Route</span>LHS 3447<span class="arrow">&rarr;</span>Diaguandri</div>
+    <div><span>Systems visited</span>2</div>
   </div>
 
   <h2>Headline</h2>
@@ -431,13 +443,13 @@ footer { color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem;
         <span class="ico">💱</span>
         <span>
           <span class="mode" title="Ship">S</span>
-          Traded 90 ruthenium for 15 technetium at the raw trader.</span>
+          Traded 90 Ruthenium for 15 Technetium at the raw trader.</span>
       </li><li>
         <span class="t">20:30:00</span>
         <span class="ico">🔧</span>
         <span>
           <span class="mode" title="Ship">S</span>
-          Applied Weapon_Overcharged grade 5 to hpt_multicannon_gimbal_medium at Tod &#39;The Blaster&#39; McQuinn.</span>
+          Applied Overcharged Weapon grade 5 to a Medium Gimballed Multi-Cannon at Tod &#39;The Blaster&#39; McQuinn.</span>
       </li><li>
         <span class="t">20:25:00</span>
         <span class="ico">⛏️</span>
@@ -635,7 +647,7 @@ footer { color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem;
         <span class="ico">💱</span>
         <span>
           <span class="mode" title="Ship">S</span>
-          Traded 90 ruthenium for 15 technetium at the raw trader.</span>
+          Traded 90 Ruthenium for 15 Technetium at the raw trader.</span>
       </li><li>
         <span class="t">19:45:00</span>
         <span class="ico">💱</span>
@@ -683,7 +695,7 @@ footer { color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem;
         <span class="ico">🔧</span>
         <span>
           <span class="mode" title="Ship">S</span>
-          Applied Weapon_Overcharged grade 5 to hpt_multicannon_gimbal_medium at Tod &#39;The Blaster&#39; McQuinn.</span>
+          Applied Overcharged Weapon grade 5 to a Medium Gimballed Multi-Cannon at Tod &#39;The Blaster&#39; McQuinn.</span>
       </li>
     </ul>
   </div>

@@ -92,10 +92,10 @@ _SYSTEMS_VISITED = 2
 # journal to render from; each is written exactly as the app renders it, so the
 # sample shows the detail a real row carries rather than the name of its kind.
 _CRAFT_ROW = (
-    "Applied Weapon_Overcharged grade 5 to hpt_multicannon_gimbal_medium "
+    "Applied Overcharged Weapon grade 5 to a Medium Gimballed Multi-Cannon "
     "at Tod 'The Blaster' McQuinn."
 )
-_MATERIAL_TRADE_ROW = "Traded 90 ruthenium for 15 technetium at the raw trader."
+_MATERIAL_TRADE_ROW = "Traded 90 Ruthenium for 15 Technetium at the raw trader."
 
 # One row per session-log moment: (kind, domain, mode, time, label, credits,
 # system). The label is the displayed text; the domain decides its category
