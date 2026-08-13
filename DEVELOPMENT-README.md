@@ -115,7 +115,7 @@ This one runs on Linux, from a checkout with the virtual environment created:
 
 The script writes its own manifest, launcher, desktop entry and metainfo rather than committing them, derives the whole icon set from the single master PNG at the repository root, pre-downloads the wheels on the host so the sandboxed build needs no network, then installs the app and produces `o7debrief.flatpak`. `./cleanup_flatpak.sh` removes only what that script produced, so the Nuitka build outputs are left alone.
 
-It has never been built or run on a Linux machine. [TECH_DEBT.md](TECH_DEBT.md) item 4 records exactly what has and has not been verified, which is worth reading before you trust it.
+It has been built, installed and run on Ubuntu. What has not been proven is producing a debrief from a real journal inside a Proton prefix, so [TECH_DEBT.md](TECH_DEBT.md) item 4 records exactly what has and has not been verified and is worth reading before you trust it.
 
 ## Stamp the version into the site
 

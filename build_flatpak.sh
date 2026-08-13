@@ -262,7 +262,7 @@ finish-args:
   # reports unreachable.
   - --share=network
   # The journal lives inside the game's Wine or Proton prefix under the user's
-  # home, and the debrief is written to their Downloads folder, so home access
+  # home; the debrief is written to their Downloads folder, so home access
   # covers both.
   - --filesystem=home
   # Steam installed AS A FLATPAK keeps its Proton prefixes under ~/.var/app,
@@ -277,6 +277,21 @@ finish-args:
   - --filesystem=xdg-config/autostart:create
   # Session-end notifications go through the desktop's notification service.
   - --talk-name=org.freedesktop.Notifications
+  # The tray icon. On Linux a Qt tray icon is not drawn into a panel at all: it
+  # is published over D-Bus as a StatusNotifierItem and the desktop's watcher
+  # draws it. Inside the sandbox that watcher is unreachable unless it is named
+  # here, so QSystemTrayIcon.isSystemTrayAvailable() answers False and the app
+  # reports no tray on a desktop that has a perfectly good one. Ubuntu ships the
+  # watcher as part of its AppIndicator extension, so this line is the whole
+  # difference between an icon and no icon there.
+  #
+  # Talking to the watcher is the entire grant. Publishing an item also means
+  # owning a bus name of the form org.kde.StatusNotifierItem-PID-N, which cannot
+  # be expressed here (flatpak only wildcards after a dot, so the hyphenated
+  # suffix has no legal pattern) and would otherwise have forced a much broader
+  # permission. It is not needed: Qt hands the watcher its unique connection
+  # name instead. Both were tried on Ubuntu and this narrower one is enough.
+  - --talk-name=org.kde.StatusNotifierWatcher
 
 modules:
 

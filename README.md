@@ -21,7 +21,7 @@ o7 Debrief watches the Journal while you play, brackets each session by its `Shu
 
 o7 Debrief runs on Windows as a standalone executable. That is the supported platform and the one every release is built and tested on.
 
-**Linux support is written but not yet released.** A Flatpak build exists in the repository and has never been built or run on a Linux machine; until it has, it is source you can build rather than a platform o7 Debrief supports. What follows describes the intended behaviour; [TECH_DEBT.md](TECH_DEBT.md) records exactly what has and has not been verified.
+**Linux support is built but not yet released.** The Flatpak in this repository has been built, installed and run on Ubuntu, so it is real rather than theoretical. What has not been proven is the part that matters most: no debrief has yet been generated on Linux from a real journal inside a Proton prefix; no report has been opened in a host browser from inside the sandbox. Until that has happened it is source you can build rather than a platform o7 Debrief supports. What follows describes the intended behaviour; [TECH_DEBT.md](TECH_DEBT.md) records exactly what has and has not been verified.
 
 On Linux the game itself runs under Proton or Wine, so the journal sits inside the game's prefix. o7 Debrief finds it without being told: it looks through the Steam compatdata prefixes (including Steam installed as a Flatpak), honours `STEAM_COMPAT_DATA_PATH` and `WINEPREFIX`, then falls back to a plain `~/.wine` prefix, trying both the `steamuser` and the real user name at each.
 

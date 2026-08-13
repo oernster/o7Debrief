@@ -68,24 +68,31 @@ Nothing here is a correctness problem; it is house style, applied unevenly. Two 
 
 The second is the better shape and should follow the first rather than lead it. Note the detector requirement above in either case: a naive single-line regex reports a false all-clear on this very tree.
 
-## 4. The Flatpak has never been built or run
+## 4. The Flatpak builds and runs; parts of it are still unproven
 
-`build_flatpak.sh`, `cleanup_flatpak.sh` and `LinuxAutostart` were written on a Windows machine with no Linux, no `flatpak-builder` and no Elite Dangerous under Proton. What has actually been verified is narrow and worth stating exactly, because the gap between it and "it works" is the item:
+`build_flatpak.sh`, `cleanup_flatpak.sh` and `LinuxAutostart` were written on a Windows machine with no Linux, no `flatpak-builder` and no Elite Dangerous under Proton. That is no longer the whole story: the Flatpak has now been built and run on a real Ubuntu machine. What that settled and what it did not is worth stating exactly, because the gap between the two is what is left of this item.
+
+Settled by running it:
+
+- The manifest builds, the wheels resolve against the runtime's Python and the app installs and launches. That was the largest single unknown and it is gone.
+- The tray was broken and is fixed. A Qt tray icon on Linux is not drawn into a panel: it is published over D-Bus as a StatusNotifierItem for the desktop's watcher to draw. The manifest named only the notification service, so the sandbox blocked the watcher, `isSystemTrayAvailable()` answered False and the app reported no tray on a desktop that had one. The prediction below had been that stock GNOME lacks a host; on Ubuntu there is a host and the sandbox was refusing it. Granting `--talk-name=org.kde.StatusNotifierWatcher` restores the icon, confirmed by running with that grant added. Ownership of the item's own bus name was tried too and proved unnecessary, so the narrower grant is what ships.
+
+Verified before that and still only that:
 
 - Both scripts pass `bash -n`.
 - The icon-generation block was run against the real 1254px master and produces all seven sizes.
 - `LinuxAutostart` is unit-tested at 100% branch coverage against a temporary directory.
 - The summon route was run for real on Windows across two processes: a second launch leaves the marker, exits cleanly and the running instance consumes it and opens its window. What that does not prove is the sandbox part of it, below.
 
-Everything that makes it a working Linux release is unverified: whether the manifest builds, whether the wheel platform tags resolve against the runtime's Python, whether the sandbox can actually read a Proton prefix, whether the autostart entry survives a real session start, plus whether `webbrowser.open` reaches a host browser through the portal from inside the sandbox.
+Still unverified: whether the sandbox can actually read a Proton prefix, whether the autostart entry survives a real session start and whether `webbrowser.open` reaches a host browser through the portal from inside the sandbox. Those need a machine with the game installed rather than another build.
 
-Three things are most likely to be wrong on first run:
+Three things remain most likely to be wrong:
 
 - **The Steam-as-Flatpak journal path.** `--filesystem=home` does not cover `~/.var/app`, which is why the manifest carries a second explicit `--filesystem=~/.var/app/com.valvesoftware.Steam:ro`. If that line is wrong or insufficient, discovery fails on a machine that plainly has a journal; the report then says no journal directory rather than saying it was not allowed to look.
 - **Opening the debrief.** The Windows path opens the file with `webbrowser`; inside the sandbox that has to travel through the portal to a browser on the host. It is the whole point of the Linux release and it is entirely untested.
-- **The tray icon and the route around it.** `QSystemTrayIcon` needs a StatusNotifierItem host. Ubuntu ships one; a stock GNOME session does not, so the icon simply will not appear there. The background watch and the browser-on-exit never depended on it; launching the app again now opens the home window instead of exiting in silence, so every operation is reachable with no tray at all. That route rests on one thing this machine cannot check: inside a flatpak each instance gets its own `XDG_RUNTIME_DIR`, so the lock file and the summon marker are placed in `$XDG_RUNTIME_DIR/app/$FLATPAK_ID`, the directory flatpak shares between instances of one application. If that is wrong or not mounted as expected, two launches take two locks: a second tray appears and the summon marker is never seen. It is written from the documented sandbox layout and verified only against a temporary directory standing in for it.
+- **The summon route's sandbox assumption.** Launching the app again opens the home window rather than exiting in silence, so every operation is reachable with no tray at all. That route rests on one thing this machine cannot check: inside a flatpak each instance gets its own `XDG_RUNTIME_DIR`, so the lock file and the summon marker are placed in `$XDG_RUNTIME_DIR/app/$FLATPAK_ID`, the directory flatpak shares between instances of one application. If that is wrong or not mounted as expected, two launches take two locks: a second tray appears and the summon marker is never seen. It is written from the documented sandbox layout and verified only against a temporary directory standing in for it.
 
-This closes by building and running it on a real Ubuntu machine, not by further reading. Until then the Linux support is written but not shipped; no document should claim otherwise.
+What closes the rest is a Linux machine with Elite Dangerous installed under Proton, not further reading. Until a debrief has been generated from a real journal there and opened in a browser, the Linux support is built but not proven; no document should claim otherwise.
 
 ---
 

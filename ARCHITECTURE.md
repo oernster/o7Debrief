@@ -1,6 +1,6 @@
 # Architecture
 
-o7 Debrief is a local-first Windows desktop application that turns the Elite Dangerous player Journal into a Commander Mission Debrief. It is a desktop executable, not a web app and not a local server. A Linux Flatpak build is written and has never been built or run; where the structure differs on Linux it is noted below; Windows is the platform the product ships on (see [TECH_DEBT.md](TECH_DEBT.md) item 4). This document states the structural invariants first, then the components, the dependency direction, the execution flow and the rationale behind the decisions that shaped the design.
+o7 Debrief is a local-first Windows desktop application that turns the Elite Dangerous player Journal into a Commander Mission Debrief. It is a desktop executable, not a web app and not a local server. A Linux Flatpak build has been built and run on Ubuntu but has not yet produced a debrief from a real journal there; where the structure differs on Linux it is noted below; Windows is the platform the product ships on (see [TECH_DEBT.md](TECH_DEBT.md) item 4). This document states the structural invariants first, then the components, the dependency direction, the execution flow and the rationale behind the decisions that shaped the design.
 
 The governing idea: a debrief is a deterministic function of the journal bytes for one session. Everything else (a tray, a one-shot command, an export format) is plumbing around that function. The architecture exists to keep that function pure, the data real and the layers honest.
 
