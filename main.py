@@ -277,6 +277,26 @@ def _icon_png_path() -> Path:
     return Path(__file__).resolve().parent / _ASSETS_DIR_NAME / _ICON_PNG_FILE_NAME
 
 
+def _app_icon() -> QIcon:
+    """Return the application icon, preferring the installed desktop icon.
+
+    A Linux tray icon is published over D-Bus as a StatusNotifierItem, and an
+    item may hand the panel either a NAME to look up in the icon theme or a
+    bitmap. Qt sends a bitmap for a file-backed icon, and it sends one at the
+    size it thinks a tray wants, which is 16 pixels; the panel then has a
+    16 pixel image to fill a slot several times that, so the icon draws small
+    and soft beside every other icon on the bar. Naming the icon instead lets
+    the panel load whichever size of the installed hicolor set it actually
+    wants, which is what makes it the same size as its neighbours.
+
+    The name is the desktop-entry id, since that is what the icons are
+    installed under. The lookup fails wherever the entry is not installed (on
+    Windows, and when running from a source tree on Linux), so the bundled
+    file remains the fallback.
+    """
+    return QIcon.fromTheme(_DESKTOP_FILE_NAME, QIcon(str(_icon_path())))
+
+
 def _set_app_user_model_id(app_user_model_id: str) -> None:
     """Declare an explicit Windows shell identity for the running process.
 
@@ -677,7 +697,7 @@ def main() -> int:
         app.setApplicationName(_APP_DIR_NAME)
         app.setDesktopFileName(_DESKTOP_FILE_NAME)
         app.setQuitOnLastWindowClosed(False)
-        icon = QIcon(str(_icon_path()))
+        icon = _app_icon()
         app.setWindowIcon(icon)
 
         # Keep a reference to the heartmoment timer for the life of the app so it
