@@ -184,13 +184,18 @@ The script writes its own manifest, launcher, desktop entry and metainfo rather 
 
 The bundle it produces is what each release publishes as `o7debrief.flatpak`. It has been built, installed and run on Ubuntu. What has not been proven is producing a debrief from a real journal inside a Proton prefix, so [TECH_DEBT.md](TECH_DEBT.md) item 3 records exactly what has and has not been verified and is worth reading before you trust it.
 
-## Stamp the version into the site
+## Refresh the site from VERSION
 
 ```powershell
 python stamp_version.py
+python refresh_example_report.py
 ```
 
-`VERSION` at the repository root is the single source of truth. The runtime and `pyproject.toml` read it directly; the GitHub Pages site under `docs/` cannot, so each page carries a delimited `<!--VERSION-->` token that this script overwrites from `VERSION`. It is idempotent and prints the files it touched. Both `buildexe.py` and `buildinstaller.py` call it at the start of a build, so a packaged release cannot ship a site showing the wrong version.
+`VERSION` at the repository root is the single source of truth. The runtime and `pyproject.toml` read it directly; the GitHub Pages site under `docs/` cannot, so each page carries a delimited `<!--VERSION-->` token that `stamp_version.py` overwrites from `VERSION`. It is idempotent and prints the files it touched.
+
+`docs/example-report.html` is not stamped, because it is not a hand-written page: it is a real report rendered by the real exporter from a fixed sample session, so it states the version that was current when it was last generated. `refresh_example_report.py` regenerates it. The render is deterministic, so a second run rewrites nothing and says so.
+
+Both `buildexe.py` and `buildinstaller.py` call both scripts at the start of a build and fail the build if either fails, so a packaged release cannot ship a site showing the wrong version, in the pages or in the example. Neither is a step anyone has to remember.
 
 ## Project layout
 
@@ -219,7 +224,8 @@ config/            TOML taxonomy: the event-to-moment mapping, the display
                    formats and the limits that bound a history report.
 docs/              The GitHub Pages site, stamped with the version from VERSION.
 tools/             Development instruments (icon generation, screenshot capture,
-                   the example report). Not part of the shipped package.
+                   the example report generator the build runs). Not part of
+                   the shipped package.
 tests/
   ...              Unit, integration and structural tests mirroring the source.
   installer/       The setup program's operations and state, against scratch
@@ -235,6 +241,9 @@ buildinstaller.py  Windows installer build.
 build_flatpak.sh   Linux Flatpak build; writes its own manifest and packaging files.
 cleanup_flatpak.sh Removes only what the Flatpak build produced.
 stamp_version.py   Stamps VERSION into the docs/ site.
+refresh_example_report.py
+                   Regenerates the example report the site publishes, so it
+                   cannot state a version the build does not.
 VERSION            The single source of truth for the version.
 ```
 

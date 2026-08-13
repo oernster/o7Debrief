@@ -36,6 +36,7 @@ import sys
 import time
 from pathlib import Path
 
+import refresh_example_report
 import stamp_version
 
 # --- Project identity (single source of truth for installer metadata) -------
@@ -207,6 +208,9 @@ def build_installer() -> int:
     stamped = stamp_version.main([])
     if stamped != 0:
         raise SystemExit("[buildinstaller] Version stamping failed.")
+
+    if refresh_example_report.main([]) != 0:
+        raise SystemExit("[buildinstaller] Example report refresh failed.")
 
     version = read_version()
     pe_version = to_pe_version(version)

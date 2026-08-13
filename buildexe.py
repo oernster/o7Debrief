@@ -7,9 +7,10 @@ the author's other PySide6 desktop builds (see EDColonisationAsst/buildruntime.p
 and additionally embeds Windows PE version metadata (product name, versions,
 file description and copyright).
 
-The build stamps the published site from VERSION before it does anything else,
-so a packaged release can never carry a site whose version disagrees with the
-binary. Stamping is a build rule rather than a step someone has to remember.
+The build stamps the published site from VERSION before it does anything else
+and regenerates the example report the site publishes, so a packaged release can
+never carry a site whose version disagrees with the binary. Both are build rules
+rather than steps someone has to remember.
 
 Usage (from the project root, with the venv active or detected):
 
@@ -32,6 +33,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import refresh_example_report
 import stamp_version
 
 # --- Project identity (single source of truth for build metadata) -----------
@@ -134,6 +136,11 @@ def build_exe() -> int:
     if stamped != 0:
         print("[buildexe] ERROR: version stamping failed.", file=sys.stderr)
         return stamped
+
+    refreshed = refresh_example_report.main([])
+    if refreshed != 0:
+        print("[buildexe] ERROR: example report refresh failed.", file=sys.stderr)
+        return refreshed
 
     version = read_version()
     pe_version = to_pe_version(version)
