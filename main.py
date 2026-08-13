@@ -67,6 +67,7 @@ from o7debrief.infrastructure import (
     JinjaTextTemplateRenderer,
     JsonPreferencesStore,
     JsonRankSnapshotStore,
+    LinuxAutostart,
     MarkdownDebriefExporter,
     NameHumaniser,
     SystemClock,
@@ -95,6 +96,18 @@ _STATE_DIR_NAME = "state"
 # It is resolved from the Windows known-folder registration so a relocated
 # Downloads folder is honoured, with a fallback to the conventional location.
 _DOWNLOADS_DIR_NAME = "Downloads"
+# The value of ``os.name`` on Windows, and the Linux equivalents of the
+# known-folder registration the Windows branch reads.
+_OS_WINDOWS = "nt"
+_ENV_XDG_DOWNLOAD_DIR = "XDG_DOWNLOAD_DIR"
+_ENV_XDG_CONFIG_HOME = "XDG_CONFIG_HOME"
+_XDG_CONFIG_DIR_NAME = ".config"
+_USER_DIRS_FILE = "user-dirs.dirs"
+_XDG_DOWNLOAD_ASSIGNMENT = "XDG_DOWNLOAD_DIR="
+# Set by flatpak inside the sandbox. Its presence is how the composition root
+# knows the autostart entry must re-launch the app through flatpak rather than
+# through the interpreter path, which does not exist on the host.
+_ENV_FLATPAK_ID = "FLATPAK_ID"
 _SHELL_FOLDERS_SUBKEY = (
     r"Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders"
 )
@@ -238,7 +251,15 @@ def _register_toast_identity(
     placeholder. Writing on each launch keeps the icon path correct whether the
     app runs from source or from an installed location. Best effort: a failed
     write simply leaves the header unbranded.
+
+    The shell identity is a Windows concept and the registry module does not
+    exist elsewhere, so off Windows this returns without doing anything. Guarding
+    on the platform rather than catching the import keeps the intent explicit:
+    there is nothing to register, not a registration that failed.
     """
+    if os.name != _OS_WINDOWS:
+        return
+
     import winreg
 
     subkey = rf"{_AUMID_CLASSES_SUBKEY}\{app_user_model_id}"
@@ -259,8 +280,13 @@ def _downloads_dir() -> Path:
 
     Reads the Windows known-folder registration so a relocated Downloads folder
     is honoured, falling back to the conventional location under the home
-    directory when the value is absent or unreadable.
+    directory when the value is absent or unreadable. On Linux the equivalent
+    registration is the XDG user-directories file, which is what a localised
+    desktop uses to call the folder something other than "Downloads".
     """
+    if os.name != _OS_WINDOWS:
+        return _xdg_downloads_dir()
+
     import winreg
 
     try:
@@ -269,6 +295,34 @@ def _downloads_dir() -> Path:
         expanded = os.path.expandvars(raw)
         if expanded:
             return Path(expanded)
+    except OSError:
+        pass
+    return Path.home() / _DOWNLOADS_DIR_NAME
+
+
+def _xdg_downloads_dir() -> Path:
+    """Return the Linux Downloads directory, honouring the XDG registration.
+
+    ``XDG_DOWNLOAD_DIR`` is read first, then the ``user-dirs.dirs`` file the
+    desktop actually maintains, which is where a localised session records that
+    the folder is called Téléchargements or Downloads or anything else. The
+    conventional English name is the last resort rather than the assumption.
+    """
+    from_env = os.environ.get(_ENV_XDG_DOWNLOAD_DIR)
+    if from_env:
+        return Path(os.path.expandvars(from_env))
+
+    config_home = os.environ.get(_ENV_XDG_CONFIG_HOME)
+    base = Path(config_home) if config_home else Path.home() / _XDG_CONFIG_DIR_NAME
+    try:
+        for line in (base / _USER_DIRS_FILE).read_text(encoding="utf-8").splitlines():
+            stripped = line.strip()
+            if not stripped.startswith(_XDG_DOWNLOAD_ASSIGNMENT):
+                continue
+            value = stripped.split("=", 1)[1].strip().strip('"')
+            expanded = os.path.expandvars(value.replace("$HOME", str(Path.home())))
+            if expanded:
+                return Path(expanded)
     except OSError:
         pass
     return Path.home() / _DOWNLOADS_DIR_NAME
@@ -312,19 +366,40 @@ def _discover_journal_dir() -> Path:
 
 
 def _autostart_command() -> str:
-    """Return the command Windows should run at sign-in to launch o7Debrief.
+    """Return the command the session should run at sign-in to launch o7Debrief.
 
-    When packaged (a frozen or Nuitka-compiled build) the executable is itself
-    the launcher; from source it is the interpreter running this script.
+    Three cases. Inside a flatpak the entry is written for the HOST session to
+    run, and neither the interpreter nor this file exists out there, so the only
+    command that works is a ``flatpak run`` of the app id. Otherwise, a packaged
+    build (frozen or Nuitka-compiled) is its own launcher, and from source it is
+    the interpreter running this script.
+
+    The flatpak case is checked first because inside the sandbox the source case
+    also looks true, and would write an entry naming a path the host cannot see.
     """
+    flatpak_id = os.environ.get(_ENV_FLATPAK_ID)
+    if flatpak_id:
+        return f"flatpak run {flatpak_id}"
     if getattr(sys, "frozen", False) or "__compiled__" in globals():
         return f'"{sys.executable}"'
     return f'"{sys.executable}" "{Path(__file__).resolve()}"'
 
 
+def _build_autostart() -> WindowsAutostart | LinuxAutostart:
+    """Return the autostart adapter for the running platform.
+
+    Both expose the same three methods, so everything downstream (the Settings
+    dialog and its save handler) is written against the shape rather than
+    against either implementation.
+    """
+    if os.name == _OS_WINDOWS:
+        return WindowsAutostart()
+    return LinuxAutostart()
+
+
 def _open_settings(
     preferences_store: JsonPreferencesStore,
-    autostart: WindowsAutostart,
+    autostart: WindowsAutostart | LinuxAutostart,
     default_output_dir: Path,
 ) -> Callable[[], None]:
     """Return a handler that opens the Settings dialog and applies any change.
@@ -466,7 +541,7 @@ def main() -> int:
         export_dir = _downloads_dir()
         state_dir = _app_dir(_ENV_LOCALAPPDATA, _STATE_DIR_NAME)
         preferences_store = JsonPreferencesStore(str(state_dir))
-        autostart = WindowsAutostart()
+        autostart = _build_autostart()
 
         one_shot, recorder = _build_one_shot(
             journal_dir, export_dir, state_dir, taxonomy_path, preferences_store

@@ -19,7 +19,15 @@ o7 Debrief watches the Journal while you play, brackets each session by its `Shu
 
 ## Platform support
 
-o7 Debrief currently supports Windows only. It is built and tested as a standalone Windows executable. A Linux port may follow if there is enough demand, though it is not available yet.
+o7 Debrief runs on Windows as a standalone executable. That is the supported platform and the one every release is built and tested on.
+
+**Linux support is written but not yet released.** A Flatpak build exists in the repository and has never been built or run on a Linux machine; until it has, it is source you can build rather than a platform o7 Debrief supports. What follows describes the intended behaviour; [TECH_DEBT.md](TECH_DEBT.md) records exactly what has and has not been verified.
+
+On Linux the game itself runs under Proton or Wine, so the journal sits inside the game's prefix. o7 Debrief finds it without being told: it looks through the Steam compatdata prefixes (including Steam installed as a Flatpak), honours `STEAM_COMPAT_DATA_PATH` and `WINEPREFIX`, then falls back to a plain `~/.wine` prefix, trying both the `steamuser` and the real user name at each.
+
+Tick "start when I sign in" and o7 Debrief watches from session start, so quitting the game opens the debrief in your browser exactly as it does on Windows. On Linux that setting writes an XDG autostart entry rather than a registry value; everything else behaves the same.
+
+macOS is not supported.
 
 ## Capabilities
 
@@ -84,6 +92,14 @@ still open, what is deliberately left and what only looks like debt.
 python buildexe.py        # Nuitka standalone executable, console disabled
 python buildinstaller.py  # Windows installer
 ```
+
+On Linux, from a checkout with the virtual environment created:
+
+```bash
+./build_flatpak.sh
+```
+
+It writes its own manifest, launcher, desktop entry and metainfo, derives the icon set from the single master PNG, pre-downloads the wheels on the host so the sandboxed build is offline, then installs the app and produces `o7debrief.flatpak`. `./cleanup_flatpak.sh` removes only what that script produced, leaving the Windows build outputs alone.
 
 Build prerequisites and the development workflow are described in [DEVELOPMENT-README.md](DEVELOPMENT-README.md).
 

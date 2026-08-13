@@ -18,6 +18,7 @@ from __future__ import annotations
 from o7debrief.infrastructure.archive.filesystem_debrief_archive import (
     FilesystemDebriefArchive,
 )
+from o7debrief.infrastructure.autostart.linux_autostart import LinuxAutostart
 from o7debrief.infrastructure.autostart.windows_autostart import WindowsAutostart
 from o7debrief.infrastructure.clock.system_clock import SystemClock
 from o7debrief.infrastructure.config.toml_config_provider import TomlConfigProvider
@@ -48,6 +49,7 @@ __all__ = [
     "JinjaTextTemplateRenderer",
     "JsonPreferencesStore",
     "JsonRankSnapshotStore",
+    "LinuxAutostart",
     "MarkdownDebriefExporter",
     "NameHumaniser",
     "SystemClock",

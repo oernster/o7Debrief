@@ -68,6 +68,24 @@ Nothing here is a correctness problem; it is house style, applied unevenly. Two 
 
 The second is the better shape and should follow the first rather than lead it. Note the detector requirement above in either case: a naive single-line regex reports a false all-clear on this very tree.
 
+## 4. The Flatpak has never been built or run
+
+`build_flatpak.sh`, `cleanup_flatpak.sh` and `LinuxAutostart` were written on a Windows machine with no Linux, no `flatpak-builder` and no Elite Dangerous under Proton. What has actually been verified is narrow and worth stating exactly, because the gap between it and "it works" is the item:
+
+- Both scripts pass `bash -n`.
+- The icon-generation block was run against the real 1254px master and produces all seven sizes.
+- `LinuxAutostart` is unit-tested at 100% branch coverage against a temporary directory.
+
+Everything that makes it a working Linux release is unverified: whether the manifest builds, whether the wheel platform tags resolve against the runtime's Python, whether the sandbox can actually read a Proton prefix, whether the autostart entry survives a real session start, plus whether `webbrowser.open` reaches a host browser through the portal from inside the sandbox.
+
+Three things are most likely to be wrong on first run:
+
+- **The Steam-as-Flatpak journal path.** `--filesystem=home` does not cover `~/.var/app`, which is why the manifest carries a second explicit `--filesystem=~/.var/app/com.valvesoftware.Steam:ro`. If that line is wrong or insufficient, discovery fails on a machine that plainly has a journal; the report then says no journal directory rather than saying it was not allowed to look.
+- **Opening the debrief.** The Windows path opens the file with `webbrowser`; inside the sandbox that has to travel through the portal to a browser on the host. It is the whole point of the Linux release and it is entirely untested.
+- **The tray icon.** `QSystemTrayIcon` needs a StatusNotifierItem host. Ubuntu ships one; a stock GNOME session does not, so the icon simply will not appear there. The background watch and the browser-on-exit do not depend on it, so the product still works; the tray menu is unreachable on those desktops though, which nothing currently says to the user.
+
+This closes by building and running it on a real Ubuntu machine, not by further reading. Until then the Linux support is written but not shipped; no document should claim otherwise.
+
 ---
 
 ## Looks like debt, not worth touching
