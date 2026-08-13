@@ -15,7 +15,7 @@ page boundary each time a page's contents changed. The stricter of the two
 wins.
 
 ``rollup_after_days`` is measured back from the newest entry in the log, never
-from the wall clock. A report must render the same way twice, and a threshold
+from the wall clock. A report must render the same way twice and a threshold
 anchored to "now" would silently re-cut the same journal differently tomorrow.
 
 This module belongs to the application layer and imports the standard library

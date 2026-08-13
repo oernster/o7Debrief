@@ -126,11 +126,11 @@ footer { color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem;
   text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 0.5rem; }
 .emptytab { color: var(--muted); font-style: italic; margin: 0; }
 /* The whole history's counts live here rather than in each page's markup.
-   A tab must state the global figure (two here out of thirteen altogether),
+   A tab must state the global figure (two here out of thirteen altogether)
    but a figure that grows every session would change the text of all forty
    pages on every quit and defeat the incremental write. The sheet is one
    small file rewritten each run, so putting the totals in it keeps both: the
-   pages state only what is on them and never move, and the totals stay right.
+   pages state only what is on them and never move and the totals stay right.
    No JavaScript is involved; these are ordinary generated-content rules. */
 {% for tab in tab_totals %}
 .logtabs label[for="logtab-{{ tab.key }}"] .n::after {

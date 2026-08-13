@@ -5,7 +5,7 @@ The rules that matter, in the order they matter:
   - **Deterministic.** The same log always splits at the same places, from the
     log alone. Nothing here reads a clock, a filesystem or a rendered size.
   - **Stable at the older end.** Pages are keyed by the calendar month they
-    cover, and a month is split from its oldest row forward. Adding rows to
+    cover and a month is split from its oldest row forward. Adding rows to
     the newest month therefore changes only that month's newest part; every
     older page is byte-identical to what it was, which is what lets the sink
     leave it untouched. Position-numbered pages would renumber on the first
@@ -79,7 +79,7 @@ def _page_key(month: str, part: int) -> str:
 
     Parts are filled from the oldest, so part one holds the same rows whether
     the month later needs two pages or ten. Letting it keep the bare month key
-    means the file a month starts life as is the file it stays, and a month
+    means the file a month starts life as is the file it stays and a month
     that outgrows one page adds files rather than renaming the one it had.
     """
     if part == _FIRST_PART:

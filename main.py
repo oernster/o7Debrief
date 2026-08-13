@@ -299,9 +299,9 @@ def _icon_png_path() -> Path:
 def _app_icon() -> QIcon:
     """Return the application icon, preferring the installed desktop icon.
 
-    A Linux tray icon is published over D-Bus as a StatusNotifierItem, and an
+    A Linux tray icon is published over D-Bus as a StatusNotifierItem and an
     item may hand the panel either a NAME to look up in the icon theme or a
-    bitmap. Qt sends a bitmap for a file-backed icon, and it sends one at the
+    bitmap. Qt sends a bitmap for a file-backed icon and it sends one at the
     size it thinks a tray wants, which is 16 pixels; the panel then has a
     16 pixel image to fill a slot several times that, so the icon draws small
     and soft beside every other icon on the bar. Naming the icon instead lets
@@ -310,7 +310,7 @@ def _app_icon() -> QIcon:
 
     The name is the desktop-entry id, since that is what the icons are
     installed under. The lookup fails wherever the entry is not installed (on
-    Windows, and when running from a source tree on Linux), so the bundled
+    Windows and when running from a source tree on Linux), so the bundled
     file remains the fallback.
     """
     return QIcon.fromTheme(_DESKTOP_FILE_NAME, QIcon(str(_icon_path())))

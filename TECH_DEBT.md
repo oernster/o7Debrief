@@ -46,7 +46,7 @@ This is a verification gap rather than a defect and it closes with evidence rath
 
 `addopts` gates `o7debrief.domain`, `o7debrief.application`, five infrastructure sub-packages (`archive`, `autostart`, `clock`, `sink`, `update`), `installer.ops` and `installer.state` at 100% branch coverage. Those five joined because they already stood at 100% with no unreachable branch. The other five (`config`, `journal`, `preferences`, `rank`, `render`) did not; the reason is structural rather than a lack of effort.
 
-Infrastructure as a whole measures **93%** branch coverage, and the figure moves with the platform it is measured on, since each operating system leaves the other's discovery module unreachable. The shortfall is concentrated and explicable: `journal/windows_paths.py` is at 0% and `journal/paths.py` at 34%, both being OS-specific path discovery that a test on one machine cannot walk; `line_parser.py` (70%) and `event_mapper.py` (75%) carry malformed-input branches.
+Infrastructure as a whole measures **86%** branch coverage on Windows, and the figure moves with the platform it is measured on, since each operating system leaves the other's discovery module unreachable. The shortfall is concentrated and explicable: `journal/windows_paths.py` is at 0% and `journal/paths.py` at 34%, both being OS-specific path discovery that a test on one machine cannot walk; `line_parser.py` (70%) and `event_mapper.py` (75%) carry malformed-input branches.
 
 The blocker is that coverage.py has a single `fail-under`. Gating a layer measured at 85% alongside layers held at 100% would drag the one threshold down to match it and quietly end the hard gate on the pure layers, which is a far worse outcome than the drift it would prevent. So the options are:
 
@@ -59,7 +59,7 @@ The UI omission is correct and should stay.
 
 The house style forbids em dashes outright and forbids a comma directly before or after a coordinating conjunction (`and`, `or`, `but`), which rules out the Oxford comma. Nothing checks either rule, so both drift wherever prose is written: docstrings, comments, Markdown and the taxonomy's own commentary.
 
-A sweep of the tree finds **112** comma breaches across **64 files** and no em dashes. The count is real rather than estimated: it comes from a detector that spans newlines. That matters because the common case is a comma ending one line and the conjunction opening the next; a single-line search misses every one of those and then reports a clean tree.
+A sweep of the tree finds **117** comma breaches across **65 files** and no em dashes. The count is real rather than estimated: it comes from a detector that spans newlines. That matters because the common case is a comma ending one line and the conjunction opening the next; a single-line search misses every one of those and then reports a clean tree.
 
 Nothing here is a correctness problem; it is house style, applied unevenly. Two ways to close it:
 
@@ -93,7 +93,9 @@ Three things remain most likely to be wrong:
 - **Opening the debrief.** The Windows path opens the file with `webbrowser`; inside the sandbox that has to travel through the portal to a browser on the host. It is the whole point of the Linux release and it is entirely untested.
 - **The summon route's sandbox assumption.** Launching the app again opens the home window rather than exiting in silence. It is no longer the only route to a tray-less desktop, since the app now opens that window itself when no tray appears, but it remains the route back after the window is closed. It rests on one thing this machine cannot check: inside a flatpak each instance gets its own `XDG_RUNTIME_DIR`, so the lock file and the summon marker are placed in `$XDG_RUNTIME_DIR/app/$FLATPAK_ID`, the directory flatpak shares between instances of one application. If that is wrong or not mounted as expected, two launches take two locks: a second tray appears and the summon marker is never seen. It is written from the documented sandbox layout and verified only against a temporary directory standing in for it.
 
-What closes the rest is a Linux machine with Elite Dangerous installed under Proton, not further reading. Until a debrief has been generated from a real journal there and opened in a browser, the Linux support is built but not proven; no document should claim otherwise.
+What closes the rest is a Linux machine with Elite Dangerous installed under Proton, not further reading. Until a debrief has been generated from a real journal there and opened in a browser, the end-to-end Linux path is built but not proven, and no document should claim otherwise.
+
+Two things have moved since that was written and the wording above is narrower than it was because of them. The Flatpak bundle is now published as a release asset rather than being something a reader had to build, so the documents and the site offer it and say plainly which part of it is unproven, rather than declining to mention a file that is plainly there for download. What that does not change is the substance of this item: the install path is proven and the play path is not, so nothing anywhere claims the second.
 
 ---
 

@@ -2,10 +2,10 @@
 
 A separator belongs to the panel or page it is drawn in, never to the moment.
 The same moment appears in the full log, in its own category panel and on one
-page of a paged history, and those three sets cover different spans of days: a
+page of a paged history and those three sets cover different spans of days: a
 category holding one afternoon's rows must stay undated even when the full log
 runs for months. So the marking is a function of a row set, applied once per
-rendered set, and a set covering a single day is marked not at all.
+rendered set and a set covering a single day is marked not at all.
 
 Rows arrive ordered newest first and are never reordered here, so the newest
 day heads the result and each separator sits directly above the rows it covers.

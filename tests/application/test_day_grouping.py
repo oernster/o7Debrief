@@ -1,7 +1,7 @@
 """Tests for the shared day-separator marking.
 
 The function is used three times over: by the presenter for the full log, for
-each category panel, and by the pager for each page and each page's tabs. What
+each category panel and by the pager for each page and each page's tabs. What
 matters is that it is a function of the row set handed to it and of nothing
 else, so the same rows can be marked differently in two different panels
 without either knowing about the other.
@@ -37,7 +37,7 @@ def _marks(entries) -> list[str]:
 
 
 def test_no_rows_is_no_marking() -> None:
-    """An empty panel produces nothing to draw, and no arithmetic on nothing."""
+    """An empty panel produces nothing to draw and no arithmetic on nothing."""
     assert with_day_separators(()) == ()
 
 

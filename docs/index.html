@@ -284,7 +284,7 @@
       "alternateName": "Commander Mission Debrief",
       "applicationCategory": "GameApplication",
       "applicationSubCategory": "Elite Dangerous companion tool",
-      "operatingSystem": "Windows 10, Windows 11",
+      "operatingSystem": "Windows 10, Windows 11, Linux",
       "url": "https://ernster.dev/o7Debrief/",
       "downloadUrl": "https://github.com/oernster/o7Debrief/releases/latest",
       "image": "https://ernster.dev/o7Debrief/assets/social-card.png",
@@ -429,8 +429,8 @@
       <h1>o7 Debrief</h1>
       <p class="tagline">Commander Mission Debrief</p>
       <p class="pitch">
-        A local-first Windows app that turns your Elite Dangerous journal into a
-        single self-contained mission debrief. Every figure traces back to a
+        A local-first app that turns your Elite Dangerous journal into a
+        self-contained mission debrief. Every figure traces back to a
         real journal field. Nothing is estimated, inferred or padded.
       </p>
       <div class="cta">
@@ -439,7 +439,7 @@
         <a class="btn ghost" href="why.html">Why it exists</a>
         <a class="btn ghost" href="https://github.com/oernster/o7Debrief">View on GitHub</a>
       </div>
-      <p class="platform-note">Windows 10 and 11 &middot; runs quietly from the system tray</p>
+      <p class="platform-note">Windows 10 and 11, and Linux as a Flatpak &middot; runs quietly from the system tray</p>
     </header>
 
     <section id="features">
@@ -473,7 +473,17 @@
         <div class="card">
           <div class="icon">&#128196;</div>
           <h3>Self-contained report</h3>
-          <p>A debrief is one self-contained file you can open in any browser or keep, plus a text version ready to paste onto Discord or Reddit.</p>
+          <p>A session debrief is one self-contained file you can open in any browser or keep, plus a text version ready to paste onto Discord or Reddit.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#128197;</div>
+          <h3>Dated where it matters</h3>
+          <p>A log covering several days heads each day with its date, so a history report reading 15:15 above 11:48 is plainly two days rather than a broken sort. A single session shows no dates and keeps its narrow time column. Times are the journal's own UTC, shown unconverted and labelled.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#128218;</div>
+          <h3>A history that stays readable</h3>
+          <p>Years of play will not fit in one page, so the history debrief is a small set of pages: an index, a page per month and one shared stylesheet, opening from your own filesystem with no server and no scripts. It is rebuilt every time you quit and only the pages that actually changed are rewritten.</p>
         </div>
         <div class="card">
           <div class="icon">&#127894;</div>
@@ -575,7 +585,7 @@
         </div>
         <div class="card">
           <h3>Does o7 Debrief run on Linux?</h3>
-          <p>Not yet, though it is closer than that sounds. The repository carries a Flatpak build, journal discovery for Proton and Wine prefixes and a Linux equivalent of the start-on-sign-in setting; the Flatpak has been built, installed and run on Ubuntu. What has not been proven is the part that matters most: producing a debrief there from a real journal inside a Proton prefix. Until that has happened it is source you can build rather than a platform o7 Debrief supports, with the repository recording exactly what has and has not been verified. Windows is the platform every release is built and tested on.</p>
+          <p>Partly, and the honest answer is worth reading before you rely on it. Every release publishes a Flatpak, which has been built, installed and run on Ubuntu, and the app carries journal discovery for Proton and Wine prefixes plus a Linux equivalent of the start-on-sign-in setting. What has not been proven is the part that matters most: producing a debrief there from a real journal inside a Proton prefix, and opening that report in a browser on the host from inside the sandbox. Both need a machine with the game installed rather than another build. So the install is real and the play path is untested, and the repository records exactly what has and has not been verified. Windows is the platform every release is built and tested on.</p>
         </div>
         <div class="card">
           <h3>How do I install or upgrade o7 Debrief?</h3>
@@ -588,9 +598,9 @@
       <div class="eyebrow">Get o7Debrief</div>
       <h2 class="section-title">Download o7Debrief</h2>
       <p class="section-sub">Download the newest release with one click. Free and
-        LGPL-3.0, local-first Windows software with no cloud, no account and no
+        LGPL-3.0, local-first software with no cloud, no account and no
         telemetry.</p>
-      <span class="dl-version" id="dl-version">Version <!--VERSION-->2.4.2<!--/VERSION--></span>
+      <span class="dl-version" id="dl-version">Version <!--VERSION-->2.5.0<!--/VERSION--></span>
       <div class="downloads">
         <div class="dl-card">
           <div class="ico">🪟</div>
@@ -601,6 +611,15 @@
           <p class="meta" data-asset="o7DebriefSetup.exe">Setup program (.exe)</p>
           <p class="meta">Windows may show a SmartScreen warning when you run this: <a href="/windows-smartscreen.html">here's why</a>.</p>
           <p class="how">Run the setup: it installs per-user, so no administrator rights are needed. It shows its progress as it works and offers to close a running copy when you upgrade.</p>
+        </div>
+        <div class="dl-card">
+          <div class="ico">&#128039;</div>
+          <h3>Linux</h3>
+          <p class="req">Any distribution with Flatpak</p>
+          <a class="btn primary" href="https://github.com/oernster/o7Debrief/releases/latest/download/o7debrief.flatpak">
+            Download for Linux</a>
+          <p class="meta" data-asset="o7debrief.flatpak">Flatpak bundle (.flatpak)</p>
+          <p class="how">Install with <code>flatpak install o7debrief.flatpak</code>. It builds, installs and runs on Ubuntu. One part is not yet proven: no debrief has been produced on Linux from a real journal inside a Proton prefix, so treat that path as untested rather than supported.</p>
         </div>
       </div>
       <p class="dl-links">

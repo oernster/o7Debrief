@@ -128,7 +128,7 @@ class TimelineEntry:
     by category without rebuilding it.
 
     ``day_separator`` carries the day heading a renderer must draw above this
-    row, and is empty on every row that needs none. Unlike the two above it is
+    row and is empty on every row that needs none. Unlike the two above it is
     a property of the set the row was rendered in, not of the moment: a set
     covering one day marks nothing at all, so it renders exactly as it did
     before separators existed.
@@ -271,7 +271,7 @@ class DebriefView:
     footer: FooterView
     timeline_categories: tuple[TimelineCategory, ...] = ()
     # Each month the log touches, paired with its display heading. The pager
-    # keys a page on a month and needs its wording, and formatting belongs to
+    # keys a page on a month and needs its wording and formatting belongs to
     # the presenter, so the mapping is carried rather than derived downstream.
     month_titles: tuple[tuple[str, str], ...] = ()
     # Warnings about the reading itself rather than about the session: a

@@ -2,9 +2,9 @@
 
 This adapter implements the application ``DebriefBundleExporter`` port for the
 ``html`` format. It emits one ``style.css``, an ``index.html`` carrying the
-report proper plus the newest page of the log, and one file per older page
+report proper plus the newest page of the log and one file per older page
 under ``pages/``. Every page links the shared sheet, so the palette is stored
-once rather than once per page, and navigation is ordinary links, so the
+once rather than once per page and navigation is ordinary links, so the
 bundle opens from the filesystem with no server and no scripts.
 
 Pages arrive already split, keyed and ordered newest first: how a log divides
@@ -56,7 +56,7 @@ _INDEX_FILE = "index.html"
 _STYLE_FILE = "style.css"
 _PAGES_DIR = "pages"
 
-# Where the index sits in the page order, and the reader-facing number of the
+# Where the index sits in the page order and the reader-facing number of the
 # first page. The newest page is the index, so it is page one.
 _NEWEST = 0
 _FIRST_POSITION = 1

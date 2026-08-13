@@ -783,7 +783,7 @@ page_bytes_target = 512000
 # Measured bytes one rendered log row costs, used only for that conversion.
 bytes_per_entry_estimate = 400
 # Emit the history as one document instead of a bundle. Useful for sending the
-# whole thing to somebody as a single file; bounded by the cap below, and the
+# whole thing to somebody as a single file; bounded by the cap below and the
 # footer states how many rows were left out.
 single_file = false
 single_file_max_entries = 2000

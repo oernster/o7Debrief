@@ -59,6 +59,12 @@ h2 { color: var(--accent-soft); font-size: 1.05rem; text-transform: uppercase;
 .timeline { list-style: none; margin: 0; padding: 0; }
 .timeline li { display: grid; grid-template-columns: 5.5rem 2rem 1fr; gap: 0.5rem;
   padding: 0.3rem 0; border-bottom: 1px solid var(--edge); }
+/* A day heading in a log that spans several days. It is a block, not a grid
+   row, because each log row is its own grid rather than the list being one, so
+   there are no shared columns for it to span. */
+.timeline li.daysep { display: block; color: var(--accent-soft);
+  font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em;
+  padding: 0.7rem 0 0.25rem; }
 .timeline .t { color: var(--muted); }
 .timeline .mode { color: var(--muted); font-size: 0.78rem; }
 .timeline .sys { color: var(--accent-soft); }
@@ -125,6 +131,33 @@ h2 { color: var(--accent-soft); font-size: 1.05rem; text-transform: uppercase;
 .promoted { color: var(--accent); }
 footer { color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem;
   border-top: 1px solid var(--edge); padding-top: 1rem; }
+/* Paged history only: the page heading, its navigation and the notes a page
+   shows when a tab or the whole report is not the complete picture. */
+.pagenav { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: baseline;
+  margin: 1rem 0; }
+.pagenav a { color: var(--accent-soft); text-decoration: none;
+  border: 1px solid var(--edge); border-radius: 4px; padding: 0.3rem 0.7rem;
+  font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.03em; }
+.pagenav a:hover { color: var(--text); border-color: var(--accent-soft); }
+/* An unavailable direction keeps its place rather than letting the row
+   reflow, so Older sits in the same spot on every page of the set. */
+.pagenav .disabled { color: var(--muted); border: 1px solid transparent;
+  padding: 0.3rem 0.7rem; font-size: 0.8rem; text-transform: uppercase;
+  letter-spacing: 0.03em; }
+.pagenav .where { color: var(--muted); font-size: 0.8rem; margin-left: auto; }
+.pagetitle { color: var(--accent-soft); font-size: 0.9rem;
+  text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 0.5rem; }
+.emptytab { color: var(--muted); font-style: italic; margin: 0; }
+/* The whole history's counts live here rather than in each page's markup.
+   A tab must state the global figure (two here out of thirteen altogether)
+   but a figure that grows every session would change the text of all forty
+   pages on every quit and defeat the incremental write. The sheet is one
+   small file rewritten each run, so putting the totals in it keeps both: the
+   pages state only what is on them and never move and the totals stay right.
+   No JavaScript is involved; these are ordinary generated-content rules. */
+
+
+.trunc { color: var(--neg); margin-top: 0.5rem; }
 </style>
 </head>
 <body>
@@ -414,135 +447,135 @@ footer { color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem;
   </div>
   <div class="panel logpanel" id="panel-all">
     <ul class="timeline">
-      <li>
+            <li>
         <span class="t">20:50:00</span>
         <span class="ico">🥾</span>
         <span>
           <span class="mode" title="On Foot">F</span>
           Visited a settlement</span>
-      </li><li>
+      </li>      <li>
         <span class="t">20:45:00</span>
         <span class="ico">🚙</span>
         <span>
           <span class="mode" title="SRV">R</span>
           Deployed the SRV</span>
-      </li><li>
+      </li>      <li>
         <span class="t">20:40:00</span>
         <span class="ico">⚔️</span>
         <span>
           <span class="mode" title="Ship">S</span>
           Promoted in Combat</span>
-      </li><li>
+      </li>      <li>
         <span class="t">20:35:00</span>
         <span class="ico">📋</span>
         <span>
           <span class="mode" title="Ship">S</span>
           Completed a mission</span>
-      </li><li>
+      </li>      <li>
         <span class="t">20:32:00</span>
         <span class="ico">💱</span>
         <span>
           <span class="mode" title="Ship">S</span>
           Traded 90 Ruthenium for 15 Technetium at the raw trader.</span>
-      </li><li>
+      </li>      <li>
         <span class="t">20:30:00</span>
         <span class="ico">🔧</span>
         <span>
           <span class="mode" title="Ship">S</span>
           Applied Overcharged Weapon grade 5 to a Medium Gimballed Multi-Cannon at Tod &#39;The Blaster&#39; McQuinn.</span>
-      </li><li>
+      </li>      <li>
         <span class="t">20:25:00</span>
         <span class="ico">⛏️</span>
         <span>
           <span class="mode" title="Ship">S</span>
           Refined a commodity</span>
-      </li><li>
+      </li>      <li>
         <span class="t">20:20:00</span>
         <span class="ico">🍃</span>
         <span>
           <span class="mode" title="On Foot">F</span>
           Sold organic data</span>
-      </li><li>
+      </li>      <li>
         <span class="t">20:02:00</span>
         <span class="ico">🍃</span>
         <span>
           <span class="mode" title="On Foot">F</span>
           Took a sample</span>
-      </li><li>
+      </li>      <li>
         <span class="t">20:00:00</span>
         <span class="ico">🥾</span>
         <span>
           <span class="mode" title="On Foot">F</span>
           Disembarked</span>
-      </li><li>
+      </li>      <li>
         <span class="t">19:50:00</span>
         <span class="ico">🔭</span>
         <span>
           <span class="mode" title="Ship">S</span>
           Sold data</span>
-      </li><li>
+      </li>      <li>
         <span class="t">19:45:00</span>
         <span class="ico">💱</span>
         <span>
           <span class="mode" title="Ship">S</span>
           Sold cargo</span>
-      </li><li>
+      </li>      <li>
         <span class="t">19:30:00</span>
         <span class="ico">💱</span>
         <span>
           <span class="mode" title="Ship">S</span>
           Bought cargo</span>
-      </li><li>
+      </li>      <li>
         <span class="t">19:25:00</span>
         <span class="ico">⚔️</span>
         <span>
           <span class="mode" title="Ship">S</span>
           Earned a combat bond</span>
-      </li><li>
+      </li>      <li>
         <span class="t">19:22:00</span>
         <span class="ico">⚔️</span>
         <span>
           <span class="mode" title="Ship">S</span>
           Bounty</span>
-      </li><li>
+      </li>      <li>
         <span class="t">19:20:00</span>
         <span class="ico">⚔️</span>
         <span>
           <span class="mode" title="Ship">S</span>
           Bounty</span>
-      </li><li>
+      </li>      <li>
         <span class="t">19:14:00</span>
         <span class="ico">🔭</span>
         <span>
           <span class="mode" title="Ship">S</span>
           Mapped a body</span>
-      </li><li>
+      </li>      <li>
         <span class="t">19:12:00</span>
         <span class="ico">🔭</span>
         <span>
           <span class="mode" title="Ship">S</span>
           Scanned a body</span>
-      </li><li>
+      </li>      <li>
         <span class="t">19:10:00</span>
         <span class="ico">🔭</span>
         <span>
           <span class="mode" title="Ship">S</span>
           Scanned a body</span>
-      </li><li>
+      </li>      <li>
         <span class="t">19:08:00</span>
         <span class="ico">🔭</span>
         <span>
           <span class="mode" title="Ship">S</span>
           Discovery scan
           <span class="sys">Diaguandri</span></span>
-      </li><li>
+      </li>      <li>
         <span class="t">19:05:30</span>
         <span class="ico">🚀</span>
         <span>
           <span class="mode" title="Ship">S</span>
           Jumped to
           <span class="sys">Diaguandri</span></span>
-      </li><li>
+      </li>      <li>
         <span class="t">19:02:10</span>
         <span class="ico">🚀</span>
         <span>
@@ -555,14 +588,14 @@ footer { color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem;
   
   <div class="panel logpanel" id="panel-travel">
     <ul class="timeline">
-      <li>
+            <li>
         <span class="t">19:05:30</span>
         <span class="ico">🚀</span>
         <span>
           <span class="mode" title="Ship">S</span>
           Jumped to
           <span class="sys">Diaguandri</span></span>
-      </li><li>
+      </li>      <li>
         <span class="t">19:02:10</span>
         <span class="ico">🚀</span>
         <span>
@@ -575,31 +608,31 @@ footer { color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem;
   
   <div class="panel logpanel" id="panel-exploration">
     <ul class="timeline">
-      <li>
+            <li>
         <span class="t">19:50:00</span>
         <span class="ico">🔭</span>
         <span>
           <span class="mode" title="Ship">S</span>
           Sold data</span>
-      </li><li>
+      </li>      <li>
         <span class="t">19:14:00</span>
         <span class="ico">🔭</span>
         <span>
           <span class="mode" title="Ship">S</span>
           Mapped a body</span>
-      </li><li>
+      </li>      <li>
         <span class="t">19:12:00</span>
         <span class="ico">🔭</span>
         <span>
           <span class="mode" title="Ship">S</span>
           Scanned a body</span>
-      </li><li>
+      </li>      <li>
         <span class="t">19:10:00</span>
         <span class="ico">🔭</span>
         <span>
           <span class="mode" title="Ship">S</span>
           Scanned a body</span>
-      </li><li>
+      </li>      <li>
         <span class="t">19:08:00</span>
         <span class="ico">🔭</span>
         <span>
@@ -612,25 +645,25 @@ footer { color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem;
   
   <div class="panel logpanel" id="panel-combat">
     <ul class="timeline">
-      <li>
+            <li>
         <span class="t">20:40:00</span>
         <span class="ico">⚔️</span>
         <span>
           <span class="mode" title="Ship">S</span>
           Promoted in Combat</span>
-      </li><li>
+      </li>      <li>
         <span class="t">19:25:00</span>
         <span class="ico">⚔️</span>
         <span>
           <span class="mode" title="Ship">S</span>
           Earned a combat bond</span>
-      </li><li>
+      </li>      <li>
         <span class="t">19:22:00</span>
         <span class="ico">⚔️</span>
         <span>
           <span class="mode" title="Ship">S</span>
           Bounty</span>
-      </li><li>
+      </li>      <li>
         <span class="t">19:20:00</span>
         <span class="ico">⚔️</span>
         <span>
@@ -642,19 +675,19 @@ footer { color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem;
   
   <div class="panel logpanel" id="panel-trade">
     <ul class="timeline">
-      <li>
+            <li>
         <span class="t">20:32:00</span>
         <span class="ico">💱</span>
         <span>
           <span class="mode" title="Ship">S</span>
           Traded 90 Ruthenium for 15 Technetium at the raw trader.</span>
-      </li><li>
+      </li>      <li>
         <span class="t">19:45:00</span>
         <span class="ico">💱</span>
         <span>
           <span class="mode" title="Ship">S</span>
           Sold cargo</span>
-      </li><li>
+      </li>      <li>
         <span class="t">19:30:00</span>
         <span class="ico">💱</span>
         <span>
@@ -666,7 +699,7 @@ footer { color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem;
   
   <div class="panel logpanel" id="panel-mining">
     <ul class="timeline">
-      <li>
+            <li>
         <span class="t">20:25:00</span>
         <span class="ico">⛏️</span>
         <span>
@@ -678,7 +711,7 @@ footer { color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem;
   
   <div class="panel logpanel" id="panel-missions">
     <ul class="timeline">
-      <li>
+            <li>
         <span class="t">20:35:00</span>
         <span class="ico">📋</span>
         <span>
@@ -690,7 +723,7 @@ footer { color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem;
   
   <div class="panel logpanel" id="panel-engineering">
     <ul class="timeline">
-      <li>
+            <li>
         <span class="t">20:30:00</span>
         <span class="ico">🔧</span>
         <span>
@@ -702,13 +735,13 @@ footer { color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem;
   
   <div class="panel logpanel" id="panel-exobiology">
     <ul class="timeline">
-      <li>
+            <li>
         <span class="t">20:20:00</span>
         <span class="ico">🍃</span>
         <span>
           <span class="mode" title="On Foot">F</span>
           Sold organic data</span>
-      </li><li>
+      </li>      <li>
         <span class="t">20:02:00</span>
         <span class="ico">🍃</span>
         <span>
@@ -720,7 +753,7 @@ footer { color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem;
   
   <div class="panel logpanel" id="panel-srv">
     <ul class="timeline">
-      <li>
+            <li>
         <span class="t">20:45:00</span>
         <span class="ico">🚙</span>
         <span>
@@ -732,13 +765,13 @@ footer { color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem;
   
   <div class="panel logpanel" id="panel-on_foot">
     <ul class="timeline">
-      <li>
+            <li>
         <span class="t">20:50:00</span>
         <span class="ico">🥾</span>
         <span>
           <span class="mode" title="On Foot">F</span>
           Visited a settlement</span>
-      </li><li>
+      </li>      <li>
         <span class="t">20:00:00</span>
         <span class="ico">🥾</span>
         <span>
@@ -753,7 +786,8 @@ footer { color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem;
   <footer>
     o7 Debrief v0 &middot; LGPL-3.0-or-later<br>
     
-    Journal 19:00:00 GMT to 21:00:00 GMT
+    Journal 19:00:00 GMT to 21:00:00 GMT<br>
+    All times shown in UTC, as the journal records them.
   </footer>
 </div>
 </body>

@@ -2,13 +2,13 @@
 
 A paged history splits the session log into pages the reader navigates
 between. Each page carries its own rows, already marked with the day headings
-that fall inside it, and one tab per category that exists anywhere in the
+that fall inside it and one tab per category that exists anywhere in the
 history, not merely on this page. A tab therefore always states the whole
 history's count, so ``Combat (2 of 13)`` reads as two here out of thirteen
-altogether, and a category with nothing on this page says so rather than
+altogether and a category with nothing on this page says so rather than
 opening an empty panel.
 
-``key`` doubles as the page's identity and its file stem, and is derived from
+``key`` doubles as the page's identity and its file stem and is derived from
 the calendar period the page covers rather than from its position in the set.
 Position-numbered pages renumber every time a page is added at the newest end,
 which would rewrite the whole bundle on the first session of a new month; a
@@ -29,7 +29,7 @@ __all__ = ["LogPage", "PageCategory"]
 
 @dataclass(frozen=True, slots=True)
 class PageCategory:
-    """One category tab on a page: its rows here, and its count everywhere."""
+    """One category tab on a page: its rows here and its count everywhere."""
 
     key: str
     label: str

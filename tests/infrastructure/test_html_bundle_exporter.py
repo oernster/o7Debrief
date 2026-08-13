@@ -2,7 +2,7 @@
 
 The bundle has to open from the filesystem with no server and no scripts, so
 what is asserted here is that every page links a stylesheet that exists, every
-navigation link points at a file the bundle contains, and no page carries a
+navigation link points at a file the bundle contains and no page carries a
 figure that the next session would change.
 
 British spelling is used in comments. No em dashes appear anywhere.
@@ -124,7 +124,7 @@ def test_an_empty_history_still_produces_a_readable_index() -> None:
 def test_the_global_counts_live_in_the_stylesheet_not_in_the_pages() -> None:
     """The one arrangement that satisfies global tab counts and stable pages.
 
-    A tab must state the whole history's figure, but that figure changes on
+    A tab must state the whole history's figure but that figure changes on
     every session. Held in each page's markup it would rewrite forty pages a
     quit; held in the one small sheet, the pages never move and the counts
     stay right.

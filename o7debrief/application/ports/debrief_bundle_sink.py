@@ -23,7 +23,7 @@ __all__ = ["BundleWriteResult", "DebriefBundleSink"]
 
 @dataclass(frozen=True, slots=True)
 class BundleWriteResult:
-    """What a bundle write did: where to open it, and how much it moved."""
+    """What a bundle write did: where to open it and how much it moved."""
 
     entry_path: str
     written: tuple[str, ...]

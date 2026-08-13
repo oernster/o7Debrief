@@ -2,7 +2,7 @@
 
 Paging divides the report; these bound it. The daily rollup folds the older
 tail into one row per day per category, the single-file cap cuts the log and
-says how much it cut, and the page limit is the stricter of a row count and a
+says how much it cut and the page limit is the stricter of a row count and a
 size budget.
 
 British spelling is used in comments. No em dashes appear anywhere.
@@ -35,7 +35,7 @@ def test_rollup_is_off_by_default_and_returns_the_log_untouched() -> None:
 
 
 def test_rollup_on_an_empty_log_is_still_empty() -> None:
-    """No rows in means no rows out, and no arithmetic on a missing newest row."""
+    """No rows in means no rows out and no arithmetic on a missing newest row."""
     options = history_options(rollup_enabled=True)
 
     assert rolled_up((), options, _LABELS) == ()
@@ -64,7 +64,7 @@ def test_rollup_folds_an_old_day_into_one_row_per_category() -> None:
 
     assert len(folded) == 3
     assert folded[0].text == view.timeline[0].text
-    # Categories keep the order they first appear in on that day, and the rows
+    # Categories keep the order they first appear in on that day and the rows
     # read newest first, so the 11:00 combat row is met before the travel ones.
     summaries = [entry.text for entry in folded[1:]]
     assert summaries == ["1 Combat entries", "2 Travel entries"]
@@ -180,7 +180,7 @@ def test_the_page_limit_is_the_stricter_of_the_row_count_and_the_budget() -> Non
 def test_a_page_always_holds_at_least_one_row() -> None:
     """A budget too small for a single row must not produce an empty page.
 
-    A page holding nothing would never consume a row, and the paging loop
+    A page holding nothing would never consume a row and the paging loop
     would not advance.
     """
     options = history_options(page_bytes_target=1, bytes_per_entry_estimate=400)

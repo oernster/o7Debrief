@@ -36,7 +36,7 @@ _DAY_13 = "Thu 13 Aug 2026"
 _DAY_14 = "Fri 14 Aug 2026"
 _DAY_15 = "Sat 15 Aug 2026"
 # The last Sunday of March 2026, when the British clock jumps from 01:00 to
-# 02:00, and the last Sunday of October, when 01:00 to 02:00 runs twice.
+# 02:00 and the last Sunday of October, when 01:00 to 02:00 runs twice.
 _SPRING_FORWARD_DAY = "Sun 29 Mar 2026"
 _FALL_BACK_DAY = "Sun 25 Oct 2026"
 

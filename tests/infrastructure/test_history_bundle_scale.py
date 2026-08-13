@@ -3,7 +3,7 @@
 These are the assertions the paging exists to make true, so they are measured
 against a real rendered bundle rather than argued from the design. A history
 run must produce a set of pages that each stay under the configured size, that
-between them hold every row exactly once, and that a following short session
+between them hold every row exactly once and that a following short session
 barely disturbs.
 
 British spelling is used in comments. No em dashes appear anywhere.

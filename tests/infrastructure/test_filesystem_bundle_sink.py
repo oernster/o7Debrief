@@ -120,7 +120,7 @@ def test_a_bundle_with_no_pages_directory_prunes_nothing(tmp_path) -> None:
 
 
 def test_no_temporary_file_survives_a_write(tmp_path) -> None:
-    """Writing goes through a temporary file, and never leaves one behind."""
+    """Writing goes through a temporary file and never leaves one behind."""
     FilesystemBundleSink(tmp_path).write_bundle(_full())
 
     assert not list((tmp_path / _DIRECTORY).rglob("*.tmp"))

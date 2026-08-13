@@ -1,4 +1,4 @@
-"""Cap a history log for the one-document mode, and say what was dropped.
+"""Cap a history log for the one-document mode and say what was dropped.
 
 Single-file mode exists so a whole history can still be handed to somebody as
 one file. That only works if the file is bounded, so the log is cut to the

@@ -32,7 +32,7 @@ _EMOJI_FILTER = "emoji"
 _TAB_KEYS = "tab_keys"
 
 # The report as one self-contained template: the shared stylesheet inlined
-# between the head and the body, and no scripts anywhere.
+# between the head and the body and no scripts anywhere.
 _HEAD = """{% macro timeline_row(entry) -%}
 {% if entry.day_separator %}      <li class="daysep">{{ entry.day_separator }}</li>
 {% endif %}      <li>

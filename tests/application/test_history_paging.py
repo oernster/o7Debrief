@@ -1,7 +1,7 @@
 """Tests for splitting a whole-history log into deterministic, stable pages.
 
 The two properties that matter are asserted directly rather than inferred: the
-same log always splits the same way, and adding rows at the newest end leaves
+same log always splits the same way and adding rows at the newest end leaves
 every older page byte-identical. Everything else in the bundle depends on
 those two holding.
 
@@ -106,7 +106,7 @@ def test_growing_a_split_month_disturbs_only_its_newest_part() -> None:
 
 
 def test_a_tab_states_the_whole_history_count_beside_the_page_count() -> None:
-    """Thirteen means thirteen altogether, and this page holds some of them."""
+    """Thirteen means thirteen altogether and this page holds some of them."""
     pages = _pages(spread(2000))
     combat = next(tab for tab in pages[0].categories if tab.key == "combat")
 

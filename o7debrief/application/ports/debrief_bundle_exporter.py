@@ -3,7 +3,7 @@
 A bundle exporter is the counterpart of ``DebriefExporter`` for a report too
 large to be one document. It declares the file ``extension`` it produces, so
 the export service can match it against a requested format exactly as it does
-a single-file exporter, and turns a formatted view into the whole set of files
+a single-file exporter and turns a formatted view into the whole set of files
 that make up the report.
 
 The view and the bundle are referenced only as forward-referenced annotations,

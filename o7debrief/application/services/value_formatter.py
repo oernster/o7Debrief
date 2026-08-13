@@ -157,7 +157,7 @@ class ValueFormatter:
 
         This is an internal grouping key, never shown to a reader, so its shape
         is fixed here rather than configured: it exists to sort and to name a
-        page file, and both break if a reader can change it.
+        page file and both break if a reader can change it.
         """
         return self._parse(iso_utc).strftime(_MONTH_KEY_FORMAT)
 

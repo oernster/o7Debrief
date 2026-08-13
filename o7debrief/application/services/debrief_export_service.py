@@ -9,14 +9,14 @@ unknown request never aborts the others.
 A whole-history request takes a different path, because a history report grows
 on every session and one document eventually stops being openable. Where a
 bundle exporter exists for the format it is used: the log is split into pages
-here, in the application, and the exporter is handed the split already made.
+here, in the application and the exporter is handed the split already made.
 The bundle goes to one stable directory rewritten in place, so the sink can
 compare and leave the pages that did not move alone.
 
 Two things still produce one document. A session report always does, because
 it is small and handing somebody the whole file is the point of it. So does a
 history report when single-file mode is on or the format has no bundle
-exporter, and then the log is capped and the footer says how much was left
+exporter and then the log is capped and the footer says how much was left
 out, rather than a truncated report passing for a complete one.
 """
 
@@ -50,7 +50,7 @@ class BundleWriting:
     """The bundle half of the service: its exporters, its sink and its limits.
 
     Grouped into one object because the three are only ever meaningful
-    together, and because a service constructor taking six positional
+    together and because a service constructor taking six positional
     collaborators is a constructor nobody reads.
     """
 
@@ -85,14 +85,14 @@ class DebriefExportService:
         return moment.strftime(_STAMP_FORMAT)
 
     def _exporter_for(self, fmt: str) -> DebriefExporter | None:
-        """Return the exporter whose extension matches ``fmt``, or None."""
+        """Return the exporter whose extension matches ``fmt`` or None."""
         for exporter in self._exporters:
             if exporter.extension == fmt:
                 return exporter
         return None
 
     def _bundle_exporter_for(self, fmt: str) -> DebriefBundleExporter | None:
-        """Return the bundle exporter for ``fmt``, or None if there is none.
+        """Return the bundle exporter for ``fmt`` or None if there is none.
 
         None is the answer for every format in a build wired without bundle
         support and for a format that has no bundle form, such as Markdown.
