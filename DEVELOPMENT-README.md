@@ -1,6 +1,6 @@
 # Development
 
-How to build and run o7 Debrief from source. o7 Debrief is a local-first Windows desktop application (Python 3.13 + PySide6) that produces a Commander Mission Debrief from the Elite Dangerous Journal. For what it is and what it is not, see [README.md](README.md); for how it is structured, see [ARCHITECTURE.md](ARCHITECTURE.md).
+How to build and run o7 Debrief from source. o7 Debrief is a local-first desktop application (Python 3.13 + PySide6) that produces a Commander Mission Debrief from the Elite Dangerous Journal. For what it is and what it is not, see [README.md](README.md); for how it is structured, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 These instructions target Windows with PowerShell, which is the platform every release is built and tested on. Building and running from source on Linux has its own section below, since almost nothing above transfers unchanged.
 
@@ -73,6 +73,8 @@ echo "EXIT=$LASTEXITCODE"
 ```
 
 One exception is deliberate. The scripts under `tools/` add the repository root to `sys.path` (and set the Qt scaling environment) before importing from the package, so their imports must stay below that bootstrap; each carries a `# noqa: E402` marker to say so. `tests/installer/test_worker_shutdown.py` does the same thing for the same reason. Do not let an import sorter move or strip those markers, because reordering the imports breaks the scripts.
+
+Two house prose rules are enforced by the test suite rather than by a linter, because no linter has an opinion on either: no em dash anywhere and no comma directly before or after `and`, `or` or `but`, which rules out the Oxford comma. `tests/structural/test_prose_style.py` reports every breach with its file and count, so a failure names exactly what to fix. It covers docstrings, comments, Markdown, the taxonomy's commentary and the site, so it fires on prose written anywhere in the tree.
 
 `ruff` is configured in `pyproject.toml` and the tree is clean under it too:
 
@@ -224,7 +226,8 @@ tests/
                    registry keys and a redirected profile.
   structural/      AST and source-scan boundary checks (layering, domain purity,
                    400-line limit including the repository root, single
-                   composition root, no magic numbers, Linux desktop identity).
+                   composition root, no magic numbers, house prose style,
+                   Linux desktop identity).
 main.py            The single composition root.
 installer_main.py  Entry point for the setup program.
 buildexe.py        Nuitka standalone build.
