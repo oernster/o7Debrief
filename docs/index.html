@@ -301,6 +301,8 @@
         "Ship swaps and purchases recorded as session events, naming the ship moved from and to",
         "Completed missions and Operations named in the session log, with the Merc Coins an Operation pays tracked separately from credits",
         "Clearer session log shown most recent first, with each row's icon showing the activity rather than the control mode",
+        "Every row states what the journal recorded, so an engineering roll names the blueprint, grade, module and engineer rather than repeating its category",
+        "Material trading at the raw, manufactured and encoded traders logged with both sides named and counted in the Trade section",
         "Update check with download, skip and daily re-check that never installs anything without you choosing it",
         "Per-user setup needing no administrator rights, which reports its progress and offers to close a running copy when you upgrade",
         "Local-first with no cloud, no account and no telemetry"
@@ -369,7 +371,7 @@
           "name": "What does an Elite Dangerous debrief track?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Credits, jumps, distance travelled by your ship and your fleet carrier, and scans across exploration, mining, trading, bounty hunting and exobiology, plus missions and Operations (naming each mission and the Merc Coins an Operation pays, kept separate from your credits) and Commander rank progress, with every figure traced to a real journal entry."
+            "text": "Credits, jumps, distance travelled by your ship and your fleet carrier, scans across exploration, mining, trading, bounty hunting and exobiology, plus missions and Operations (naming each mission and the Merc Coins an Operation pays, kept separate from your credits) and Commander rank progress, with every figure traced to a real journal entry."
           }
         },
         {
@@ -393,7 +395,7 @@
           "name": "Does o7 Debrief check for updates?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes. Shortly after launch and once a day while running, the app asks GitHub anonymously whether a newer published release exists; the home screen and the tray menu both carry a Check for updates button that does the same on demand. If one is found you choose Download, Skip this version or Later, and a skipped version never prompts again. This anonymous ask is the only network call the app makes and nothing is ever downloaded or installed without you choosing it."
+            "text": "Yes. Shortly after launch and once a day while running, the app asks GitHub anonymously whether a newer published release exists; the home screen and the tray menu both carry a Check for updates button that does the same on demand. If one is found you choose Download, Skip this version or Later; a skipped version never prompts again. This anonymous ask is the only network call the app makes and nothing is ever downloaded or installed without you choosing it."
           }
         },
         {
@@ -488,6 +490,16 @@
           <p>A death row names who died, the vehicle actually lost at that moment (an SRV, not the ship it launched from), the killer with their ship and squadron read from the targeting scan, then what the rebuy cost.</p>
         </div>
         <div class="card">
+          <div class="icon">&#128736;</div>
+          <h3>Every row says what you did</h3>
+          <p>An engineering roll names the blueprint, the grade, the module and the engineer who applied it, so an evening of two hundred rolls reads as the work it was rather than two hundred identical lines. Where the journal did not record something a row needs, the row says less rather than guessing.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#128142;</div>
+          <h3>Material trading</h3>
+          <p>Exchanges at the raw, manufactured and encoded traders are logged with both sides named, then counted in the Trade section. No credit figure is shown against them, because they cost no credits: you pay in materials.</p>
+        </div>
+        <div class="card">
           <div class="icon">&#128260;</div>
           <h3>Check for updates</h3>
           <p>Shortly after launch and once a day, the app asks GitHub anonymously whether a newer release exists; a Check for updates button on the home screen and a tray entry both do the same on demand. You choose Download, Skip this version or Later; it never downloads or runs anything without you choosing it.</p>
@@ -518,7 +530,7 @@
       <h2>Example output</h2>
       <div class="shot">
         <a href="example-report.html" title="Open the full example report">
-          <img src="assets/screenshot.png" loading="lazy" alt="An o7 Debrief report showing the session header, headline totals with a credit balance beside the change, ten per-domain activity cards and rank progress">
+          <img src="assets/screenshot.png" loading="lazy" alt="An o7 Debrief report showing the session header, headline totals with a credit balance beside the change, the per-domain activity cards and rank progress">
         </a>
         <p class="caption">A debrief covering a commander's whole journal history. <a href="example-report.html">Open the full example report &rarr;</a></p>
       </div>
@@ -541,7 +553,7 @@
         </div>
         <div class="card">
           <h3>What does an Elite Dangerous debrief track?</h3>
-          <p>Credits, jumps, distance travelled by your ship and your fleet carrier, and scans across exploration, mining, trading, bounty hunting and exobiology, plus missions and Operations (naming each mission and the Merc Coins an Operation pays, kept separate from your credits), deaths (who died, in what, at whose hands and what the rebuy cost) and Commander rank progress, with every figure traced to a real journal entry. Where the journal states nothing, the report says so rather than printing a zero you would read as a real figure.</p>
+          <p>Credits, jumps, distance travelled by your ship and your fleet carrier, scans across exploration, mining, trading, bounty hunting and exobiology, plus missions and Operations (naming each mission and the Merc Coins an Operation pays, kept separate from your credits), deaths (who died, in what, at whose hands and what the rebuy cost) and Commander rank progress, with every figure traced to a real journal entry. Where the journal states nothing, the report says so rather than printing a zero you would read as a real figure.</p>
         </div>
         <div class="card">
           <h3>Do I need to keep o7 Debrief running while I play?</h3>
@@ -553,7 +565,7 @@
         </div>
         <div class="card">
           <h3>Does o7 Debrief check for updates?</h3>
-          <p>Yes. Shortly after launch and once a day while running, the app asks GitHub anonymously whether a newer published release exists; the home screen and the tray menu both carry a Check for updates button that does the same on demand. If one is found you choose Download, Skip this version or Later, and a skipped version never prompts again. This anonymous ask is the only network call the app makes and nothing is ever downloaded or installed without you choosing it.</p>
+          <p>Yes. Shortly after launch and once a day while running, the app asks GitHub anonymously whether a newer published release exists; the home screen and the tray menu both carry a Check for updates button that does the same on demand. If one is found you choose Download, Skip this version or Later; a skipped version never prompts again. This anonymous ask is the only network call the app makes and nothing is ever downloaded or installed without you choosing it.</p>
         </div>
         <div class="card">
           <h3>Which Windows versions does o7 Debrief support?</h3>
@@ -572,7 +584,7 @@
       <p class="section-sub">Download the newest release with one click. Free and
         LGPL-3.0, local-first Windows software with no cloud, no account and no
         telemetry.</p>
-      <span class="dl-version" id="dl-version">Version <!--VERSION-->2.2.3<!--/VERSION--></span>
+      <span class="dl-version" id="dl-version">Version <!--VERSION-->2.3.0<!--/VERSION--></span>
       <div class="downloads">
         <div class="dl-card">
           <div class="ico">🪟</div>

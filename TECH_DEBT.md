@@ -35,7 +35,7 @@ The consequence is worse than a possibly misspelled key. A schema that tracks th
 
 ### It cannot be closed from this machine
 
-The local journals hold **zero** `MissionCompleted` events across all 71 files. Every occurrence of "Coin" in them is another commander's chat message. So the mission path as a whole, not only the coins field, has never been exercised against real data here; no amount of reading the existing journals can confirm anything.
+The local journals hold **zero** `MissionCompleted` events across all 77 files. Every occurrence of "Coin" in them is another commander's chat message. So the mission path as a whole, not only the coins field, has never been exercised against real data here; no amount of reading the existing journals can confirm anything.
 
 This is a verification gap rather than a defect and it closes with evidence rather than with code: complete a real Operation, read the journal line and confirm both the event and the key. Two things are worth doing regardless of the outcome:
 
@@ -46,7 +46,7 @@ This is a verification gap rather than a defect and it closes with evidence rath
 
 `addopts` gates `o7debrief.domain`, `o7debrief.application`, five infrastructure sub-packages (`archive`, `autostart`, `clock`, `sink`, `update`), `installer.ops` and `installer.state` at 100% branch coverage. Those five joined because they already stood at 100% with no unreachable branch. The other five (`config`, `journal`, `preferences`, `rank`, `render`) did not; the reason is structural rather than a lack of effort.
 
-Infrastructure as a whole measures **81%** branch coverage. The shortfall is concentrated and explicable: `journal/windows_paths.py` is at 0% and `journal/paths.py` at 34%, both being OS-specific path discovery that a test on one machine cannot walk; `line_parser.py` (70%) and `event_mapper.py` (75%) carry malformed-input branches.
+Infrastructure as a whole measures **82%** branch coverage. The shortfall is concentrated and explicable: `journal/windows_paths.py` is at 0% and `journal/paths.py` at 34%, both being OS-specific path discovery that a test on one machine cannot walk; `line_parser.py` (70%) and `event_mapper.py` (75%) carry malformed-input branches.
 
 The blocker is that coverage.py has a single `fail-under`. Gating a layer measured at 81% alongside layers held at 100% would drag the one threshold down to match it and quietly end the hard gate on the pure layers, which is a far worse outcome than the drift it would prevent. So the options are:
 
@@ -54,6 +54,19 @@ The blocker is that coverage.py has a single `fail-under`. Gating a layer measur
 - Or run a second, separately floored coverage pass for infrastructure and wire it into the verification routine. That keeps the pure gate intact but adds a second command to remember, which is the kind of remembered step this project deliberately converts into rules.
 
 The UI omission is correct and should stay.
+
+## 3. House prose style is unenforced; breaches sit in the tree
+
+The house style forbids em dashes outright and forbids a comma directly before or after a coordinating conjunction (`and`, `or`, `but`), which rules out the Oxford comma. Nothing checks either rule, so both drift wherever prose is written: docstrings, comments, Markdown and the taxonomy's own commentary.
+
+A sweep of the tree finds **87** comma breaches across **57 files** and no em dashes. The count is real rather than estimated: it comes from a detector that spans newlines. That matters because the common case is a comma ending one line and the conjunction opening the next; a single-line search misses every one of those and then reports a clean tree.
+
+Nothing here is a correctness problem; it is house style, applied unevenly. Two ways to close it:
+
+- Sweep the remaining files in one pass. Cheap in thought but wide in diff, touching prose across every layer at once.
+- Add a structural test alongside the em-dash rule so the tree cannot drift again, then clear the backlog it reports. That converts a remembered habit into a rule, which is what this project does with every other invariant. It is only worth doing once the backlog is cleared, since a guard that fails on day one gets skipped.
+
+The second is the better shape and should follow the first rather than lead it. Note the detector requirement above in either case: a naive single-line regex reports a false all-clear on this very tree.
 
 ---
 
@@ -76,4 +89,4 @@ These look like candidates but are correct as they stand; changing them would re
 - **`VERSION` at root with `o7debrief/__init__.py` exposing `__version__`.** Single source of truth, correctly implemented, with no literal anywhere else in the tree.
 - **The two `# noqa: BLE001` handlers in `journal/paths.py` and `journal/windows_paths.py`.** Each has a written reason ("a stubbed environ may misbehave", "any WinAPI failure falls back below"). This is the house style done correctly.
 - **The three `# pragma: no cover` handlers in `installer/ops/paths.py`.** They sit inside a package held at 100%, which normally deserves suspicion. Each one guards an `OSError` from `Path.resolve()` that no test can provoke on Windows and each carries a written explanation of why it is unreachable and why the fallback is the safe direction. Deleting them to satisfy the gate would remove a correct defence; faking a failure to cover them would test the fake.
-- **The `# noqa: E402` markers on the imports in `tools/`.** Those scripts put the repository root on `sys.path` (and set the Qt scaling environment) before importing from the package, so the imports must follow the bootstrap. The markers record that. `ruff check --isolated` reports all thirty-three of them as unused, because it runs with E402 disabled and no project configuration to enable it; `--fix` would then strip them and re-sort the imports. Under `flake8`, which is the linter the project configures, they are load-bearing and the tree is clean. This is a false positive from a tool the project does not use, not debt.
+- **The `# noqa: E402` markers on the imports in `tools/`.** Those scripts put the repository root on `sys.path` (and set the Qt scaling environment) before importing from the package, so the imports must follow the bootstrap. The markers record that. `ruff check --isolated` reports all thirty-four of them as unused, because it runs with E402 disabled and no project configuration to enable it; `--fix` would then strip them and re-sort the imports. Under `flake8`, which is the linter the project configures, they are load-bearing and the tree is clean. This is a false positive from a tool the project does not use, not debt.
