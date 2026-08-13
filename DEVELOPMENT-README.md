@@ -148,7 +148,7 @@ The first tells a Python-level import failure from a Qt-level one. The second ma
 
 ### It will not start without a journal
 
-Discovery is not optional. o7 Debrief resolves the journal directory before it builds anything; when it finds none it stops with `JournalDirectoryNotFoundError` listing every location it looked in. On a machine with the game that message is the diagnosis. On a machine without it, which is the normal state of anything you are only building, it arrives as a traceback on first run and looks like a defect.
+Discovery is not optional. o7 Debrief resolves the journal directory before it builds anything; when it finds none it says so and stops with exit code 1: a message on stderr and a dialog carrying the locations it tried in its details. That is the normal state of any machine you are only building on, so expect it on a first run and read it as a statement about the machine rather than as a fault in the build.
 
 You can satisfy discovery without owning the game, because `WINEPREFIX` is honoured and searched at the path Windows would use:
 

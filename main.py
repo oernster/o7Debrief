@@ -30,7 +30,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QTimer
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QMessageBox
 
 from o7debrief import __version__
 from o7debrief.application.services.auto_debrief_trigger import (
@@ -183,6 +183,24 @@ _DISCOVERY_NAMES = (
 
 # Process exit code used when another instance already holds the lock.
 _EXIT_ALREADY_RUNNING = 0
+
+# Process exit code used when no journal directory can be found. Nothing the app
+# does is possible without one, so the run ends here. It is not a crash, so it
+# earns no traceback; it is not success either, so it cannot be zero.
+_EXIT_NO_JOURNAL = 1
+
+# Shown when discovery finds no journal at all. The wording addresses the
+# likeliest cause rather than the mechanism, because the mechanism is in the
+# detail pane and the cause is usually simply that the game has not been played
+# on this machine yet.
+_NO_JOURNAL_TITLE = "o7 Debrief: no journal found"
+_NO_JOURNAL_ADVICE = (
+    "o7 Debrief could not find your Elite Dangerous journal, so there is "
+    "nothing for it to read. The game writes the journal the first time you "
+    "play on this machine.\n\n"
+    "If you have played here, the journal is somewhere o7 Debrief did not "
+    "look. The details say what it searched for."
+)
 
 # How often (in milliseconds) the Qt loop yields to the Python interpreter so a
 # pending Ctrl+C (SIGINT) handler can run. Qt's C++ event loop otherwise never
@@ -400,6 +418,42 @@ def _discover_journal_dir() -> Path:
     )
 
 
+def _report_missing_journal(detail: str) -> int:
+    """Say that no journal was found on every channel available, then give up.
+
+    Discovery failing is an ordinary situation with a plain cause, usually that
+    the game has not been played on this machine. It used to arrive as an
+    unhandled traceback, which reads as a defect in o7 Debrief rather than as a
+    statement about the machine. Most users never saw it at all either: the
+    packaged Windows build is compiled with its console disabled and a desktop
+    entry has no console either, so the app simply never appeared and gave no
+    reason. That silence is the worse half of the bug.
+
+    So it is said twice. stderr first, because it is the one channel that
+    always exists and is what a terminal launch or a captured log will show,
+    surviving even if Qt cannot start. The dialog second, for
+    every launch that has no console to read.
+
+    The locations that were tried go in the detail pane rather than the body.
+    On Linux that is a dozen paths, which turns a readable sentence into a wall
+    that gets skipped.
+    """
+    print(f"{_NO_JOURNAL_ADVICE}\n\n{detail}", file=sys.stderr, flush=True)
+
+    # A message box needs a running application object, which this early
+    # nothing else has built. Reusing the existing instance keeps this safe to call
+    # at any point rather than only before Qt exists.
+    application = QApplication.instance() or QApplication(sys.argv)
+    box = QMessageBox()
+    box.setIcon(QMessageBox.Icon.Critical)
+    box.setWindowTitle(_NO_JOURNAL_TITLE)
+    box.setText(_NO_JOURNAL_ADVICE)
+    box.setDetailedText(detail)
+    box.exec()
+    application.quit()
+    return _EXIT_NO_JOURNAL
+
+
 def _autostart_command() -> str:
     """Return the command the session should run at sign-in to launch o7Debrief.
 
@@ -436,7 +490,7 @@ def _on_tray_settled(controller: TrayController, available: bool) -> None:
     """React to the desktop's answer about whether it draws a system tray.
 
     With a tray, the icon is shown again: it may have been asked for before the
-    host that draws it existed, and asking twice costs nothing where it was
+    host that draws it existed; asking twice costs nothing where it was
     there all along. Without one, the home window is opened, because the app is
     otherwise running with nothing on screen to click.
     """
@@ -597,7 +651,13 @@ def main() -> int:
 
     try:
         taxonomy_path = _taxonomy_path()
-        journal_dir = _discover_journal_dir()
+        try:
+            journal_dir = _discover_journal_dir()
+        except journal_paths.JournalDirectoryNotFoundError as error:
+            # Not a crash: the machine simply has no journal on it. Discovery
+            # already knows every location it looked in, so the message it
+            # raises is the whole explanation and is passed through as it is.
+            return _report_missing_journal(str(error))
         export_dir = _downloads_dir()
         state_dir = _app_dir(_ENV_LOCALAPPDATA, _STATE_DIR_NAME)
         preferences_store = JsonPreferencesStore(str(state_dir))
@@ -663,7 +723,7 @@ def main() -> int:
         print(_RUNNING_MESSAGE, flush=True)
 
         # Ask the running desktop whether it draws a tray rather than inferring
-        # it from the platform, and give it time to answer: at sign-in the app
+        # it from the platform, then give it time to answer: at sign-in the app
         # can be up before the panel that would host the icon. Until this
         # settles the app is reachable either way, because the summon watcher
         # above is already running.
