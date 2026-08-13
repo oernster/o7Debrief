@@ -25,18 +25,22 @@ o7 Debrief runs on Windows as a standalone executable. That is the supported pla
 
 On Linux the game itself runs under Proton or Wine, so the journal sits inside the game's prefix. o7 Debrief finds it without being told: it looks through the Steam compatdata prefixes (including Steam installed as a Flatpak), honours `STEAM_COMPAT_DATA_PATH` and `WINEPREFIX`, then falls back to a plain `~/.wine` prefix, trying both the `steamuser` and the real user name at each.
 
-Tick "start when I sign in" and o7 Debrief watches from session start, so quitting the game opens the debrief in your browser exactly as it does on Windows. On Linux that setting writes an XDG autostart entry rather than a registry value; everything else behaves the same.
+Tick "start o7 Debrief in the background when I sign in" and o7 Debrief watches from session start, so quitting the game opens the debrief in your browser exactly as it does on Windows. On Linux that setting writes an XDG autostart entry rather than a registry value; everything else behaves the same.
 
-Not every Linux desktop draws a system tray. A stock GNOME session does not; o7 Debrief has no window of its own to fall back on, so it would be running with nothing on screen to click. Launching o7 Debrief again is how you reach it: the second launch hands the request to the copy already running and closes, then that copy opens its home screen, which carries everything the tray menu does. So the desktop entry in your applications menu summons the window: nothing about the app is out of reach on a desktop with no tray. Launching again on Windows does the same thing rather than appearing to do nothing.
+Not every Linux desktop draws a system tray, so o7 Debrief does not assume one. A stock GNOME session draws none, Ubuntu ships an extension that does, KDE, XFCE, MATE, Cinnamon and LXQt each provide one their own way, and any of them can have it switched off. Rather than guess from the distribution, o7 Debrief asks your desktop what it actually provides, and it asks for a few seconds rather than once: started at sign-in the app is up before the panel that would host the icon has finished loading, and asking too early would report no tray on a session that is about to have one.
+
+Where there is a tray, you get the icon. Where there is not, o7 Debrief opens its home screen instead, so it is never left running with nothing on screen to click. Closing that window leaves it running and watching the journal.
+
+Either way, launching o7 Debrief again is always the route back to it: the second launch hands the request to the copy already running and closes, then that copy opens its home screen, which carries everything the tray menu does. So the desktop entry in your applications menu summons the window, and nothing about the app is out of reach on a desktop with no tray. Launching again on Windows does the same thing rather than appearing to do nothing.
 
 macOS is not supported.
 
 ## Capabilities
 
-- Live system-tray watcher that follows the active Journal with a low-frequency modification-time poll (no `watchdog` dependency) and automatically generates a debrief on `Shutdown`, with a crash-timeout safety net for sessions that end without a clean shutdown.
+- Live background watcher that follows the active Journal with a low-frequency modification-time poll (no `watchdog` dependency) and automatically generates a debrief on `Shutdown`, with a crash-timeout safety net for sessions that end without a clean shutdown.
 - Cold one-shot mode: "Debrief my last session" reads the most recent session while "Debrief my history to date" covers everything you have played so far; both produce a report even if o7 Debrief was not running while you played.
-- Light on resources: o7 Debrief reads only the events each debrief needs rather than the whole journal, so it stays small and quiet in the tray no matter how many years of logs you have. A last-session debrief reads back only as far as the previous session; the all-history report streams the journal file by file; the live watcher keeps only the session in progress.
-- A home screen on a left-click of the tray icon: the live status, the two debrief actions and the reports generated this run, all in one place. A right-click opens the full tray menu. Launching o7 Debrief while it is already running opens that same home screen instead of starting a second copy, so the app stays reachable on a desktop that draws no tray.
+- Light on resources: o7 Debrief reads only the events each debrief needs rather than the whole journal, so it stays small and quiet in the background no matter how many years of logs you have. A last-session debrief reads back only as far as the previous session; the all-history report streams the journal file by file; the live watcher keeps only the session in progress.
+- A home screen on a left-click of the tray icon: the live status, the two debrief actions and the reports generated this run, all in one place. A right-click opens the full tray menu. On a desktop that draws no tray the home screen opens by itself, and launching o7 Debrief while it is already running opens that same home screen instead of starting a second copy, so the app is reachable whether or not there is a tray to put an icon in.
 - Session isolation: the latest session is the run bounded by `Shutdown` events (the run ending at the last `Shutdown`), with every `LoadGame` inside it kept, so a previous session never bleeds into the current one.
 - Rank reporting that is honest about journal timing: tier-ups (a `Promotion`) are reported immediately and fractional rank percentages are finalised at the next launch because the journal only snapshots rank progress at startup. Only ranks that actually changed are shown.
 - A single self-contained HTML report (inlined CSS, zero JavaScript) as the canonical output, plus a Markdown rendering for pasting elsewhere. A default export format is configurable and can be overridden per export.
@@ -66,7 +70,7 @@ macOS is not supported.
 | Report templating | Jinja2 (HTML) |
 | Configuration | stdlib `tomllib` (TOML taxonomy) |
 | Testing | pytest with pytest-cov (100% gate on domain, application, five infrastructure sub-packages and the setup program's operations and state) |
-| Packaging | Nuitka (standalone Windows executable) |
+| Packaging | Nuitka (standalone Windows executable), Flatpak (Linux) |
 | Licence | LGPL-3.0 |
 
 ## Install and run
@@ -83,7 +87,12 @@ To run from source during development, see [DEVELOPMENT-README.md](DEVELOPMENT-R
 
 The project enforces 100% line and branch coverage on the domain and application layers, on the infrastructure sub-packages that can reach it and on the setup program's operations and state model.
 
-```pytest -v --cov```
+```powershell
+pytest
+echo "EXIT=$LASTEXITCODE"
+```
+
+The coverage flags live in `pyproject.toml`, so `pytest` alone applies the gate to the packages it covers. Do not add a bare `--cov`: it widens measurement to the UI and the composition roots, which are deliberately outside the gate, and the run then fails the 100% threshold on a clean tree.
 
 See [TESTING.md](TESTING.md) for the full strategy and [TECH_DEBT.md](TECH_DEBT.md) for what is
 still open, what is deliberately left and what only looks like debt.
@@ -107,7 +116,7 @@ Build prerequisites and the development workflow are described in [DEVELOPMENT-R
 
 ## Architecture
 
-o7 Debrief follows a clean architecture with a strict dependency direction and a deterministic core. The two capture paths (live tray watcher and cold one-shot) share one reducer, so a debrief is reproducible from the same journal bytes regardless of how it was triggered. The setup program is a second, self-contained program built to the same shape, with its side effects and its state model separated from its Qt client so the privileged work is measurable. The full set of invariants, the layer breakdown, the execution flow and the design-decision rationale are in [ARCHITECTURE.md](ARCHITECTURE.md).
+o7 Debrief follows a clean architecture with a strict dependency direction and a deterministic core. The two capture paths (live background watcher and cold one-shot) share one reducer, so a debrief is reproducible from the same journal bytes regardless of how it was triggered. The setup program is a second, self-contained program built to the same shape, with its side effects and its state model separated from its Qt client so the privileged work is measurable. The full set of invariants, the layer breakdown, the execution flow and the design-decision rationale are in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Licence
 

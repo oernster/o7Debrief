@@ -18,7 +18,7 @@ A hard coverage gate of 100% line and branch coverage applies to these packages:
 
 The first two are the deterministic core: the reducer, the value objects, the `SessionDebrief` aggregate, the use cases and the ports. They are pure logic with injected dependencies, so every line and branch can be reached by a fast, deterministic test. Holding them at 100% is what makes "the same journal bytes produce the same debrief" a property the suite actually proves, not a hope.
 
-The five infrastructure sub-packages are there because they already stood at 100% with no branch a test cannot reach. They are the adapters whose work is file and registry mechanics with no OS-specific discovery in them. The rest of infrastructure cannot join: measured as a whole the layer stands at 85%, with the shortfall concentrated in `journal/windows_paths.py` and `journal/paths.py`, which walk operating-system-specific locations a test on one machine cannot reach. Coverage carries a single fail-under, so gating the layer alongside those held at 100% would drag the one threshold down and quietly end the hard gate on the pure layers. That trade is recorded as open debt rather than taken.
+The five infrastructure sub-packages are there because they already stood at 100% with no branch a test cannot reach. They are the adapters whose work is file and registry mechanics with no OS-specific discovery in them. The rest of infrastructure cannot join: measured as a whole the layer stands at 93%, with the shortfall concentrated in `journal/windows_paths.py` and `journal/paths.py`, which walk operating-system-specific locations a test on one machine cannot reach. That figure moves with the machine it is measured on, which is the same fact stated a second way: on Linux `windows_paths.py` is unreachable and reads 0%, on Windows the Proton and Wine discovery in `paths.py` is. Neither platform can produce the whole number, so the layer cannot be gated from either. Coverage carries a single fail-under, so gating the layer alongside those held at 100% would drag the one threshold down and quietly end the hard gate on the pure layers. That trade is recorded as open debt rather than taken.
 
 The installer pair are the setup program's operations and its state model. They do the most privileged work in the product (registry writes, shortcut creation, per-user deployment, uninstall) and they are Qt-free, so they are gated rather than left unmeasured. Three seams make that possible without touching a real installation: commands are run through an injectable runner, the registry keys are a value that a test replaces with a scratch set and the per-user locations come from environment variables the suite redirects. No mocking library is used; the doubles are hand-written and live in `tests/installer/fakes.py`.
 
@@ -53,6 +53,7 @@ The structural suite under `tests/structural/` scans the source as an AST or as 
 - `test_loc_limits.py`: no module under `o7debrief/`, `installer/`, `tests/` or the repository root exceeds 400 lines. The setup program is in scope deliberately: it was one module of over a thousand lines that no rule could see. So is the root, which was in the same state: the composition root sat outside every scanned tree and was the largest module in the project. The exemptions there (the composition root and the delivery scripts) are named with a reason each; a companion test fails if an exemption names a file that no longer exists.
 - `test_composition_root.py`: there is exactly one composition root and no module-level singletons or service locators elsewhere.
 - `test_no_magic_numbers.py`: domain-specific values come from the TOML taxonomy or named constants, not inline literals.
+- `test_desktop_identity.py`: the Linux desktop identity agrees across the two files that state it, the application id in `build_flatpak.sh` and the names `main.py` hands to Qt. It is a text scan rather than an AST one, because one of the two files is a shell script. Both matching paths are covered, since Wayland matches on the application id and X11 matches on `WM_CLASS`.
 
 ## Running the suite and reading the result
 
@@ -67,6 +68,13 @@ echo "EXIT=$LASTEXITCODE"
 
 - `EXIT=0` means all tests passed and the 100% gate on every gated package was met.
 - Any non-zero value means a failure. Check the line under the coverage table first: it says whether coverage reached the threshold. If it did, the cause is a test failure and that output sits above the table.
+
+The suite reaches `EXIT=0` on Windows only. The setup program is a Windows program: `installer.state` reads and writes HKCU through `winreg`, which does not exist elsewhere, so on Linux those tests fail or error at import rather than being skipped, currently 29 failed and 24 errors out of 799. That is not a broken suite, it is a Windows-only suite that has never been told what to do off Windows, and it became worth stating once `build_flatpak.sh` gave a reason to have a checkout on Linux at all. Everything outside `tests/installer` does pass there, so that is the useful command on a Linux checkout:
+
+```bash
+QT_QPA_PLATFORM=offscreen pytest --ignore=tests/installer
+echo "EXIT=$?"
+```
 
 To run the UI tests headless, set the offscreen Qt platform first:
 

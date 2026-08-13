@@ -2,7 +2,7 @@
 
 A standing reference to the project's outstanding technical debt. It records what is still open, weighs whether each item is worth doing and gives the rationale. Every item is a behaviour-preserving internal concern: nothing here proposes reverting a feature or changing any UI or UX behaviour. Scope is the whole repository (the `o7debrief` package, the composition root, the taxonomy configuration, the bespoke installer and the delivery scripts) read against `ARCHITECTURE.md`, `TESTING.md` and the tests under `tests/structural/`.
 
-This is the most rigorously enforced project in the portfolio. `tests/structural/` holds five separate suites: layering, domain purity (including a ban on reading the clock), a composition-root whitelist, a magic-numbers test that exists nowhere else in the account and a 400-line cap over `o7debrief/`, `installer/` and `tests/`. The domain and application layers are gated at 100% branch coverage, as are the setup program's operations and state model. The list below is short because there is not much left.
+This is the most rigorously enforced project in the portfolio. `tests/structural/` holds six separate suites: layering, domain purity (including a ban on reading the clock), a composition-root whitelist, a magic-numbers test that exists nowhere else in the account, a 400-line cap over `o7debrief/`, `installer/`, `tests/` and the repository root, and a desktop-identity check pinning the Linux application id across the build script and the composition root. The domain and application layers are gated at 100% branch coverage, as are the setup program's operations and state model. The list below is short because there is not much left.
 
 ---
 
@@ -46,7 +46,7 @@ This is a verification gap rather than a defect and it closes with evidence rath
 
 `addopts` gates `o7debrief.domain`, `o7debrief.application`, five infrastructure sub-packages (`archive`, `autostart`, `clock`, `sink`, `update`), `installer.ops` and `installer.state` at 100% branch coverage. Those five joined because they already stood at 100% with no unreachable branch. The other five (`config`, `journal`, `preferences`, `rank`, `render`) did not; the reason is structural rather than a lack of effort.
 
-Infrastructure as a whole measures **85%** branch coverage. The shortfall is concentrated and explicable: `journal/windows_paths.py` is at 0% and `journal/paths.py` at 34%, both being OS-specific path discovery that a test on one machine cannot walk; `line_parser.py` (70%) and `event_mapper.py` (75%) carry malformed-input branches.
+Infrastructure as a whole measures **93%** branch coverage, and the figure moves with the platform it is measured on, since each operating system leaves the other's discovery module unreachable. The shortfall is concentrated and explicable: `journal/windows_paths.py` is at 0% and `journal/paths.py` at 34%, both being OS-specific path discovery that a test on one machine cannot walk; `line_parser.py` (70%) and `event_mapper.py` (75%) carry malformed-input branches.
 
 The blocker is that coverage.py has a single `fail-under`. Gating a layer measured at 85% alongside layers held at 100% would drag the one threshold down to match it and quietly end the hard gate on the pure layers, which is a far worse outcome than the drift it would prevent. So the options are:
 
@@ -59,7 +59,7 @@ The UI omission is correct and should stay.
 
 The house style forbids em dashes outright and forbids a comma directly before or after a coordinating conjunction (`and`, `or`, `but`), which rules out the Oxford comma. Nothing checks either rule, so both drift wherever prose is written: docstrings, comments, Markdown and the taxonomy's own commentary.
 
-A sweep of the tree finds **85** comma breaches across **57 files** and no em dashes. The count is real rather than estimated: it comes from a detector that spans newlines. That matters because the common case is a comma ending one line and the conjunction opening the next; a single-line search misses every one of those and then reports a clean tree.
+A sweep of the tree finds **112** comma breaches across **64 files** and no em dashes. The count is real rather than estimated: it comes from a detector that spans newlines. That matters because the common case is a comma ending one line and the conjunction opening the next; a single-line search misses every one of those and then reports a clean tree.
 
 Nothing here is a correctness problem; it is house style, applied unevenly. Two ways to close it:
 
@@ -76,6 +76,7 @@ Settled by running it:
 
 - The manifest builds, the wheels resolve against the runtime's Python and the app installs and launches. That was the largest single unknown and it is gone.
 - The tray was broken and is fixed. A Qt tray icon on Linux is not drawn into a panel: it is published over D-Bus as a StatusNotifierItem for the desktop's watcher to draw. The manifest named only the notification service, so the sandbox blocked the watcher, `isSystemTrayAvailable()` answered False and the app reported no tray on a desktop that had one. The prediction below had been that stock GNOME lacks a host; on Ubuntu there is a host and the sandbox was refusing it. Granting `--talk-name=org.kde.StatusNotifierWatcher` restores the icon, confirmed by running with that grant added. Ownership of the item's own bus name was tried too and proved unnecessary, so the narrower grant is what ships.
+- Tray presence is no longer assumed either way. That fix settled one desktop; it did not make a tray something the app may count on, so availability is now asked of the running desktop rather than inferred from the platform, and asked repeatedly over a grace period rather than once, because an autostart launch precedes the panel that would host the icon. Where none appears the home window opens, so the no-tray case is a supported path rather than a warning on a stream nobody reads. Both branches were run: the tray branch on the Ubuntu session, the fallback branch under the offscreen platform, which reports no tray and therefore exercises it for real.
 
 Verified before that and still only that:
 
@@ -90,7 +91,7 @@ Three things remain most likely to be wrong:
 
 - **The Steam-as-Flatpak journal path.** `--filesystem=home` does not cover `~/.var/app`, which is why the manifest carries a second explicit `--filesystem=~/.var/app/com.valvesoftware.Steam:ro`. If that line is wrong or insufficient, discovery fails on a machine that plainly has a journal; the report then says no journal directory rather than saying it was not allowed to look.
 - **Opening the debrief.** The Windows path opens the file with `webbrowser`; inside the sandbox that has to travel through the portal to a browser on the host. It is the whole point of the Linux release and it is entirely untested.
-- **The summon route's sandbox assumption.** Launching the app again opens the home window rather than exiting in silence, so every operation is reachable with no tray at all. That route rests on one thing this machine cannot check: inside a flatpak each instance gets its own `XDG_RUNTIME_DIR`, so the lock file and the summon marker are placed in `$XDG_RUNTIME_DIR/app/$FLATPAK_ID`, the directory flatpak shares between instances of one application. If that is wrong or not mounted as expected, two launches take two locks: a second tray appears and the summon marker is never seen. It is written from the documented sandbox layout and verified only against a temporary directory standing in for it.
+- **The summon route's sandbox assumption.** Launching the app again opens the home window rather than exiting in silence. It is no longer the only route to a tray-less desktop, since the app now opens that window itself when no tray appears, but it remains the route back after the window is closed. It rests on one thing this machine cannot check: inside a flatpak each instance gets its own `XDG_RUNTIME_DIR`, so the lock file and the summon marker are placed in `$XDG_RUNTIME_DIR/app/$FLATPAK_ID`, the directory flatpak shares between instances of one application. If that is wrong or not mounted as expected, two launches take two locks: a second tray appears and the summon marker is never seen. It is written from the documented sandbox layout and verified only against a temporary directory standing in for it.
 
 What closes the rest is a Linux machine with Elite Dangerous installed under Proton, not further reading. Until a debrief has been generated from a real journal there and opened in a browser, the Linux support is built but not proven; no document should claim otherwise.
 

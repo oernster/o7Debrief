@@ -30,7 +30,7 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements-dev.txt
 ```
 
-`requirements-dev.txt` pulls in `requirements.txt` as well, so this one command covers everything: the runtime dependencies (PySide6 and Jinja2), the test runner, the coverage plugin, the formatter, both linters and Nuitka for the builds. To run the app without any of the development tooling, install `requirements.txt` alone.
+`requirements-dev.txt` pulls in `requirements.txt` as well, so this one command covers everything: the runtime dependencies (PySide6 and Jinja2), the test runner, the coverage plugin, the formatter, both linters, Nuitka for the Windows build and Pillow, which the Flatpak build uses to derive the icon set. To run the app without any of the development tooling, install `requirements.txt` alone.
 
 `tomllib` is part of the Python 3.13 standard library, so configuration loading needs no extra package.
 
@@ -40,7 +40,7 @@ python -m pip install -r requirements-dev.txt
 python main.py
 ```
 
-`main.py` is the single composition root: it wires the concrete infrastructure adapters into the application use cases and starts the PySide6 system-tray UI. o7 Debrief then sits in the tray, watches the active Journal and lets you generate a debrief on demand or automatically at session end.
+`main.py` is the single composition root: it wires the concrete infrastructure adapters into the application use cases and starts the PySide6 UI. o7 Debrief then runs in the background, in the system tray where the desktop draws one and behind its home window where it does not, watches the active Journal and lets you generate a debrief on demand or automatically at session end.
 
 ## Run the tests and read the result
 
@@ -113,7 +113,7 @@ This one runs on Linux, from a checkout with the virtual environment created:
 ./build_flatpak.sh
 ```
 
-The script writes its own manifest, launcher, desktop entry and metainfo rather than committing them, derives the whole icon set from the single master PNG at the repository root, pre-downloads the wheels on the host so the sandboxed build needs no network, then installs the app and produces `o7debrief.flatpak`. `./cleanup_flatpak.sh` removes only what that script produced, so the Nuitka build outputs are left alone.
+The script writes its own manifest, launcher, desktop entry and metainfo rather than committing them, derives the whole icon set from the single master PNG at `assets/o7Debrief.png`, pre-downloads the wheels on the host so the sandboxed build needs no network, then installs the app and produces `o7debrief.flatpak`. `./cleanup_flatpak.sh` reverses it: it removes the build trees, the wheels, the generated manifest and packaging files and the bundle, and it uninstalls the app, since a cleanup that left the one thing actually installed on the machine would not be one. Pass `--keep-installed` to clear the artefacts and keep the app. It touches nothing the other two delivery paths produced, so the Nuitka build outputs are left alone.
 
 It has been built, installed and run on Ubuntu. What has not been proven is producing a debrief from a real journal inside a Proton prefix, so [TECH_DEBT.md](TECH_DEBT.md) item 4 records exactly what has and has not been verified and is worth reading before you trust it.
 
@@ -157,7 +157,7 @@ tests/
                    registry keys and a redirected profile.
   structural/      AST and source-scan boundary checks (layering, domain purity,
                    400-line limit including the repository root, single
-                   composition root, no magic numbers).
+                   composition root, no magic numbers, Linux desktop identity).
 main.py            The single composition root.
 installer_main.py  Entry point for the setup program.
 buildexe.py        Nuitka standalone build.

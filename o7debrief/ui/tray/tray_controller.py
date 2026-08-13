@@ -192,6 +192,18 @@ class TrayController(QObject):
         if self._update_controller is not None:
             self._update_controller.start()
 
+    def reattach_icon(self) -> None:
+        """Ask the tray to draw the icon again, for a tray that arrived late.
+
+        Started from the autostart entry, the app can call ``show`` before the
+        panel or shell extension hosting tray icons exists. Qt has nothing to
+        attach to at that moment, so the icon is not drawn even once the host
+        appears. Showing it again once a tray has been seen is what puts it
+        there. It is a no-op on a desktop whose tray was ready all along, which
+        is why nothing needs to decide which case this is.
+        """
+        self._tray.show()
+
     def show_home(self) -> None:
         """Open the home window, raising it when it is already open.
 

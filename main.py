@@ -30,7 +30,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QTimer
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QApplication, QSystemTrayIcon
+from PySide6.QtWidgets import QApplication
 
 from o7debrief import __version__
 from o7debrief.application.services.auto_debrief_trigger import (
@@ -77,6 +77,7 @@ from o7debrief.infrastructure import (
 from o7debrief.infrastructure.journal import paths as journal_paths
 from o7debrief.ui.tray.single_instance import SingleInstanceLock
 from o7debrief.ui.tray.summon import SummonRequest, SummonWatcher
+from o7debrief.ui.tray.tray_availability import TrayAvailabilityWatcher
 from o7debrief.ui.tray.tray_controller import TrayController
 from o7debrief.ui.view_models.session_view_model import SessionViewModel
 from o7debrief.ui.windows.about import AboutDialog
@@ -188,17 +189,26 @@ _EXIT_ALREADY_RUNNING = 0
 # returns control to Python, so the signal would never be delivered.
 _SIGNAL_POLL_MS = 200
 
-# Console guidance printed when the tray starts. o7Debrief has no window of its
+# Console guidance printed when the app starts. o7Debrief has no window of its
 # own, so a terminal launch needs to say where the app went and how to stop it.
+# This is printed before the desktop has been asked whether it draws a tray, so
+# it claims no tray icon: it says only what is true on every desktop.
 _RUNNING_MESSAGE = (
-    "o7 Debrief is running in the system tray. Left-click its icon to open the "
-    "home screen; right-click for the full menu (generate a debrief, Settings, "
-    "Help, Quit). Press Ctrl+C here to quit."
+    "o7 Debrief is running in the background. Launch o7 Debrief again at any "
+    "time to bring up its home screen, which carries every action the app has. "
+    "Press Ctrl+C here to quit."
+)
+# Printed once the desktop has answered, so each of these states a tray fact
+# that has been observed rather than one assumed from the operating system.
+_TRAY_MESSAGE = (
+    "A system tray was found. Left-click the o7 Debrief icon to open the home "
+    "screen; right-click for the full menu (generate a debrief, Settings, Help, "
+    "Quit)."
 )
 _NO_TRAY_MESSAGE = (
-    "Warning: no system tray was detected, so the o7 Debrief icon may not be "
-    "visible. The app is still running. Launch o7 Debrief again to bring up its "
-    "home screen. Press Ctrl+C here to quit."
+    "This desktop draws no system tray, so o7 Debrief has opened its home "
+    "screen instead. Closing that window leaves the app running and watching "
+    "the journal; launch o7 Debrief again to bring the window back."
 )
 
 # Printed by a second launch, which does not start a second tray. Whether it
@@ -422,6 +432,22 @@ def _build_autostart() -> WindowsAutostart | LinuxAutostart:
     return LinuxAutostart()
 
 
+def _on_tray_settled(controller: TrayController, available: bool) -> None:
+    """React to the desktop's answer about whether it draws a system tray.
+
+    With a tray, the icon is shown again: it may have been asked for before the
+    host that draws it existed, and asking twice costs nothing where it was
+    there all along. Without one, the home window is opened, because the app is
+    otherwise running with nothing on screen to click.
+    """
+    if available:
+        controller.reattach_icon()
+        print(_TRAY_MESSAGE, flush=True)
+        return
+    print(_NO_TRAY_MESSAGE, flush=True)
+    controller.show_home()
+
+
 def _open_settings(
     preferences_store: JsonPreferencesStore,
     autostart: WindowsAutostart | LinuxAutostart,
@@ -634,14 +660,24 @@ def main() -> int:
         summon_watcher = SummonWatcher(summon, controller.show_home, parent=controller)
         summon_watcher.start()
 
-        if not QSystemTrayIcon.isSystemTrayAvailable():
-            print(_NO_TRAY_MESSAGE, file=sys.stderr)
         print(_RUNNING_MESSAGE, flush=True)
+
+        # Ask the running desktop whether it draws a tray rather than inferring
+        # it from the platform, and give it time to answer: at sign-in the app
+        # can be up before the panel that would host the icon. Until this
+        # settles the app is reachable either way, because the summon watcher
+        # above is already running.
+        tray_availability = TrayAvailabilityWatcher(
+            lambda available: _on_tray_settled(controller, available),
+            parent=controller,
+        )
+        tray_availability.start()
 
         splash = SplashScreen(icon, __version__)
         splash.show_briefly()
 
         exit_code = app.exec()
+        tray_availability.stop()
         summon_watcher.stop()
         interrupt_timer.stop()
         return exit_code

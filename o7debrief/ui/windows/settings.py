@@ -2,7 +2,7 @@
 
 The user-facing preferences are the format a generated debrief is saved as (a
 self-contained HTML report by default, or Markdown for Discord or Reddit) and
-whether o7Debrief starts in the system tray when they sign in. The
+whether o7Debrief starts in the background when they sign in. The
 dialog preselects the current values and reports the chosen values through an
 injected ``on_save`` callback. It performs no file, registry or network I/O
 itself; the composition root applies the choices, so the ui stays free of
@@ -46,12 +46,15 @@ _MIN_WIDTH_PX = 470
 _FORMAT_HEADING = "Export format"
 _FORMAT_PROMPT = "When a debrief is generated, save it as:"
 _STARTUP_HEADING = "Startup"
-# The wording names no operating system: the app ships on Windows and on Linux,
-# where the same setting writes an XDG autostart entry rather than a registry
-# value, and "when I sign in" is accurate on both.  Naming the platform here
-# would need the ui to read the platform back, which the composition root has
-# already decided when it chose the autostart adapter.
-_AUTOSTART_LABEL = "Start o7 Debrief in the system tray when I sign in"
+# The label states what the setting does, not the mechanism it uses to be
+# visible. It names no operating system, because the app ships on Windows and on
+# Linux, where the same setting writes an XDG autostart entry rather than a
+# registry value; naming one would need the ui to read the platform back, which
+# the composition root already decided when it chose the autostart adapter. It
+# names no system tray either, because whether there is one to start in is a
+# property of the running desktop rather than of this setting: a tray is not
+# guaranteed on Linux, and the app opens its home window where there is none.
+_AUTOSTART_LABEL = "Start o7 Debrief in the background when I sign in"
 _OUTPUT_HEADING = "Output folder"
 _OUTPUT_PROMPT = "Save generated debrief files to:"
 _BROWSE_TEXT = "Browse..."
