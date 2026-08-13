@@ -17,7 +17,9 @@ BUNDLE="o7debrief.flatpak"
 MANIFEST="${APP_ID}.yml"
 
 UNINSTALL=0
-for arg in "$@"; do [[ "$arg" == "--uninstall" ]] && UNINSTALL=1; done
+for arg in "$@"; do
+    if [[ "$arg" == "--uninstall" ]]; then UNINSTALL=1; fi
+done
 
 echo "Cleaning Flatpak build artefacts..."
 

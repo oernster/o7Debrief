@@ -237,6 +237,18 @@ o7DebriefSetup.exe
 # Build provenance marker, if emitted.
 BUILD_ID
 
+# o7Debrief Flatpak artifacts (build_flatpak.sh)
+# Everything below is generated fresh on each run; only the script is committed.
+.flatpak-build/
+.flatpak-repo/
+.flatpak-builder/
+.flatpak-wheels/
+# Generated manifest, launcher, desktop entry, metainfo and hicolor icon set.
+uk.co.oernster.o7Debrief.yml
+packaging/
+# The distributable bundle.
+o7debrief.flatpak
+
 # Private / local files (not for distribution)
 discord-advert.txt
 NOTES.md

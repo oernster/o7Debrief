@@ -13,7 +13,15 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${SCRIPT_DIR}/venv/bin/activate"
+cd "${SCRIPT_DIR}"
+
+if [[ ! -f venv/bin/activate ]]; then
+    echo "ERROR: no virtual environment at ${SCRIPT_DIR}/venv" >&2
+    echo "Create one first:  python3 -m venv venv" >&2
+    echo "                   ./venv/bin/pip install -r requirements-dev.txt" >&2
+    exit 1
+fi
+source venv/bin/activate
 
 APP_ID="uk.co.oernster.o7Debrief"
 APP_VERSION=$(tr -d '[:space:]' < VERSION)
@@ -44,7 +52,9 @@ WHEEL_PLATFORMS=(
 # The distributable bundle is the whole point of this script, so it is built by
 # default.  Pass --no-bundle to skip it and only build + install locally.
 MAKE_BUNDLE=1
-for arg in "$@"; do [[ "$arg" == "--no-bundle" ]] && MAKE_BUNDLE=0; done
+for arg in "$@"; do
+    if [[ "$arg" == "--no-bundle" ]]; then MAKE_BUNDLE=0; fi
+done
 
 # ── Colour helpers ────────────────────────────────────────────────────────────
 bold=$(tput bold 2>/dev/null || true)
@@ -55,9 +65,22 @@ run_with_spinner() {
     local label="$1" watch=""
     shift
     if [[ "${1:-}" == "--watch" ]]; then watch="$2"; shift 2; fi
-    [[ "${1:-}" == "--" ]] && shift
+    if [[ "${1:-}" == "--" ]]; then shift; fi
     "$@" &
     local pid=$! i=0 spin='⣾⣽⣻⢿⡿⣟⣯⣷'
+    # The spinner rewrites one line with a carriage return, which only reads as
+    # a spinner on a terminal.  Redirected to a file or a pipe there is nothing
+    # to rewrite, so every frame lands as its own line and buries the log; in
+    # that case announce the step once and wait quietly.
+    # 'wait' is read inside an if so that set -e does not abort the script
+    # before the outcome line is printed; the non-zero code is returned instead.
+    local rc=0
+    if [[ ! -t 1 ]]; then
+        echo "  ... ${label}"
+        if wait "$pid"; then rc=0; else rc=$?; fi
+        [[ $rc -eq 0 ]] && echo "  OK   ${label}" || echo "  FAIL ${label}"
+        return $rc
+    fi
     while kill -0 "$pid" 2>/dev/null; do
         local extra=""
         if [[ -n "$watch" && -f "$watch" ]]; then
@@ -66,7 +89,7 @@ run_with_spinner() {
         printf "\r  %s  %s%s" "${spin:$((i % ${#spin})):1}" "$label" "$extra"
         i=$((i + 1)); sleep 0.3
     done
-    wait "$pid"; local rc=$?
+    if wait "$pid"; then rc=0; else rc=$?; fi
     [[ $rc -eq 0 ]] && printf "\r  ✓  %-72s\n" "$label" \
                      || printf "\r  ✗  %-72s\n" "$label"
     return $rc
@@ -86,6 +109,16 @@ install_if_missing() {
 }
 install_if_missing flatpak
 install_if_missing flatpak-builder
+
+# Pillow is a BUILD dependency only (it derives the hicolor icon set from the
+# master PNG); the app itself never imports it, so it is not in requirements.txt
+# and a venv created from the runtime requirements alone will not have it.
+if python3 -c "import PIL" &>/dev/null; then
+    echo "  Pillow: OK"
+else
+    echo "  Pillow not found in the venv - installing..."
+    pip install -q Pillow
+fi
 
 # ── Flatpak remote + runtime ──────────────────────────────────────────────────
 section "Configuring Flathub remote"

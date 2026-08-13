@@ -17,3 +17,7 @@ ruff>=0.6
 
 # Standalone Windows build (buildexe.py / buildinstaller.py).
 Nuitka>=2.4
+
+# Flatpak build (build_flatpak.sh): derives the hicolor icon set from the
+# assets/o7Debrief.png master. Build-time only; the app never imports it.
+Pillow>=10
