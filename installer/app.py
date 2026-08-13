@@ -62,7 +62,7 @@ def run_window() -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Run the setup program, or the uninstall flow when so invoked."""
+    """Run the setup program or the uninstall flow when so invoked."""
     install_crash_logging()
     set_app_user_model_id()
     options = parse_args(list(argv) if argv is not None else sys.argv[1:])

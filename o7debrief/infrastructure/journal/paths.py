@@ -2,7 +2,7 @@
 
 Lifted from the author's EDColonisationAsst (``utils/journal.py``) and adapted
 to o7Debrief. It locates the journal directory for the current OS (Windows
-Saved Games, or a Linux Steam Proton / Wine prefix) and lists the
+Saved Games or a Linux Steam Proton / Wine prefix) and lists the
 ``Journal.*.log`` files oldest to newest. It only ever reads paths; it never
 writes to the journal directory.
 
@@ -81,7 +81,7 @@ def _get_home_dir() -> Path:
 
 
 def _current_user() -> str:
-    """Return the current user name from the environment, or a default."""
+    """Return the current user name from the environment or a default."""
     return os.environ.get(_ENV_USER) or os.environ.get(_ENV_USERNAME) or _DEFAULT_USER
 
 
@@ -191,6 +191,6 @@ def get_journal_files(journal_dir: Path) -> list[Path]:
 
 
 def get_latest_journal_file(journal_dir: Path) -> Path | None:
-    """Return the most recent journal file in the directory, or None."""
+    """Return the most recent journal file in the directory or None."""
     files = get_journal_files(journal_dir)
     return files[_LATEST] if files else None

@@ -46,7 +46,7 @@ _CLOSE_ON_NEXT_TURN_MS = 0
 WINDOW_TITLE = f"Install {APP_DISPLAY_NAME}"
 INSTALLED_MESSAGE = "Installed to {path}."
 LAUNCH_FAILED_MESSAGE = (
-    f"Installed, but {APP_DISPLAY_NAME} could not be started. "
+    f"Installed but {APP_DISPLAY_NAME} could not be started. "
     "Start it yourself from {path}."
 )
 REPAIRED_MESSAGE = "Repair complete."

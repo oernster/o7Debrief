@@ -67,7 +67,7 @@ DEFAULT_KEYS = RegistryKeys()
 
 
 def read_string(key: str, name: str) -> str | None:
-    """Return an HKCU string value, or None when the key or value is absent."""
+    """Return an HKCU string value or None when the key or value is absent."""
     import winreg
 
     try:
@@ -131,15 +131,15 @@ def delete_toast_identity(keys: RegistryKeys = DEFAULT_KEYS) -> None:
 
 
 def installed_version(keys: RegistryKeys = DEFAULT_KEYS) -> str | None:
-    """Return the registered installed version, or None when not installed."""
+    """Return the registered installed version or None when not installed."""
     return read_string(keys.uninstall_key, DISPLAY_VERSION)
 
 
 def installed_location(keys: RegistryKeys = DEFAULT_KEYS) -> Path | None:
-    """Return the registered install location, or None when not installed.
+    """Return the registered install location or None when not installed.
 
     A recorded location that is not absolute is treated as absent: it cannot be
-    acted on, and Path would quietly turn an empty value into the current
+    acted on and Path would quietly turn an empty value into the current
     directory, which is the one place an uninstall must never point at.
     """
     raw = read_string(keys.uninstall_key, INSTALL_LOCATION)

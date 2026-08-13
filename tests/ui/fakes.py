@@ -2,7 +2,7 @@
 
 These stand in for the application services the ui depends on. They implement
 only the shape the ui uses (the application defines its services as concrete
-classes, but the ui consumes them by attribute access, so a fake suffices) and
+classes but the ui consumes them by attribute access, so a fake suffices) and
 record their calls so a test can assert how the ui drove them. No real domain
 or infrastructure is imported here.
 """
@@ -86,14 +86,14 @@ class FakeOneShot:
         self.history_calls = 0
 
     def debrief_last_session(self) -> ExportResult:
-        """Return the preset result, or raise the preset error."""
+        """Return the preset result or raise the preset error."""
         self.calls += 1
         if self._error is not None:
             raise self._error
         return self._result
 
     def debrief_all_history(self) -> ExportResult:
-        """Return the preset result for the all-history path, or raise."""
+        """Return the preset result for the all-history path or raise."""
         self.history_calls += 1
         if self._error is not None:
             raise self._error

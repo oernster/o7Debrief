@@ -1,7 +1,7 @@
 """Tests for Operations/Merc-Coins support in the missions presenter.
 
 A completed mission (an Operation among them) names itself and its faction in
-the timeline, and surfaces any Merc Coins reward on the row. The missions domain
+the timeline and surfaces any Merc Coins reward on the row. The missions domain
 section carries the credit and the Merc Coins totals as separate stats.
 
 The Merc Coins field name is configured in the taxonomy (new game content absent

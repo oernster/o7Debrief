@@ -21,7 +21,7 @@ class PreferencesStore(Protocol):
     """A store of the user's application preferences."""
 
     def load(self) -> Preferences:
-        """Return the saved preferences, or sensible defaults when absent."""
+        """Return the saved preferences or sensible defaults when absent."""
         ...
 
     def save(self, preferences: Preferences) -> None:

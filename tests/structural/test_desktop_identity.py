@@ -4,7 +4,7 @@ A desktop decides that a window belongs to an installed application by matching
 the window's own identity against the installed entry. That identity is stated
 in two places which no compiler, import or test previously connected: the
 application id in ``build_flatpak.sh``, which names the installed ``.desktop``
-file, and the two names ``main.py`` hands to Qt for the running window.
+file and the two names ``main.py`` hands to Qt for the running window.
 
 The failure when they drift is quiet and easy to misread. Nothing raises and
 nothing looks broken; the app simply opens its window as a second, unrelated
@@ -15,7 +15,7 @@ which is exactly why it is pinned here instead of left to be noticed.
 Both matching paths are covered because the app runs under either. Wayland
 matches on the application id, which ``main.py`` sets through
 ``setDesktopFileName``. X11 and XWayland match on ``WM_CLASS``, which Qt takes
-from the application name, and which the desktop entry restates as
+from the application name and which the desktop entry restates as
 ``StartupWMClass``.
 
 This test reads the shell script as text on purpose. It is the delivery recipe

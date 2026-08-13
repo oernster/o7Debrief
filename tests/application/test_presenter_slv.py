@@ -1,7 +1,7 @@
 """Tests for the ship-launched-vessel rows in the timeline presenter.
 
 A deploy, dock or loss row names the vessel type, read from the moment detail
-(the journal's SRVType_Localised, or the type the moment factory recovered for a
+(the journal's SRVType_Localised or the type the moment factory recovered for a
 deployment). These cover each verb, the generic fallback and configurability.
 """
 

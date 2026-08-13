@@ -2,7 +2,7 @@
 
 The service asks the injected ``ReleaseSource`` for the latest published
 release and compares it against the running version. The one network call the
-otherwise offline-first app makes happens indirectly through the source, and
+otherwise offline-first app makes happens indirectly through the source and
 the service never raises for an unreachable source: the source returns None
 and the service reports no update available. The result is a plain
 ``UpdateStatus`` carrying the platform's own installer asset when the release

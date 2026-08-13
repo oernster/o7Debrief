@@ -83,7 +83,7 @@ class LabelResolver:
         return self._lookup(_DOMAIN_ICON_KEY.format(key=key), key)
 
     def domain_note(self, key: str) -> str | None:
-        """Return a domain note, or None when none is configured."""
+        """Return a domain note or None when none is configured."""
         note = self._lookup(_DOMAIN_NOTE_KEY.format(key=key), _NO_NOTE)
         return note if note != _NO_NOTE else None
 

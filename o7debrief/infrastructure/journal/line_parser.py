@@ -18,9 +18,9 @@ __all__ = ["parse_file", "parse_line", "parse_lines"]
 
 
 def parse_line(line: str) -> dict[str, Any] | None:
-    """Parse one journal line into a dict, or None if it is not a JSON object.
+    """Parse one journal line into a dict or None if it is not a JSON object.
 
-    Whitespace is stripped first. Invalid JSON, or JSON that is not an object
+    Whitespace is stripped first. Invalid JSON or JSON that is not an object
     (for example a bare array or number), yields None so the caller can skip it.
     """
     text = line.strip()

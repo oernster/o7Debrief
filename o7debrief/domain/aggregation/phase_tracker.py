@@ -4,7 +4,7 @@ The journal does not stamp every event with the commander's control mode,
 so we reconstruct it by folding over the transition events that change it:
 deploying or stowing the SRV, deploying or losing a ship-launched vessel
 (the Nomad), launching, docking or losing a player-controlled ship-launched
-fighter, and disembarking or embarking on foot. The result has exactly one
+fighter and disembarking or embarking on foot. The result has exactly one
 ``ActivityMode`` per input event, aligned by index.
 
 The Nomad is asymmetric in the journal, confirmed against live logs: it deploys

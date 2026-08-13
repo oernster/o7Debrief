@@ -27,7 +27,7 @@ The heuristic is intentionally narrow to avoid false positives:
   - Only assignments whose right-hand side is a Call are considered, so type
     aliases and plain references do not trip it.
   - Only the simple-call forms ``Name(...)`` and ``module.Name(...)`` are
-    inspected, and the constructed name must end in a role suffix.
+    inspected and the constructed name must end in a role suffix.
 
 British spelling is used in comments. No em dashes appear anywhere.
 """

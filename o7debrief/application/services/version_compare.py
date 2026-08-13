@@ -21,7 +21,7 @@ _COMPONENT_SEPARATOR = "."
 
 
 def _parts(version: str) -> tuple[int, ...] | None:
-    """Return a version's integer components, or None when it is malformed."""
+    """Return a version's integer components or None when it is malformed."""
     text = version.strip()
     if text[:1].lower() == _TAG_PREFIX:
         text = text[1:]

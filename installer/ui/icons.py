@@ -14,7 +14,7 @@ from installer.ops.payload import icon_file
 
 
 def app_icon() -> QIcon:
-    """Return the bundled application icon, or an empty icon when absent."""
+    """Return the bundled application icon or an empty icon when absent."""
     path = icon_file()
     if path is None:
         return QIcon()

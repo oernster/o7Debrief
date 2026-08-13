@@ -25,7 +25,7 @@ class RankSnapshotStore(Protocol):
     """A store of per-commander rank snapshots across sessions."""
 
     def load(self, commander: CommanderId) -> RankSnapshot | None:
-        """Return the saved snapshot for a commander, or None if absent."""
+        """Return the saved snapshot for a commander or None if absent."""
         ...
 
     def save(self, commander: CommanderId, snapshot: RankSnapshot) -> None:

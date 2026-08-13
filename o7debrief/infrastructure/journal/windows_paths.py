@@ -65,7 +65,7 @@ def _guid_from_string(guid_string: str) -> GUID:
 
 
 def _path_from_winapi() -> Path | None:
-    """Return the Saved Games path via SHGetKnownFolderPath, or None.
+    """Return the Saved Games path via SHGetKnownFolderPath or None.
 
     Any WinAPI failure (including a missing ``windll`` on non-Windows) returns
     None so the caller can fall back to the user profile. The returned pointer
@@ -100,7 +100,7 @@ def _path_from_winapi() -> Path | None:
 
 
 def get_saved_games_path() -> Path | None:
-    """Return the user's Saved Games folder, or None when it cannot be found.
+    """Return the user's Saved Games folder or None when it cannot be found.
 
     The Known Folders API is preferred; when it is unavailable the value of the
     ``USERPROFILE`` environment variable is used. Returns None if neither path

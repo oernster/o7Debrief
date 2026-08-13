@@ -41,5 +41,5 @@ _EMOJI_BY_TOKEN: dict[str, str] = {
 
 
 def emoji_for(token: str) -> str:
-    """Return the emoji for an icon token, or a neutral bullet if unmapped."""
+    """Return the emoji for an icon token or a neutral bullet if unmapped."""
     return _EMOJI_BY_TOKEN.get(token, _FALLBACK)

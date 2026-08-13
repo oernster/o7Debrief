@@ -35,7 +35,7 @@ class TailResult:
     """The outcome of one incremental read of a journal file.
 
     ``complete_lines`` holds the newly completed, non-empty, decoded lines in
-    file order. ``new_offset`` is the byte position to resume from next time,
+    file order. ``new_offset`` is the byte position to resume from next time
     and ``new_partial`` is any trailing bytes not yet terminated by a newline.
     """
 

@@ -7,7 +7,7 @@ session earned nothing or travelled nowhere where the truth is that nothing was
 ever read. The two are indistinguishable to a reader; the failure is silent by
 construction.
 
-This is not a hypothetical, and it has bitten twice. The taxonomy's
+This is not a hypothetical and it has bitten twice. The taxonomy's
 ``coins_field`` names the key an Operation's Merc Coins reward is read from.
 That name is an assumption: no published schema documents it, Frontier's
 journal manual has not been revised since 2021 and the reward may not even ride
@@ -15,7 +15,7 @@ the event the rule matches. If the guess is wrong, every Operation reports zero
 coins forever and nothing says so.
 
 The second case is why ``magnitude_field`` is watched here too. The jump rule
-named ``JumpDist``, the event carried it, and the reader that fetched it took
+named ``JumpDist``, the event carried it and the reader that fetched it took
 integers only, so every jump distance in the game's history was discarded and
 five jumps reported nought light years travelled. Nothing said so, because the
 field was present: what failed was reading it. Watching magnitude the same way

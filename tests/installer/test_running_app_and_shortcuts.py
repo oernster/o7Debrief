@@ -1,4 +1,4 @@
-"""Detecting and closing the running application, and writing its shortcuts.
+"""Detecting and closing the running application and writing its shortcuts.
 
 Every external command is observed through the recording runner, so no test
 ends a real process or writes a real shortcut. British spelling is used in

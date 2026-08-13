@@ -38,7 +38,7 @@ __all__ = ["FileJournalSource"]
 
 
 # How many Shutdown events the backward scan must see before the latest session
-# is fully bounded: one closes the latest run, and the one before it ends the
+# is fully bounded: one closes the latest run and the one before it ends the
 # previous run and so marks where the latest run began. Reading back only this
 # far keeps a last-session debrief to the newest file or two rather than parsing
 # the entire journal folder into memory, even when a run is split across a file
@@ -115,7 +115,7 @@ class FileJournalSource:
         """Parse journal files newest first until the latest session is bounded.
 
         Stops as soon as ``_SHUTDOWNS_TO_BOUND_LATEST`` Shutdown events have been
-        seen, or the files run out. That is enough for the bracketer to isolate
+        seen or the files run out. That is enough for the bracketer to isolate
         the most recent run even when it is split across a file rotation. The
         accumulated events are returned unsorted; the bracketer orders them.
         """

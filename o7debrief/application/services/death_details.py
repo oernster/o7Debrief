@@ -1,7 +1,7 @@
 """Everything the journal knows about a death, stamped onto its moment.
 
 A death row read back months later has to stand alone. The journal's ``Died``
-event carries almost nothing: five of six real deaths carry only a timestamp,
+event carries almost nothing: five of six real deaths carry only a timestamp
 and the sixth names its killer with a raw model token. Everything else worth
 reporting is in the events around it, so it is gathered here and stamped onto
 the moment, because the presenter is handed the assembled debrief alone and

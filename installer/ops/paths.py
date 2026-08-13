@@ -66,7 +66,7 @@ def desktop_link() -> Path:
 
 
 def start_menu_link() -> Path | None:
-    """Return the Start Menu shortcut path, or None when APPDATA is unset."""
+    """Return the Start Menu shortcut path or None when APPDATA is unset."""
     appdata = os.environ.get(ENV_APPDATA)
     if not appdata:
         return None
@@ -89,7 +89,7 @@ def original_installer_exe(
     """Return the setup executable the user actually launched.
 
     Under a Nuitka onefile build ``sys.executable`` is the unpacked temporary
-    bootstrap rather than the launcher, and registering that as the uninstaller
+    bootstrap rather than the launcher and registering that as the uninstaller
     would record a path that disappears when the process exits. The real
     launcher is exposed through NUITKA_ONEFILE_BINARY and as ``sys.argv[0]``,
     so those are preferred and ``sys.executable`` is the last resort.
@@ -148,7 +148,7 @@ def running_from_inside(install_dir: Path) -> bool:
 
 
 def directory_size_kb(path: Path) -> int | None:
-    """Return the total size of a directory in KiB, or None when unreadable.
+    """Return the total size of a directory in KiB or None when unreadable.
 
     A path that is not a directory walks to nothing and reports zero, which is
     the honest answer for an install that is not there.

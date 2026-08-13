@@ -72,7 +72,7 @@ class JsonPreferencesStore:
         self._directory = Path(directory)
 
     def load(self) -> Preferences:
-        """Return the saved preferences, or the defaults when absent or odd."""
+        """Return the saved preferences or the defaults when absent or odd."""
         try:
             text = self._path().read_text(encoding=_ENCODING)
         except OSError:

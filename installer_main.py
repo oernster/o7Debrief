@@ -4,7 +4,7 @@
 The setup program is a package rather than a single script, so its entry point
 sits at the repository root beside main.py. Running a script inside the package
 directory would put that directory on the module search path instead of the
-root, and the ``installer.*`` imports would not resolve; compiling from here
+root and the ``installer.*`` imports would not resolve; compiling from here
 gives Nuitka the same layout it reproduces in the bundle, so one rule holds in
 both source and compiled runs.
 

@@ -3,7 +3,7 @@
 This collaborator performs the only rank work that needs the domain at
 runtime: mapping the journal's per-ladder fields onto the rank ladders and
 calling the domain's rank-progression function. It therefore imports the
-domain layer and nothing else, and is injected into the one-shot service as
+domain layer and nothing else; it is injected into the one-shot service as
 a forward-referenced dependency. Its inputs and outputs use ladder-key
 strings so the application orchestrator never has to touch the domain enum.
 """
@@ -87,7 +87,7 @@ class RankAnalyzer:
     """Reads events into a commander identity and rank progression."""
 
     def extract_commander(self, events: tuple[RawEvent, ...]) -> CommanderId | None:
-        """Return the commander named in the events, or None if none is.
+        """Return the commander named in the events or None if none is.
 
         The first Commander or LoadGame event carrying a name is used; the
         FID falls back to the name when the event omits it.

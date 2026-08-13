@@ -2,7 +2,7 @@
 
 Both exist because of the same reported failure: the setup program appeared to
 do nothing and the application never started. The log is what makes a repeat of
-that answerable from the machine instead of guessed at, and the subtitle is what
+that answerable from the machine instead of guessed at and the subtitle is what
 tells the user which version they are actually replacing.
 """
 

@@ -162,7 +162,7 @@ class HomeDialog(QDialog):
     ) -> None:
         """Replace the displayed recents page and update the pager controls.
 
-        A debrief generated from the tray menu while this dialog is showing, or a
+        A debrief generated from the tray menu while this dialog is showing or a
         previous/next click, replaces the page in place rather than leaving the
         dialog on the snapshot it was built with.
         """
@@ -232,7 +232,7 @@ class HomeDialog(QDialog):
         self._recent_holder_layout.addWidget(self._build_recent(recent))
 
     def _build_recent(self, recent: Sequence[str]) -> QWidget:
-        """Build the recent-debriefs list, or a muted placeholder when empty.
+        """Build the recent-debriefs list or a muted placeholder when empty.
 
         A long run can produce many debriefs, so once the list passes a
         threshold it is capped and scrolls rather than growing the dialog past

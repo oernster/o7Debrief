@@ -1,7 +1,7 @@
 """Typed exception hierarchy for the o7Debrief application layer.
 
 These sit above the domain errors. ``ApplicationError`` is the single base
-the outer layers can catch to handle any orchestration failure, and the
+the outer layers can catch to handle any orchestration failure and the
 specific subclasses name the conditions the services raise.
 """
 

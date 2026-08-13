@@ -3,7 +3,7 @@
 A journal record is a JSON object with an ``event`` type, a ``timestamp`` and an
 arbitrary payload. This module turns such a dict into the domain's ``RawEvent``:
 the timestamp is parsed via ``EventTime.parse`` (the domain's only timestamp
-entry point), and the remaining payload keys become a stable, sorted tuple of
+entry point) and the remaining payload keys become a stable, sorted tuple of
 ``(key, value)`` pairs so two events with the same payload compare equal.
 
 Records missing an event type or a parseable timestamp are mapped to None, so a
@@ -44,10 +44,10 @@ def _fields_from(record: dict[str, Any]) -> tuple[tuple[str, object], ...]:
 
 
 def map_record(record: dict[str, Any]) -> RawEvent | None:
-    """Map one parsed journal dict to a ``RawEvent``, or None if unmappable.
+    """Map one parsed journal dict to a ``RawEvent`` or None if unmappable.
 
     Returns None when the record lacks a non-empty ``event`` type, lacks a
-    string ``timestamp``, or carries a timestamp the domain cannot parse.
+    string ``timestamp`` or carries a timestamp the domain cannot parse.
     """
     event_type = record.get(EVENT_KEY)
     if not isinstance(event_type, str) or not event_type:

@@ -2,7 +2,7 @@
 
 A debrief should record the ships a commander changed during a session, not
 only the one they finished in. Elite names the ship moved into on a
-``ShipyardSwap`` or ``ShipyardNew`` and gives a swap the stored ship's id, but
+``ShipyardSwap`` or ``ShipyardNew`` and gives a swap the stored ship's id but
 no shipyard event carries a ship's custom name. So this first indexes every
 ship id seen this session to its localised type and custom name (gathered from
 ``LoadGame``, ``Loadout`` and the shipyard events), then walks the session and
@@ -13,7 +13,7 @@ so it joins the timeline and the Shipyard category alongside every other moment.
 The from ship of a swap is the stored ship (``StoreShipID``); the to ship is
 the new one (``ShipID``); its custom name is picked up from the ``Loadout`` that
 follows. A ship not seen elsewhere this session falls back to its internal
-symbol, and an unidentifiable ship to a neutral placeholder.
+symbol and an unidentifiable ship to a neutral placeholder.
 """
 
 from __future__ import annotations

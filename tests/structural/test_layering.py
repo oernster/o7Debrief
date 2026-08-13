@@ -55,7 +55,7 @@ def _iter_modules(root: Path):
 
 
 def _layer_of(path: Path, root: Path) -> str | None:
-    """Return the layer a module belongs to, or None if it is top level.
+    """Return the layer a module belongs to or None if it is top level.
 
     The layer is the first path segment beneath the package root. Modules that
     sit directly in the package root (for example main.py) have no layer.

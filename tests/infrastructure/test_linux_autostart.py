@@ -1,6 +1,6 @@
 """Tests for LinuxAutostart, the XDG autostart entry adapter.
 
-The adapter is the Linux half of the "start when I sign in" setting, and it
+The adapter is the Linux half of the "start when I sign in" setting and it
 matters more here than on Windows: o7 Debrief's Linux proposition is that it is
 already watching when the Commander quits the game, so an entry that silently
 fails to be written costs the whole feature.

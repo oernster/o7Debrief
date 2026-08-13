@@ -3,7 +3,7 @@
 The probe is injected throughout, so no test needs a real system tray to be
 present or absent on the machine running it. That is the point of the seam: the
 suite runs on an offscreen platform that reports no tray, on a developer's
-Ubuntu session that reports one, and in CI, and every one of these cases has to
+Ubuntu session that reports one and in CI; every one of these cases has to
 be exercised regardless of which of those it is running on.
 
 British spelling is used in comments. No em dashes appear anywhere.
@@ -16,7 +16,7 @@ from PySide6.QtWidgets import QApplication
 from o7debrief.ui.tray.tray_availability import TrayAvailabilityWatcher
 
 # A poll interval and grace period for the tests. The grace is a small multiple
-# of the interval so the expiry arrives after a known number of polls, and both
+# of the interval so the expiry arrives after a known number of polls and both
 # are derived from that one relationship rather than stated twice.
 _INTERVAL_MS = 10
 _POLLS_BEFORE_EXPIRY = 3

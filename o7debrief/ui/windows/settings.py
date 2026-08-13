@@ -1,7 +1,7 @@
 """Settings dialog for o7Debrief: export format and startup behaviour.
 
 The user-facing preferences are the format a generated debrief is saved as (a
-self-contained HTML report by default, or Markdown for Discord or Reddit) and
+self-contained HTML report by default or Markdown for Discord or Reddit) and
 whether o7Debrief starts in the background when they sign in. The
 dialog preselects the current values and reports the chosen values through an
 injected ``on_save`` callback. It performs no file, registry or network I/O
@@ -53,7 +53,7 @@ _STARTUP_HEADING = "Startup"
 # the composition root already decided when it chose the autostart adapter. It
 # names no system tray either, because whether there is one to start in is a
 # property of the running desktop rather than of this setting: a tray is not
-# guaranteed on Linux, and the app opens its home window where there is none.
+# guaranteed on Linux and the app opens its home window where there is none.
 _AUTOSTART_LABEL = "Start o7 Debrief in the background when I sign in"
 _OUTPUT_HEADING = "Output folder"
 _OUTPUT_PROMPT = "Save generated debrief files to:"

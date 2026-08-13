@@ -49,7 +49,7 @@ _ONE_SYSTEM = 1
 # (through SHIP_EVENTS), so the all-history fold needs no extra retention.
 _BALANCE_EVENTS = ("LoadGame",)
 _BALANCE_FIELD = "Credits"
-# Indices into the ordered balance readings, and how many are needed before a
+# Indices into the ordered balance readings and how many are needed before a
 # change between them can be measured at all.
 _FIRST_READING = 0
 _LAST_READING = -1

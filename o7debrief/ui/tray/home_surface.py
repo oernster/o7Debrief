@@ -99,13 +99,13 @@ class HomeSurface:
     # -------------------------------------------------------------- home dialog
 
     def open_home(self) -> None:
-        """Show the home dialog wired to the injected actions, or raise it.
+        """Show the home dialog wired to the injected actions or raise it.
 
         The dialog is modeless (``show`` rather than ``exec``) so the tray
         context menu stays reachable while it is open; that is what lets a
         debrief triggered from the menu refresh the dialog. A second
         left-click brings the existing dialog to the front (restoring it if
-        minimised) instead of opening another, and the reference is dropped
+        minimised) instead of opening another and the reference is dropped
         on close so a stale, closed dialog is never refreshed.
         """
         if self._home is not None:

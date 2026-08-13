@@ -1,9 +1,9 @@
-"""The application bundle the setup program carries, and putting it on disk.
+"""Reading the application bundle the setup program carries and putting it on disk.
 
 The bundle ships as a single zip because Nuitka's onefile build drops loose
 executables and DLLs from an included data directory, so the installer extracts
 the archive on deploy. Extraction is member by member rather than a single
-``extractall``: it lets the operation report real progress, and it lets every
+``extractall``: it lets the operation report real progress and it lets every
 entry be checked before it is written. British spelling is used in comments. No
 em dashes appear anywhere.
 """
@@ -65,7 +65,7 @@ def _first_readable(candidates: tuple[Path, ...]) -> str | None:
 
 
 def licence_text() -> str:
-    """Return the bundled licence text, or a fallback when it is absent."""
+    """Return the bundled licence text or a fallback when it is absent."""
     text = _first_readable(
         (
             payload_dir() / LICENSE_FILE_NAME,
@@ -76,7 +76,7 @@ def licence_text() -> str:
 
 
 def app_version() -> str:
-    """Return the bundled application version, or an empty string if absent."""
+    """Return the bundled application version or an empty string if absent."""
     candidates = (
         payload_app_dir() / VERSION_FILE_NAME,
         payload_dir() / VERSION_FILE_NAME,
@@ -90,13 +90,13 @@ def app_version() -> str:
 
 
 def icon_file() -> Path | None:
-    """Return the bundled application PNG icon, or None when it is absent."""
+    """Return the bundled application PNG icon or None when it is absent."""
     path = payload_app_dir().joinpath(*ICON_SUBPATH)
     return path if path.is_file() else None
 
 
 def shortcut_icon_file(install_dir: Path) -> Path | None:
-    """Return the installed multi-size .ico, or None when it is absent."""
+    """Return the installed multi-size .ico or None when it is absent."""
     path = install_dir.joinpath(*SHORTCUT_ICON_SUBPATH)
     return path if path.is_file() else None
 

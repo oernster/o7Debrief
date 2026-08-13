@@ -3,7 +3,7 @@
 A carrier jump is unlike a ship jump: the journal states where the carrier
 arrived but never how far it came, so the distance is derived from the gaps
 between consecutive stated positions rather than read outright. That leaves the
-first jump of a session unmeasurable, and these tests hold the report to saying
+first jump of a session unmeasurable and these tests hold the report to saying
 so instead of passing a short total off as the whole distance.
 """
 

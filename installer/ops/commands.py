@@ -43,7 +43,7 @@ class CommandResult:
 
 
 class CommandRunner(Protocol):
-    """Runs a command to completion, or starts one and does not wait."""
+    """Runs a command to completion or starts one and does not wait."""
 
     def run(self, args: Sequence[str], *, timeout: float) -> CommandResult:
         """Run ``args`` to completion and return its result."""

@@ -1,4 +1,4 @@
-"""The bundled payload: reading it, and putting it on disk safely.
+"""The bundled payload: reading it and putting it on disk safely.
 
 The payload is anchored on the installer package directory, so these tests point
 that anchor at a temporary tree and stage a small bundle inside it rather than

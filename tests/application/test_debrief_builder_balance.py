@@ -1,10 +1,10 @@
 """Tests for the credit balance readings the builder takes from a session.
 
-The balance is a level the journal states outright at every login, and the
+The balance is a level the journal states outright at every login and the
 session's net change is the difference between the first and last such reading.
 That change used to be summed from the moments instead, which priced income and
 nothing else, so a session that paid an eleven million credit rebuy still
-reported a gain. These tests hold the change to the stated balances, and hold a
+reported a gain. These tests hold the change to the stated balances and hold a
 change that was never stated apart from a session that broke even.
 """
 

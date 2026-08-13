@@ -28,7 +28,7 @@ _TASKKILL = "taskkill"
 _TASKKILL_IMAGE = "/im"
 _TASKKILL_FORCE = "/f"
 # There is deliberately no /t here. That flag ends the target's whole process
-# tree, and the setup program twice died at exactly this call with the running
+# tree and the setup program twice died at exactly this call with the running
 # application closing successfully: the kill reached something it should never
 # have reached. The application is a single standalone process that starts no
 # children needing termination, so the tree flag bought nothing and cost the

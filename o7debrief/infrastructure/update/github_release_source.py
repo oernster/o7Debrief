@@ -4,7 +4,7 @@ This adapter implements the application ``ReleaseSource`` port. It performs a
 single short, best-effort HTTPS GET against the GitHub releases API using only
 the standard library (``urllib``), so the otherwise offline-first app gains no
 third-party runtime dependency for one network call. Any failure (no network,
-a timeout, a non-2xx status, or an unparseable body) yields None, so the
+a timeout, a non-2xx status or an unparseable body) yields None, so the
 update check is non-blocking and silent on failure.
 
 The endpoint returns only a published, non-draft, non-prerelease release, so
@@ -81,7 +81,7 @@ class GitHubReleaseSource:
         self._timeout_s = timeout_s
 
     def latest_release(self) -> ReleaseInfo | None:
-        """Return the latest published release, or None when it cannot be read."""
+        """Return the latest published release or None when it cannot be read."""
         request = urllib.request.Request(
             self._api_url, headers={_ACCEPT_HEADER: _ACCEPT_JSON}
         )

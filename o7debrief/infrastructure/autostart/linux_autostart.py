@@ -88,7 +88,7 @@ class LinuxAutostart:
         """Return whether an entry exists and is not marked as switched off.
 
         An unreadable entry counts as disabled rather than raising: the caller
-        is a settings checkbox, and refusing to draw is worse than drawing the
+        is a settings checkbox and refusing to draw is worse than drawing the
         state the desktop will actually act on.
         """
         path = self.entry_path

@@ -1,7 +1,7 @@
 """Assembling the setup window's layout.
 
 Construction is separated from behaviour so each stays small enough to read in
-one pass: this module only builds widgets and places them, and the window
+one pass: this module only builds widgets and places them; the window
 module decides what they do. British spelling is used in comments. No em dashes
 appear anywhere.
 """

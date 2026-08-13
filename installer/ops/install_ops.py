@@ -157,7 +157,7 @@ def repair(
     """Re-deploy over an existing install and restore its shortcuts.
 
     The user's sign-in setting is left as it is: a repair restores what the
-    installer put down, and the Run entry is a preference rather than part of
+    installer put down and the Run entry is a preference rather than part of
     the deployed application.
     """
     active = runner or default_runner()

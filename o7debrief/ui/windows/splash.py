@@ -1,6 +1,6 @@
 """Startup splash for o7Debrief: a brief, rounded, frameless card.
 
-Shown once at launch, it carries the application icon, the name and version, and
+Shown once at launch, it carries the application icon, the name and version, plus
 a short note that the app keeps running in the background after the splash
 fades, with the route back to it. It stays on screen long enough to read, then
 dismisses itself, so it never gets in the way.
@@ -19,13 +19,13 @@ __all__ = ["SplashScreen"]
 _APP_NAME = "o7 Debrief"
 # The splash appears before the desktop has been asked whether it draws a tray,
 # and it names no screen corner: a tray sits bottom-right on Windows, top-right
-# on a GNOME shell, and elsewhere wherever that desktop's panel puts it. So the
+# on a GNOME shell and elsewhere wherever that desktop's panel puts it. So the
 # note gives the route that works on every desktop, tray or no tray, which is
 # launching the app again. The tray is mentioned as somewhere to look rather
 # than as somewhere the icon is promised to be.
 _TRAY_MESSAGE = (
     "Now running in the background. Launch o7 Debrief again at any time to "
-    "bring up its home screen, or use its system tray icon where your desktop "
+    "bring up its home screen or use its system tray icon where your desktop "
     "provides one."
 )
 

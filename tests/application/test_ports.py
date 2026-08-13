@@ -1,7 +1,7 @@
 """Conformance checks that each fake satisfies its application port.
 
-Importing the port modules here exercises their declarations, and binding a
-fake to each port-typed name documents (and, via the type checker, enforces)
+Importing the port modules here exercises their declarations and binding a
+fake to each port-typed name documents (and via the type checker, enforces)
 that the hand-written fakes implement the Protocols the services depend on.
 The Protocol method bodies are ellipses excluded from coverage; these tests
 cover the class and signature lines that remain.

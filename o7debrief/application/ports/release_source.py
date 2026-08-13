@@ -23,5 +23,5 @@ class ReleaseSource(Protocol):
     """A source of the latest published release."""
 
     def latest_release(self) -> ReleaseInfo | None:
-        """Return the latest published release, or None if unreachable."""
+        """Return the latest published release or None if unreachable."""
         ...

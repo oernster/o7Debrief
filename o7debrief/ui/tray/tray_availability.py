@@ -1,17 +1,17 @@
 """TrayAvailabilityWatcher: settling whether this desktop draws a system tray.
 
-o7 Debrief lives in the tray, and a tray is not something a Linux desktop owes
+o7 Debrief lives in the tray and a tray is not something a Linux desktop owes
 anyone. Assume nothing: GNOME draws none without an extension, Ubuntu ships
 that extension enabled, KDE, XFCE, MATE, Cinnamon and LXQt each provide one by
-their own route, and any of them can have it turned off. The app therefore asks
-the running desktop rather than the platform name, and it asks more than once.
+their own route and any of them can have it turned off. The app therefore asks
+the running desktop rather than the platform name and it asks more than once.
 
 Asking once is the trap this module exists to avoid. ``isSystemTrayAvailable``
-answers for the desktop as it stands at that instant, and the instant the app
+answers for the desktop as it stands at that instant and the instant the app
 cares about is the worst one to ask in: started from the autostart entry, o7
 Debrief launches while the session is still assembling, before the panel or the
 shell extension that hosts tray icons has registered itself. A single check
-there reports no tray on a machine that is about to have one, and the app would
+there reports no tray on a machine that is about to have one and the app would
 draw its fallback window over a session that never needed it.
 
 So the question is asked repeatedly over a short grace period and settles once:
@@ -44,7 +44,7 @@ if TYPE_CHECKING:  # pragma: no cover - type-only imports, no runtime dependency
 __all__ = ["TrayAvailabilityWatcher"]
 
 # How often the desktop is asked. Short enough that a tray appearing during
-# login is picked up while the splash is still on screen, and cheap enough to
+# login is picked up while the splash is still on screen and cheap enough to
 # repeat: the probe is a single query of the platform integration.
 _POLL_INTERVAL_MS = 500
 
@@ -88,7 +88,7 @@ class TrayAvailabilityWatcher(QObject):
         return self._settled
 
     def start(self) -> None:
-        """Ask the desktop now, and keep asking until an answer settles.
+        """Ask the desktop now and keep asking until an answer settles.
 
         A desktop that already draws a tray answers immediately and no timer
         ever runs, so the common case costs one query and nothing else.

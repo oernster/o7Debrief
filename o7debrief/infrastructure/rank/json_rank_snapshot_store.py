@@ -2,7 +2,7 @@
 
 This adapter implements the application ``RankSnapshotStore`` port. Each
 commander's last-known rank state is stored as a small JSON file under a
-configured directory, keyed by the commander's frontier id, and written
+configured directory, keyed by the commander's frontier id and written
 atomically (a temporary file plus ``os.replace``) so a snapshot is never left
 half-written. A missing or unreadable snapshot loads as None, so the first ever
 run simply has no prior state to compare against.
@@ -90,7 +90,7 @@ class JsonRankSnapshotStore:
         self._directory = Path(directory)
 
     def load(self, commander: CommanderId) -> RankSnapshot | None:
-        """Return the saved snapshot for a commander, or None if absent."""
+        """Return the saved snapshot for a commander or None if absent."""
         path = self._path_for(commander.fid)
         try:
             text = path.read_text(encoding=_ENCODING)

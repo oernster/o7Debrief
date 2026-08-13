@@ -118,7 +118,7 @@ def test_settings_dialog_theme_sets_a_colour_for_every_caption_control(
     This asserts the rule exists rather than sampling the rendered pixels. A
     pixel test cannot fail here: the offscreen platform used by the suite
     supplies its own light default palette, so the captions render legibly
-    with or without the fix, and the very palette dependency that caused the
+    with or without the fix and the very palette dependency that caused the
     defect is the thing the test environment does not reproduce.
     """
     dialog = SettingsDialog(FORMAT_HTML, False, _DIR, _noop_save)

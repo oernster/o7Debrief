@@ -52,7 +52,7 @@ if [[ $UNINSTALL -eq 1 ]]; then
 
     # The start-on-sign-in entry is written OUTSIDE the sandbox, so uninstalling
     # the app does not take it with it.  Left behind it points at an app that is
-    # no longer there, and the session tries to launch it on every sign-in, so
+    # no longer there and the session tries to launch it on every sign-in, so
     # it is removed here rather than reported as the user's problem.
     if [[ -f "${AUTOSTART}" ]]; then
         rm -f "${AUTOSTART}"
