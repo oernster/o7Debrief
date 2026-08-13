@@ -183,6 +183,50 @@ def test_second_left_click_brings_open_home_to_front(
     assert first.bring_to_front_calls == 1
 
 
+def test_show_home_opens_the_same_surface_a_left_click_does(
+    qapp: QApplication, view_model
+) -> None:
+    """The public entry point opens the home dialog without a tray click.
+
+    This is the route a second launch takes on a desktop that draws no tray,
+    where there is no icon to click, so it has to reach the same window.
+    """
+    _FakeHome.last = None
+    controller = TrayController(
+        one_shot=FakeOneShot(),
+        session=view_model,
+        opener=RecordingOpener(),
+        home_factory=_FakeHome,
+    )
+
+    controller.show_home()
+
+    assert _FakeHome.last is not None
+    assert _FakeHome.last.show_calls == 1
+    assert _FakeHome.last.status_text == view_model.status_text
+
+
+def test_repeated_show_home_surfaces_the_open_dialog(
+    qapp: QApplication, view_model
+) -> None:
+    """Launching again while the window is open raises it, never duplicates it."""
+    _FakeHome.last = None
+    controller = TrayController(
+        one_shot=FakeOneShot(),
+        session=view_model,
+        opener=RecordingOpener(),
+        home_factory=_FakeHome,
+    )
+
+    controller.show_home()
+    first = _FakeHome.last
+    controller.show_home()
+
+    assert _FakeHome.last is first
+    assert first.show_calls == 1
+    assert first.bring_to_front_calls == 1
+
+
 def test_home_reopens_after_being_closed(qapp: QApplication, view_model) -> None:
     """Once closed, the next left-click builds a fresh dialog rather than none."""
     _FakeHome.last = None

@@ -76,6 +76,7 @@ from o7debrief.infrastructure import (
 )
 from o7debrief.infrastructure.journal import paths as journal_paths
 from o7debrief.ui.tray.single_instance import SingleInstanceLock
+from o7debrief.ui.tray.summon import SummonRequest, SummonWatcher
 from o7debrief.ui.tray.tray_controller import TrayController
 from o7debrief.ui.view_models.session_view_model import SessionViewModel
 from o7debrief.ui.windows.about import AboutDialog
@@ -96,7 +97,7 @@ _STATE_DIR_NAME = "state"
 # It is resolved from the Windows known-folder registration so a relocated
 # Downloads folder is honoured, with a fallback to the conventional location.
 _DOWNLOADS_DIR_NAME = "Downloads"
-# The value of ``os.name`` on Windows, and the Linux equivalents of the
+# The value of ``os.name`` on Windows, plus the Linux equivalents of the
 # known-folder registration the Windows branch reads.
 _OS_WINDOWS = "nt"
 _ENV_XDG_DOWNLOAD_DIR = "XDG_DOWNLOAD_DIR"
@@ -184,7 +185,19 @@ _RUNNING_MESSAGE = (
 )
 _NO_TRAY_MESSAGE = (
     "Warning: no system tray was detected, so the o7 Debrief icon may not be "
-    "visible. The app is still running. Press Ctrl+C here to quit."
+    "visible. The app is still running. Launch o7 Debrief again to bring up its "
+    "home screen. Press Ctrl+C here to quit."
+)
+
+# Printed by a second launch, which does not start a second tray. Whether it
+# says the window was opened depends on whether the request actually reached
+# the running instance, so the two outcomes are never reported as one.
+_SUMMONED_MESSAGE = (
+    "o7 Debrief is already running. Its home screen has been brought up."
+)
+_ALREADY_RUNNING_MESSAGE = (
+    "o7 Debrief is already running. Its home screen could not be summoned; use "
+    "the tray icon to open it."
 )
 
 
@@ -369,13 +382,13 @@ def _autostart_command() -> str:
     """Return the command the session should run at sign-in to launch o7Debrief.
 
     Three cases. Inside a flatpak the entry is written for the HOST session to
-    run, and neither the interpreter nor this file exists out there, so the only
+    run; neither the interpreter nor this file exists out there, so the only
     command that works is a ``flatpak run`` of the app id. Otherwise, a packaged
-    build (frozen or Nuitka-compiled) is its own launcher, and from source it is
+    build (frozen or Nuitka-compiled) is its own launcher; from source it is
     the interpreter running this script.
 
     The flatpak case is checked first because inside the sandbox the source case
-    also looks true, and would write an entry naming a path the host cannot see.
+    also looks true and would write an entry naming a path the host cannot see.
     """
     flatpak_id = os.environ.get(_ENV_FLATPAK_ID)
     if flatpak_id:
@@ -532,7 +545,16 @@ def _build_one_shot(
 def main() -> int:
     """Build the whole app and run the Qt event loop; return the exit code."""
     lock = SingleInstanceLock()
+    summon = SummonRequest()
     if not lock.acquire():
+        # Another instance holds the lock, so this launch is a request to see
+        # the app rather than a second copy of it. It leaves the marker the
+        # running instance is watching for and exits: the window is the running
+        # instance's to open, opening the same one a tray click would.
+        print(
+            _SUMMONED_MESSAGE if summon.send() else _ALREADY_RUNNING_MESSAGE,
+            flush=True,
+        )
         return _EXIT_ALREADY_RUNNING
 
     try:
@@ -594,6 +616,11 @@ def main() -> int:
         )
         controller.show()
 
+        # Watch for a later launch asking to see the app. Parented to the
+        # controller so it lives exactly as long as the tray it surfaces.
+        summon_watcher = SummonWatcher(summon, controller.show_home, parent=controller)
+        summon_watcher.start()
+
         if not QSystemTrayIcon.isSystemTrayAvailable():
             print(_NO_TRAY_MESSAGE, file=sys.stderr)
         print(_RUNNING_MESSAGE, flush=True)
@@ -602,6 +629,7 @@ def main() -> int:
         splash.show_briefly()
 
         exit_code = app.exec()
+        summon_watcher.stop()
         interrupt_timer.stop()
         return exit_code
     finally:

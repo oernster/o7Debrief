@@ -12,7 +12,7 @@ status line and drives the automatic debrief (through the view model) when a
 session ends; there is no background thread here.
 
 Every collaborator is injected through the constructor: the one-shot debrief
-service, the session view model, an opener (defaulting to the preview helper),
+service, the session view model, an opener (defaulting to the preview helper)
 and plain callables for settings and quit so this controller owns no
 application lifecycle and no policy of its own. The controller is a dispatcher,
 not a place where behaviour accumulates.
@@ -192,6 +192,16 @@ class TrayController(QObject):
         if self._update_controller is not None:
             self._update_controller.start()
 
+    def show_home(self) -> None:
+        """Open the home window, raising it when it is already open.
+
+        The same surface a left-click on the tray icon opens. It is public
+        because the tray is not the only way to ask for it: on a desktop that
+        draws no tray, launching the app again is what summons this window;
+        the composition root wires that route to here.
+        """
+        self._home_surface.open_home()
+
     def stop(self) -> None:
         """Stop the refresh and update timers and hide the tray icon."""
         self._timer.stop()
@@ -319,7 +329,7 @@ class TrayController(QObject):
     def _on_tray_activated(self, reason: QSystemTrayIcon.ActivationReason) -> None:
         """Open the home dialog on a left-click; ignore other reasons."""
         if reason == QSystemTrayIcon.ActivationReason.Trigger:
-            self._home_surface.open_home()
+            self.show_home()
 
     # ------------------------------------------------------------------ status
 

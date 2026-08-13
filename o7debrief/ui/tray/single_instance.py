@@ -7,6 +7,10 @@ so the module imports and tests cleanly off Windows). Operating-system file
 locks are released automatically when the owning process exits, so a crash
 or reboot never leaves a stale lock behind.
 
+The directory that holds the lock file is public, because it is also where the
+summon marker lives: the lock and the marker are two halves of one conversation
+between a running instance and a second launch, so they belong in one place.
+
 This module belongs to the ui layer and imports the standard library only.
 """
 
@@ -16,7 +20,7 @@ import os
 from pathlib import Path
 from typing import IO
 
-__all__ = ["SingleInstanceLock"]
+__all__ = ["SingleInstanceLock", "user_lock_dir"]
 
 # Application identity used for the lock directory and the lock file name.
 _APP_DIR_NAME = "o7Debrief"
@@ -31,6 +35,11 @@ _POSIX_CACHE_DIR = ".cache"
 _ENV_LOCALAPPDATA = "LOCALAPPDATA"
 _ENV_XDG_RUNTIME = "XDG_RUNTIME_DIR"
 _ENV_XDG_CACHE = "XDG_CACHE_HOME"
+# Set by flatpak inside the sandbox, where it names the running application.
+_ENV_FLATPAK_ID = "FLATPAK_ID"
+# Subdirectory of the XDG runtime directory that flatpak shares between every
+# instance of one application.
+_FLATPAK_APP_DIR_NAME = "app"
 
 # File open mode that both creates the file and allows seeking without
 # truncating an existing one.
@@ -79,7 +88,7 @@ class SingleInstanceLock:
 
     def _resolve_lock_path(self) -> Path:
         """Return the per-user lock file path, creating its directory."""
-        root = _user_lock_dir()
+        root = user_lock_dir()
         root.mkdir(parents=True, exist_ok=True)
         return root / _LOCK_FILE_NAME
 
@@ -121,8 +130,8 @@ class SingleInstanceLock:
             return
 
 
-def _user_lock_dir() -> Path:
-    """Return the per-user directory that should hold the lock file."""
+def user_lock_dir() -> Path:
+    """Return the per-user directory that holds the lock and summon files."""
     if os.name == "nt":
         base = os.environ.get(_ENV_LOCALAPPDATA)
         if base:
@@ -130,11 +139,27 @@ def _user_lock_dir() -> Path:
         return Path.home().joinpath(*_WINDOWS_APPDATA_LOCAL) / _APP_DIR_NAME
     runtime_dir = os.environ.get(_ENV_XDG_RUNTIME)
     if runtime_dir:
-        return Path(runtime_dir) / _APP_DIR_NAME
+        return _runtime_lock_dir(Path(runtime_dir))
     cache_home = os.environ.get(_ENV_XDG_CACHE)
     if cache_home:
         return Path(cache_home) / _APP_DIR_NAME
     return Path.home() / _POSIX_CACHE_DIR / _APP_DIR_NAME
+
+
+def _runtime_lock_dir(runtime_dir: Path) -> Path:
+    """Return the lock directory beneath the XDG runtime directory.
+
+    Inside a flatpak sandbox the runtime directory is private to the instance,
+    so two launches of the same app would each take a lock on their own file and
+    neither would ever see the other's summon marker: the guard would admit a
+    second tray and the summon route would go nowhere. Flatpak shares exactly
+    one directory between every instance of an application for this purpose, the
+    application id under ``app/``, so that is where the files go in the sandbox.
+    """
+    flatpak_id = os.environ.get(_ENV_FLATPAK_ID)
+    if flatpak_id:
+        return runtime_dir / _FLATPAK_APP_DIR_NAME / flatpak_id
+    return runtime_dir / _APP_DIR_NAME
 
 
 def _windows_lock(handle: IO[str]) -> bool:
