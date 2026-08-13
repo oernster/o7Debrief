@@ -206,6 +206,12 @@ Icon=${APP_ID}
 Terminal=false
 Type=Application
 Categories=Game;Utility;
+# Ties the home window back to this entry so it lights up the launcher it was
+# started from instead of appearing as a second, generic one. Wayland matches on
+# the application id, which main.py sets through setDesktopFileName; X11 and
+# XWayland match on WM_CLASS instead, which Qt takes from the application name.
+# Both are needed because this app runs under either.
+StartupWMClass=o7Debrief
 DESKTOP
 
 cat > "packaging/${APP_ID}.metainfo.xml" <<XML

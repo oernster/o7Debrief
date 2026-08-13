@@ -132,6 +132,18 @@ _ICON_PNG_FILE_NAME = "o7Debrief.png"
 # placeholder. The id is stable across versions and is mirrored by the
 # installer, which removes this registration on uninstall.
 _APP_USER_MODEL_ID = "OliverErnster.o7Debrief"
+
+# The Linux counterpart of that shell identity: the reverse-DNS application id
+# the desktop entry is installed under. A desktop knows a window belongs to an
+# installed application by matching this against the entry's own name, so
+# without it the home window opens as an unrelated entry with a generic icon
+# rather than lighting up the launcher the user started it from. Setting it on
+# Windows is harmless; Qt uses it only where the platform has the concept.
+#
+# It must stay identical to APP_ID in build_flatpak.sh, which is what names the
+# installed .desktop file. A structural test pins the two together rather than
+# trusting them to be kept in step by hand.
+_DESKTOP_FILE_NAME = "uk.co.oernster.o7Debrief"
 _APP_TOAST_TITLE = "Commander Mission Debrief"
 _AUMID_CLASSES_SUBKEY = r"Software\Classes\AppUserModelId"
 _AUMID_DISPLAY_NAME_VALUE = "DisplayName"
@@ -577,6 +589,7 @@ def main() -> int:
 
         app = QApplication(sys.argv)
         app.setApplicationName(_APP_DIR_NAME)
+        app.setDesktopFileName(_DESKTOP_FILE_NAME)
         app.setQuitOnLastWindowClosed(False)
         icon = QIcon(str(_icon_path()))
         app.setWindowIcon(icon)

@@ -21,8 +21,10 @@ _ENV_XDG_RUNTIME = "XDG_RUNTIME_DIR"
 _ENV_XDG_CACHE = "XDG_CACHE_HOME"
 _ENV_FLATPAK_ID = "FLATPAK_ID"
 
-# Application id a flatpak build runs under, used to check the sandbox branch.
-_FLATPAK_APP_ID = "uk.codecrafter.o7Debrief"
+# The application id the flatpak build actually runs under, used to check the
+# sandbox branch. It matches APP_ID in build_flatpak.sh; a made-up id would test
+# the same code path but would read as though the real one were something else.
+_FLATPAK_APP_ID = "uk.co.oernster.o7Debrief"
 
 
 @pytest.fixture(autouse=True)
