@@ -46,10 +46,30 @@ _NAV = """  <div class="pagenav">
 # The tabbed log for one page. Every tab states the whole history's count and
 # how many of those are here, so a reader is never left wondering whether a
 # figure describes this page or the lot.
-_LOG = """  <h2>Session log</h2>
+# Every month in the history, as a link. It is rendered on the index alone and
+# the pages link back to it by anchor, so reaching any month is two clicks from
+# anywhere rather than a walk through every page in between. Keeping it off the
+# pages is deliberate: the list gains an entry each new month, so carrying it on
+# all of them would rewrite the whole bundle monthly, which is the churn the
+# paging exists to avoid. The index is rewritten on every run regardless.
+_MONTHS = """  {% if months %}
+  <div class="monthlist">
+    <span class="monthlabel">Jump to</span>
+    {% for month in months %}
+    {% if month.current %}<span class="current">{{ month.title }}
+      <span class="n">{{ month.count }}</span></span>
+    {% else %}<a href="{{ month.href }}">{{ month.title }}
+      <span class="n">{{ month.count }}</span></a>{% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
+"""
+
+_LOG = """  <h2 id="log">Session log</h2>
   <p class="pagetitle">{{ page.title }}</p>
 """
 _LOG += _NAV
+_LOG += _MONTHS
 _LOG += """  <input type="radio" name="logtab" id="logtab-all"
     class="logtabs-radio" checked>
   {% for cat in page.categories %}

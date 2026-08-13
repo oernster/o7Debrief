@@ -125,6 +125,22 @@ footer { color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem;
 .pagetitle { color: var(--accent-soft); font-size: 0.9rem;
   text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 0.5rem; }
 .emptytab { color: var(--muted); font-style: italic; margin: 0; }
+/* Every month in the history, on the index. It reads as a row of small chips
+   like the tab row above it, so the two scan as one navigation block. */
+.monthlist { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: baseline;
+  margin: 0 0 0.8rem; }
+.monthlist .monthlabel { color: var(--muted); font-size: 0.78rem;
+  text-transform: uppercase; letter-spacing: 0.04em; margin-right: 0.2rem; }
+.monthlist a, .monthlist .current { padding: 0.25rem 0.6rem;
+  border: 1px solid var(--edge); border-radius: 4px; font-size: 0.78rem;
+  text-decoration: none; letter-spacing: 0.03em; }
+.monthlist a { color: var(--muted); }
+.monthlist a:hover { color: var(--text); border-color: var(--accent-soft); }
+.monthlist a .n, .monthlist .current .n { color: var(--muted);
+  padding-left: 0.35rem; }
+.monthlist .current { background: var(--accent); color: var(--bg);
+  border-color: var(--accent); }
+.monthlist .current .n { color: var(--bg); }
 /* The whole history's counts live here rather than in each page's markup.
    A tab must state the global figure (two here out of thirteen altogether)
    but a figure that grows every session would change the text of all forty

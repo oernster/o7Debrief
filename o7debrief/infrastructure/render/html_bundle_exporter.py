@@ -53,6 +53,10 @@ BUNDLE_DIRECTORY_NAME = "debrief_history"
 
 # The fixed file names inside a bundle.
 _INDEX_FILE = "index.html"
+# The log section's anchor. A page's Index link carries it so the reader lands
+# on the month list rather than at the top of the whole report, which on the
+# index sits a long way above the log.
+_LOG_ANCHOR = "#log"
 _STYLE_FILE = "style.css"
 _PAGES_DIR = "pages"
 
@@ -75,9 +79,27 @@ def _href(from_index: bool, target: int, pages: tuple[LogPage, ...]) -> str:
     reader currently is.
     """
     if target == _NEWEST:
-        return _INDEX_FILE if from_index else f"../{_INDEX_FILE}"
+        return _INDEX_FILE if from_index else f"../{_INDEX_FILE}{_LOG_ANCHOR}"
     path = _page_path(pages[target])
     return path if from_index else path.split("/", maxsplit=1)[1]
+
+
+def _months(pages: tuple[LogPage, ...]) -> list[dict]:
+    """Return every page as a jump target, newest first, for the index.
+
+    A reader wanting a month five pages back should not have to walk through
+    the four in between and the page files carry no such list of their own, so
+    this is what their Index link goes to.
+    """
+    return [
+        {
+            "href": _INDEX_FILE if position == _NEWEST else _page_path(page),
+            "title": page.title,
+            "count": len(page.entries),
+            "current": position == _NEWEST,
+        }
+        for position, page in enumerate(pages)
+    ]
 
 
 def _style_context(context: dict, pages: tuple[LogPage, ...]) -> dict:
@@ -132,9 +154,16 @@ class HtmlBundleExporter:
                 ),
             )
         ]
+        months = _months(pages)
         for position, page in enumerate(pages):
             template = self._index if position == _NEWEST else self._page
-            body = {**context, "page": page.as_dict(), "nav": _nav(position, pages)}
+            body = {
+                **context,
+                "page": page.as_dict(),
+                "nav": _nav(position, pages),
+                # The list is the index's alone; a page links back to it.
+                "months": months if position == _NEWEST else [],
+            }
             files.append(
                 BundleFile(
                     relative_path=(
@@ -150,7 +179,12 @@ class HtmlBundleExporter:
                 BundleFile(
                     relative_path=_INDEX_FILE,
                     content=self._index.render(
-                        **{**context, "page": _EMPTY_PAGE, "nav": _EMPTY_NAV}
+                        **{
+                            **context,
+                            "page": _EMPTY_PAGE,
+                            "nav": _EMPTY_NAV,
+                            "months": [],
+                        }
                     ).encode(_ENCODING),
                 )
             )

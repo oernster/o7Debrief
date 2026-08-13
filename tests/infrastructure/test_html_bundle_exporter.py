@@ -84,11 +84,12 @@ def test_every_navigation_link_points_at_a_file_in_the_bundle() -> None:
             continue
         here = path.rsplit("/", maxsplit=1)[0] if "/" in path else ""
         for href in re.findall(r'<a href="([^"]+)"', html):
-            resolved = href
-            if href.startswith("../"):
-                resolved = href[len("../") :]
+            # A link may carry the log anchor; the fragment is not a file.
+            resolved = href.split("#", maxsplit=1)[0]
+            if resolved.startswith("../"):
+                resolved = resolved[len("../") :]
             elif here:
-                resolved = f"{here}/{href}"
+                resolved = f"{here}/{resolved}"
             assert resolved in present, f"{path} links missing {href}"
 
 
@@ -100,7 +101,7 @@ def test_the_index_has_no_newer_link_and_the_oldest_has_no_older_one() -> None:
     assert '<span class="disabled">&larr; Newer</span>' in files["index.html"]
     oldest = files[f"pages/{pages[-1].key}.html"]
     assert '<span class="disabled">Older &rarr;</span>' in oldest
-    assert '<a href="../index.html">Index</a>' in oldest
+    assert '<a href="../index.html#log">Index</a>' in oldest
 
 
 def test_a_single_page_history_needs_only_an_index() -> None:
@@ -172,3 +173,37 @@ def test_the_bundle_carries_no_script_of_any_kind() -> None:
     for item in bundle.files:
         assert b"<script" not in item.content
         assert b"javascript:" not in item.content
+
+
+def test_the_index_lists_every_month_as_a_jump_target() -> None:
+    """Stepping through eight pages to reach an old month is not navigation."""
+    bundle, pages = _bundle(spread(_MANY))
+    files = _by_path(bundle)
+    index = files["index.html"]
+
+    assert '<span class="monthlabel">Jump to</span>' in index
+    for page in pages[1:]:
+        assert f'<a href="pages/{page.key}.html">' in index
+        assert page.title in index
+    # The month being read is marked rather than linked to itself.
+    assert f'<span class="current">{pages[0].title}' in index
+
+
+def test_a_page_carries_no_month_list_of_its_own() -> None:
+    """The list gains an entry every month, so carrying it on every page would
+    rewrite the whole bundle monthly. The pages link back to it instead."""
+    bundle, _pages = _bundle(spread(_MANY))
+    files = _by_path(bundle)
+
+    for path, html in files.items():
+        if path.startswith("pages/"):
+            assert "monthlist" not in html
+            assert '<a href="../index.html#log">Index</a>' in html
+
+
+def test_the_index_link_lands_on_the_month_list_not_the_top_of_the_report() -> None:
+    """The log sits below the whole report, so an unanchored link misses it."""
+    bundle, _pages = _bundle(spread(_MANY))
+    files = _by_path(bundle)
+
+    assert '<h2 id="log">Session log</h2>' in files["index.html"]
