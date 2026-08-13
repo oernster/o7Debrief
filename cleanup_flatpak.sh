@@ -6,19 +6,26 @@
 # left untouched, so the three delivery paths stay independent and cleaning one
 # never costs another a rebuild.
 #
+# build_flatpak.sh installs the app as its normal course, so a cleanup that left
+# it installed would not be a cleanup: it undid the artefacts and kept the one
+# thing that is actually on the machine.  Uninstalling is therefore the default
+# and matches the sibling script's shape (bundle by default, --no-bundle to opt
+# out).  Pass --keep-installed to clear the build artefacts and keep the app.
+#
 # Usage:
-#   ./cleanup_flatpak.sh            - remove build artefacts, keep the app installed
-#   ./cleanup_flatpak.sh --uninstall - also uninstall the locally installed Flatpak
+#   ./cleanup_flatpak.sh                  - remove artefacts AND uninstall the app
+#   ./cleanup_flatpak.sh --keep-installed - remove artefacts only, app stays
 
 set -euo pipefail
 
 APP_ID="uk.co.oernster.o7Debrief"
 BUNDLE="o7debrief.flatpak"
 MANIFEST="${APP_ID}.yml"
+AUTOSTART="${XDG_CONFIG_HOME:-${HOME}/.config}/autostart/${APP_ID}.desktop"
 
-UNINSTALL=0
+UNINSTALL=1
 for arg in "$@"; do
-    if [[ "$arg" == "--uninstall" ]]; then UNINSTALL=1; fi
+    if [[ "$arg" == "--keep-installed" ]]; then UNINSTALL=0; fi
 done
 
 echo "Cleaning Flatpak build artefacts..."
@@ -35,15 +42,24 @@ rm -f "${BUNDLE}"
 echo "  Removed build trees, wheels, manifest, packaging helpers and bundle."
 
 if [[ $UNINSTALL -eq 1 ]]; then
-    echo "Uninstalling ${APP_ID}..."
-    flatpak uninstall --user --noninteractive "${APP_ID}" || true
-    echo "  Uninstalled."
-    echo
-    echo "Note: the start-on-sign-in entry is written OUTSIDE the sandbox, at"
-    echo "  \${XDG_CONFIG_HOME:-\$HOME/.config}/autostart/${APP_ID}.desktop"
-    echo "Uninstalling the app does not remove it, so a stale entry would try to"
-    echo "run an app that is no longer installed.  Remove it with:"
-    echo "  rm -f \"\${XDG_CONFIG_HOME:-\$HOME/.config}/autostart/${APP_ID}.desktop\""
+    if flatpak info --user "${APP_ID}" &>/dev/null; then
+        echo "Uninstalling ${APP_ID}..."
+        flatpak uninstall --user --noninteractive "${APP_ID}"
+        echo "  Uninstalled."
+    else
+        echo "  ${APP_ID} is not installed for this user; nothing to uninstall."
+    fi
+
+    # The start-on-sign-in entry is written OUTSIDE the sandbox, so uninstalling
+    # the app does not take it with it.  Left behind it points at an app that is
+    # no longer there, and the session tries to launch it on every sign-in, so
+    # it is removed here rather than reported as the user's problem.
+    if [[ -f "${AUTOSTART}" ]]; then
+        rm -f "${AUTOSTART}"
+        echo "  Removed the stale start-on-sign-in entry: ${AUTOSTART}"
+    fi
+else
+    echo "  App left installed (--keep-installed)."
 fi
 
 echo "Done."
