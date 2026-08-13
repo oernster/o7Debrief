@@ -68,6 +68,7 @@ from o7debrief.infrastructure import (
     JsonPreferencesStore,
     JsonRankSnapshotStore,
     MarkdownDebriefExporter,
+    NameHumaniser,
     SystemClock,
     TomlConfigProvider,
     WindowsAutostart,
@@ -427,7 +428,10 @@ def _build_one_shot(
     journal_source = FileJournalSource(str(journal_dir))
     recorder = SessionRecorder(journal_source)
     builder = DebriefBuilder(spec)
-    presenter = DebriefPresenter(spec, number_format, JinjaTextTemplateRenderer())
+    humaniser = NameHumaniser(config_provider.humanise_vocabulary())
+    presenter = DebriefPresenter(
+        spec, number_format, JinjaTextTemplateRenderer(humaniser)
+    )
 
     exporters = (HtmlDebriefExporter(), MarkdownDebriefExporter())
     sink = FilesystemSink(str(export_dir))

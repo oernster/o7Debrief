@@ -265,7 +265,7 @@ event = "MaterialTrade"
 domain = "trade"
 mode = "ship"
 kind = "material_trade"
-text = "Traded {{ Paid.Quantity }} {{ Paid.Material_Localised | default(Paid.Material, true) }} for {{ Received.Quantity }} {{ Received.Material_Localised | default(Received.Material, true) }} at the {{ TraderType }} trader."
+text = "Traded {{ Paid.Quantity }} {{ Paid.Material_Localised | default(Paid.Material, true) | material }} for {{ Received.Quantity }} {{ Received.Material_Localised | default(Received.Material, true) | material }} at the {{ TraderType }} trader."
 
 [[moment]]
 event = "MiningRefined"
@@ -301,7 +301,7 @@ event = "EngineerCraft"
 domain = "engineering"
 mode = "ship"
 kind = "engineer_craft"
-text = "Applied {{ BlueprintName }} grade {{ Level }} to {{ Module }} at {{ Engineer }}."
+text = "Applied {{ BlueprintName | blueprint }} grade {{ Level }} to a {{ Module | module }} at {{ Engineer }}."
 
 [[moment]]
 event = "CarrierJump"
@@ -464,6 +464,106 @@ domain = "missions"
 mode = "ship"
 kind = "promotion"
 text = "Earned a rank promotion."
+
+# ---------------------------------------------------------------------------
+# Humanise: the vocabulary that turns the journal's internal tokens into the
+# English a report shows. The journal names a module "int_sensors_size5_class2"
+# and never states a readable form for one (not one of 182 fitted modules in a
+# real journal carried an Item_Localised), so the English is decoded from the
+# token itself.
+#
+# The decode is structural and this table is the whole of its vocabulary. A part
+# with no entry here is title-cased and kept, so an unrecognised module still
+# reads as itself and a gap shows up in the report rather than silently
+# vanishing. Correcting a word (or a game-side rename) is an edit here alone.
+# ---------------------------------------------------------------------------
+
+[humanise]
+# Leading markers the journal uses for an internal or hardpoint module. They say
+# where a module is fitted, which the report does not report, so they are
+# dropped. Only a LEADING part is ever dropped.
+drop_prefixes = ["int", "hpt"]
+# Blueprint categories that name how Frontier filed the blueprint rather than
+# anything a Commander applied it to. "Light Weight Misc" says less than
+# "Light Weight" does, so the category is left off.
+drop_categories = ["Misc"]
+# Rating letters by module class, from class 1 upwards: the journal states
+# "size5_class5" where the game and every Commander say "5A".
+ratings = ["E", "D", "C", "B", "A"]
+# The numbered parts the decode recognises, named here rather than in code.
+size_token = "size"
+class_token = "class"
+grade_token = "grade"
+# How a decoded name is finally worded.
+rated_format = "{size}{rating} {name}"
+graded_format = "{name} (grade {grade})"
+# Used when the class falls outside the ratings above. It states the size and
+# class rather than inventing a letter. It keeps the size too, rather than
+# dropping it to hide the gap.
+unrated_format = "{name} (size {size}, class {class_number})"
+
+# Weapon mountings. These move in front of the module they describe, because
+# that is the order English wants: "Medium Gimballed Multi-Cannon".
+[humanise.mounts]
+fixed = "Fixed"
+gimbal = "Gimballed"
+turret = "Turreted"
+
+# Physical hardpoint sizes, which likewise move in front.
+[humanise.sizes]
+tiny = "Tiny"
+small = "Small"
+medium = "Medium"
+large = "Large"
+huge = "Huge"
+
+# Token parts whose English differs from a simple title-casing. Anything absent
+# is title-cased instead, so this list only needs to grow when a plain
+# title-case would read wrongly.
+#
+# One known limit, deliberately left alone: a part can mean different things on
+# different modules. "fast" is Bi-Weave on a shield generator and Enhanced
+# Performance on a thruster; this table has one entry per part, so mapping
+# it would be right in one report and wrong in the other. It is therefore left
+# out and reads as "Fast" on both, which is true of neither in full but false
+# about neither either. Adding module-aware entries is the fix if it matters.
+[humanise.words]
+beamlaser = "Beam Laser"
+pulselaser = "Pulse Laser"
+burstlaser = "Burst Laser"
+pulselaserburst = "Burst Laser"
+multicannon = "Multi-Cannon"
+slugshot = "Fragment Cannon"
+railgun = "Rail Gun"
+plasmaaccelerator = "Plasma Accelerator"
+chafflauncher = "Chaff Launcher"
+heatsinklauncher = "Heat Sink Launcher"
+crimescanner = "Kill Warrant Scanner"
+cloudscanner = "Frame Shift Wake Scanner"
+dronecontrol = "Limpet Controller"
+collection = "Collector"
+powerplant = "Power Plant"
+powerdistributor = "Power Distributor"
+hyperdrive = "Frame Shift Drive"
+engine = "Thrusters"
+shieldgenerator = "Shield Generator"
+shieldbooster = "Shield Booster"
+shieldcellbank = "Shield Cell Bank"
+hullreinforcement = "Hull Reinforcement"
+detailedsurfacescanner = "Detailed Surface Scanner"
+fuelscoop = "Fuel Scoop"
+lifesupport = "Life Support"
+cargorack = "Cargo Rack"
+fsdinterdictor = "FSD Interdictor"
+guardianfsdbooster = "Guardian FSD Booster"
+overcharge = "Overcharged"
+overchargebooster = "Overcharge Booster"
+gravityoptimised = "Gravity Optimised"
+agileboost = "Agile Boost"
+mkiiagileboost = "Mk II Agile Boost"
+reactive = "Reactive Surface"
+mkii = "Mk II"
+nx = "NX"
 
 # ---------------------------------------------------------------------------
 # Thresholds: named numeric values the domain compares against. Keeping them

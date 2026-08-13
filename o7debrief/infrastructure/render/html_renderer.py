@@ -68,9 +68,15 @@ h2 { color: var(--accent-soft); font-size: 1.05rem; text-transform: uppercase;
   border-radius: 6px; padding: 1rem 1.2rem; }
 .meta { display: grid;
   grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 0.6rem 1.5rem; }
-.meta span { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; }
+.meta span { color: var(--muted); font-size: 0.78rem; text-transform: uppercase;
+  display: block; }
+/* The route is one cell, not a From cell and a To cell. As two they wrapped
+   apart, leaving the origin at the end of one row and the destination at the
+   start of the next, which read as two unrelated facts. */
+.meta .route .arrow { display: inline; color: var(--muted); padding: 0 0.4rem;
+  font-size: 1rem; text-transform: none; }
 .grid { display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 1rem; }
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 1rem; }
 .metric { background: var(--panel); border: 1px solid var(--edge);
   border-radius: 6px; padding: 0.9rem 1rem; }
 .metric .label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; }
@@ -80,9 +86,16 @@ h2 { color: var(--accent-soft); font-size: 1.05rem; text-transform: uppercase;
 .neutral { color: var(--neutral); }
 .card .title { color: var(--accent-soft); font-size: 1rem; margin-bottom: 0.5rem; }
 .stats { list-style: none; margin: 0; padding: 0; }
-.stats li { display: flex; justify-content: space-between;
-  border-bottom: 1px dotted var(--edge); padding: 0.2rem 0; }
-.stats li span:first-child { color: var(--muted); }
+/* A stat row is a label and a figure on one line. The gap stops them touching
+   when the label is long ("Modifications261"); the figure never wraps, because a
+   value broken across two lines ("766.5" then "ly") stops reading as one
+   quantity and no longer lines up with the figures above and below it. The
+   label may wrap instead, since prose survives wrapping and a number does not. */
+.stats li { display: flex; justify-content: space-between; align-items: baseline;
+  gap: 0.9rem; border-bottom: 1px dotted var(--edge); padding: 0.25rem 0; }
+.stats li span:first-child { color: var(--muted); min-width: 0; }
+.stats li span:last-child { white-space: nowrap; text-align: right;
+  flex: 0 0 auto; font-variant-numeric: tabular-nums; }
 .note { color: var(--muted); font-style: italic; margin-top: 0.5rem; }
 .timeline { list-style: none; margin: 0; padding: 0; }
 .timeline li { display: grid; grid-template-columns: 5.5rem 2rem 1fr; gap: 0.5rem;
@@ -127,12 +140,12 @@ footer { color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem;
   </p>
 
   <div class="panel meta">
-    <div><span>Session start</span><br>{{ header.session_start }}</div>
-    <div><span>Session end</span><br>{{ header.session_end }}</div>
-    <div><span>Duration</span><br>{{ header.duration }}</div>
-    <div><span>From</span><br>{{ header.start_system }}</div>
-    <div><span>To</span><br>{{ header.end_system }}</div>
-    <div><span>Systems visited</span><br>{{ header.systems_visited }}</div>
+    <div><span>Session start</span>{{ header.session_start }}</div>
+    <div><span>Session end</span>{{ header.session_end }}</div>
+    <div><span>Duration</span>{{ header.duration }}</div>
+    <div class="route"><span>Route</span>{{ header.start_system
+      }}<span class="arrow">&rarr;</span>{{ header.end_system }}</div>
+    <div><span>Systems visited</span>{{ header.systems_visited }}</div>
   </div>
 
   <h2>Headline</h2>

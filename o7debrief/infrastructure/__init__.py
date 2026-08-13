@@ -32,6 +32,7 @@ from o7debrief.infrastructure.render.html_renderer import HtmlDebriefExporter
 from o7debrief.infrastructure.render.jinja_text_renderer import (
     JinjaTextTemplateRenderer,
 )
+from o7debrief.infrastructure.render.journal_names import NameHumaniser
 from o7debrief.infrastructure.render.markdown_renderer import MarkdownDebriefExporter
 from o7debrief.infrastructure.sink.filesystem_sink import FilesystemSink
 from o7debrief.infrastructure.update.github_release_source import (
@@ -48,6 +49,7 @@ __all__ = [
     "JsonPreferencesStore",
     "JsonRankSnapshotStore",
     "MarkdownDebriefExporter",
+    "NameHumaniser",
     "SystemClock",
     "TomlConfigProvider",
     "WindowsAutostart",

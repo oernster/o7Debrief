@@ -31,6 +31,7 @@ from o7debrief.domain.value_objects.enums import (
     ActivityMode,
     MomentKind,
 )
+from o7debrief.infrastructure.render.journal_names import HumaniseVocabulary
 
 __all__ = ["TomlConfigProvider"]
 
@@ -67,6 +68,23 @@ _TEXT = "text"
 _SCHEMA_VERSION = "schema_version"
 _APP_NAME = "app_name"
 _LICENSE = "license"
+
+# The [humanise] table and its keys: the vocabulary that decodes the journal's
+# internal tokens into English. Absent keys fall back to the vocabulary's own
+# defaults, so a taxonomy without the table still loads and simply title-cases.
+_HUMANISE = "humanise"
+_DROP_PREFIXES = "drop_prefixes"
+_DROP_CATEGORIES = "drop_categories"
+_RATINGS = "ratings"
+_WORDS = "words"
+_MOUNTS = "mounts"
+_SIZES = "sizes"
+_SIZE_TOKEN = "size_token"
+_CLASS_TOKEN = "class_token"
+_GRADE_TOKEN = "grade_token"
+_RATED_FORMAT = "rated_format"
+_GRADED_FORMAT = "graded_format"
+_UNRATED_FORMAT = "unrated_format"
 
 # Threshold keys, matching the ThresholdSet fields.
 _LONG_JUMP_LY = "long_jump_ly"
@@ -146,6 +164,31 @@ class TomlConfigProvider:
         data = self._read()
         meta = data.get(_META, {})
         return str(meta.get(_SCHEMA_VERSION, _SCHEMA_VERSION_FALLBACK))
+
+    def humanise_vocabulary(self) -> HumaniseVocabulary:
+        """Build the token-to-English vocabulary from the ``[humanise]`` table.
+
+        A taxonomy with no such table yields the vocabulary's own defaults,
+        which title-case every token part and decorate nothing. That is a
+        readable result rather than a crash; it also keeps this adapter working
+        against an older taxonomy file.
+        """
+        table = self._read().get(_HUMANISE, {})
+        defaults = HumaniseVocabulary()
+        return HumaniseVocabulary(
+            drop_prefixes=tuple(table.get(_DROP_PREFIXES, ())),
+            drop_categories=tuple(table.get(_DROP_CATEGORIES, ())),
+            ratings=tuple(table.get(_RATINGS, ())),
+            words=dict(table.get(_WORDS, {})),
+            mounts=dict(table.get(_MOUNTS, {})),
+            sizes=dict(table.get(_SIZES, {})),
+            size_token=table.get(_SIZE_TOKEN, defaults.size_token),
+            class_token=table.get(_CLASS_TOKEN, defaults.class_token),
+            grade_token=table.get(_GRADE_TOKEN, defaults.grade_token),
+            rated_format=table.get(_RATED_FORMAT, defaults.rated_format),
+            graded_format=table.get(_GRADED_FORMAT, defaults.graded_format),
+            unrated_format=table.get(_UNRATED_FORMAT, defaults.unrated_format),
+        )
 
     def load(self) -> RollupSpec:
         """Build the full RollupSpec from the parsed taxonomy."""

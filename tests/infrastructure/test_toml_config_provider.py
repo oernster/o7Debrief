@@ -106,9 +106,11 @@ def test_engineer_craft_wording_names_the_work_and_the_engineer() -> None:
     """The engineering row states blueprint, grade, module and engineer."""
     craft = _provider().load().rule_for("EngineerCraft")
     assert craft is not None
+    # The blueprint and module ride the humanising filters, because the journal
+    # states each as an internal token and never as English.
     assert craft.text_template == (
-        "Applied {{ BlueprintName }} grade {{ Level }} to {{ Module }} "
-        "at {{ Engineer }}."
+        "Applied {{ BlueprintName | blueprint }} grade {{ Level }} "
+        "to a {{ Module | module }} at {{ Engineer }}."
     )
 
 

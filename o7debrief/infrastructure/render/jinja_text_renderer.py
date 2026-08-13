@@ -28,7 +28,16 @@ from collections.abc import Mapping
 
 from jinja2 import Environment, StrictUndefined, Template, TemplateError
 
+from o7debrief.infrastructure.render.journal_names import NameHumaniser
+
 __all__ = ["JinjaTextTemplateRenderer"]
+
+# Filters a taxonomy template may apply to a journal value. Each turns one of
+# the journal's internal tokens into English; the vocabulary behind them is
+# taxonomy data, so the filter names are the only part of this that is code.
+_MODULE_FILTER = "module"
+_BLUEPRINT_FILTER = "blueprint"
+_MATERIAL_FILTER = "material"
 
 
 class JinjaTextTemplateRenderer:
@@ -39,11 +48,21 @@ class JinjaTextTemplateRenderer:
     compiles a dozen templates rather than one per row. The cache is per
     instance rather than module level, so there is no shared mutable state and
     the renderer stays an ordinary injected collaborator.
+
+    An optional ``humaniser`` registers the filters a template uses to turn the
+    journal's internal tokens into English (``module``, ``blueprint``,
+    ``material``). Without one those filters are undefined, so a template that
+    applies them renders nothing and its row falls back to its label: the row
+    says less rather than printing ``int_sensors_size5_class2`` at a reader.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, humaniser: NameHumaniser | None = None) -> None:
         self._environment = Environment(undefined=StrictUndefined, autoescape=False)
         self._compiled: dict[str, Template | None] = {}
+        if humaniser is not None:
+            self._environment.filters[_MODULE_FILTER] = humaniser.module
+            self._environment.filters[_BLUEPRINT_FILTER] = humaniser.blueprint
+            self._environment.filters[_MATERIAL_FILTER] = humaniser.material
 
     def _template_for(self, template: str) -> Template | None:
         """Return the compiled template; ``None`` if it will not compile.
