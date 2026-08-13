@@ -24,7 +24,9 @@ _LONG_JUMP = 60
 
 
 def _present(debrief):
-    return DebriefPresenter(spec(), number_format()).present(debrief)
+    return DebriefPresenter(spec(), number_format(), app_version="1.2.3").present(
+        debrief
+    )
 
 
 def _populated_view():
@@ -214,7 +216,7 @@ def test_render_draws_no_bar_for_a_standing_with_no_reading() -> None:
 
 def test_render_shows_a_notice_about_an_unread_field() -> None:
     debrief = build.debrief(moments=(), activity=build.full_activity())
-    view = DebriefPresenter(spec(), number_format()).present(
+    view = DebriefPresenter(spec(), number_format(), app_version="1.2.3").present(
         debrief, (("MissionCompleted", "MercCoins"),)
     )
 
@@ -280,3 +282,11 @@ def test_render_names_the_timezone_in_the_footer() -> None:
     html = _dated_html("2026-08-13T09:00:00Z")
 
     assert "All times shown in UTC" in html
+
+
+def test_render_states_the_running_version_in_the_footer() -> None:
+    """The footer names the version that produced the report, never v0."""
+    html = HtmlDebriefExporter().render(_populated_view()).decode("utf-8")
+
+    assert "v1.2.3" in html
+    assert "v0 " not in html

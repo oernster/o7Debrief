@@ -674,7 +674,10 @@ def _build_one_shot(
     builder = DebriefBuilder(spec)
     humaniser = NameHumaniser(config_provider.humanise_vocabulary())
     presenter = DebriefPresenter(
-        spec, number_format, JinjaTextTemplateRenderer(humaniser)
+        spec,
+        number_format,
+        JinjaTextTemplateRenderer(humaniser),
+        app_version=__version__,
     )
 
     exporters = (HtmlDebriefExporter(), MarkdownDebriefExporter())

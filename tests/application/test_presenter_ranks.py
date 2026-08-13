@@ -39,7 +39,9 @@ def _row(
     debrief = build.debrief(
         moments=(), activity=ActivityRollup(modes_used=()), ranks=(delta,)
     )
-    view = DebriefPresenter(spec(), number_format()).present(debrief)
+    view = DebriefPresenter(spec(), number_format(), app_version="1.2.3").present(
+        debrief
+    )
     return view.to_context()["ranks"][0]
 
 
@@ -84,5 +86,7 @@ def test_the_no_reading_wording_is_configurable_through_the_spec() -> None:
         moments=(), activity=ActivityRollup(modes_used=()), ranks=(delta,)
     )
     labels = (("label.rank.no_reading", "Unrecorded"),)
-    view = DebriefPresenter(spec(labels), number_format()).present(debrief)
+    view = DebriefPresenter(spec(labels), number_format(), app_version="1.2.3").present(
+        debrief
+    )
     assert view.to_context()["ranks"][0]["progress_display"] == "Unrecorded"

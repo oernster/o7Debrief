@@ -62,6 +62,11 @@ class DebriefPresenter:
     than a requirement: without one, every row states its label, which is what
     the report did before the templates were read at all. The composition root
     supplies the real one; a caller that only wants figures need not.
+
+    ``app_version`` is required and keyword-only, so no caller can construct a
+    presenter that does not know what version it is reporting. It was once a
+    taxonomy lookup with a "0" default and the key existed in no taxonomy, so
+    the footer of every report read v0.
     """
 
     def __init__(
@@ -69,11 +74,14 @@ class DebriefPresenter:
         spec: RollupSpec,
         number_format: NumberFormat,
         text_renderer: TextTemplateRenderer | None = None,
+        *,
+        app_version: str,
     ) -> None:
         self._spec = spec
         self._formatter = ValueFormatter(number_format)
         self._resolver = LabelResolver(spec)
         self._text_renderer = text_renderer
+        self._app_version = app_version
 
     def _notices(self, missing_fields: tuple[tuple[str, str], ...]) -> tuple[str, ...]:
         """Word each unread field as a notice, in the order they were found."""
@@ -109,6 +117,6 @@ class DebriefPresenter:
             month_titles=build_month_titles(debrief, fmt),
             ranks=build_ranks(debrief, fmt, resolver),
             milestones=build_milestones(debrief.moments, self._spec, resolver),
-            footer=build_footer(debrief, fmt, resolver),
+            footer=build_footer(debrief, fmt, resolver, self._app_version),
             notices=self._notices(missing_fields),
         )

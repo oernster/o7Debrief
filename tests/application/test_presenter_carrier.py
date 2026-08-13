@@ -21,7 +21,7 @@ def _carrier_stats(rollup: CarrierRollup, labels=()) -> dict[str, str]:
         moments=(),
         activity=ActivityRollup(carrier=rollup, modes_used=()),
     )
-    presenter = DebriefPresenter(spec(labels), number_format())
+    presenter = DebriefPresenter(spec(labels), number_format(), app_version="1.2.3")
     context = presenter.present(debrief).to_context()
     section = next(s for s in context["domains"] if s["key"] == "carrier")
     return {stat["label"]: stat["value_display"] for stat in section["stats"]}

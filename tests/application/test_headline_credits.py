@@ -22,7 +22,7 @@ SESSION_PAYOUT = 750
 
 def _credits_headline(debrief, labels: tuple[tuple[str, str], ...] = ()) -> dict:
     """Return the credits item from a presented debrief's headline row."""
-    presenter = DebriefPresenter(spec(labels), number_format())
+    presenter = DebriefPresenter(spec(labels), number_format(), app_version="1.2.3")
     context = presenter.present(debrief).to_context()
     return next(i for i in context["headline"] if i["label"] == "Credits")
 

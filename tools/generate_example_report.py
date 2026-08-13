@@ -17,6 +17,7 @@ from pathlib import Path
 _ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_ROOT))
 
+from o7debrief import __version__  # noqa: E402
 from o7debrief.application.services.config_loading_service import (  # noqa: E402
     ConfigLoadingService,
 )
@@ -289,7 +290,12 @@ def _number_format() -> NumberFormat:
 def main() -> int:
     """Render the sample debrief to docs/example-report.html."""
     spec = ConfigLoadingService(TomlConfigProvider(str(_TAXONOMY))).load_spec()
-    presenter = DebriefPresenter(spec, _number_format(), JinjaTextTemplateRenderer())
+    presenter = DebriefPresenter(
+        spec,
+        _number_format(),
+        JinjaTextTemplateRenderer(),
+        app_version=__version__,
+    )
     view = presenter.present(_debrief())
     html = HtmlDebriefExporter().render(view).decode("utf-8")
     _OUT.write_text(html, encoding="utf-8")

@@ -78,7 +78,9 @@ def spread(
 def view_of(moments: tuple[ConceptualMoment, ...]) -> DebriefView:
     """Present a debrief holding exactly these moments."""
     debrief = build.debrief(moments=moments, activity=build.full_activity())
-    return DebriefPresenter(spec(), number_format()).present(debrief)
+    return DebriefPresenter(spec(), number_format(), app_version="1.2.3").present(
+        debrief
+    )
 
 
 def history_options(**overrides) -> HistoryOptions:

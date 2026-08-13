@@ -45,6 +45,13 @@ INFRASTRUCTURE = "infrastructure"
 # instance of one of these is treated as a forbidden singleton.
 SERVICE_SUFFIXES = ("Service", "Controller", "Repository", "Store")
 
+# The presenter builds the report footer, which states the running version.
+# The version must be injected from the single source of truth rather than
+# written into the call as a literal or resolved from a config file.
+PRESENTER = "DebriefPresenter"
+VERSION_ARGUMENT = "app_version"
+VERSION_SOURCE = "__version__"
+
 
 def _package_root() -> Path:
     """Return the o7debrief package directory relative to this test file."""
@@ -158,6 +165,40 @@ def test_only_main_wires_infrastructure() -> None:
     ), "Infrastructure wiring leaked outside the composition root:\n" + "\n".join(
         violations
     )
+
+
+def test_the_composition_root_injects_the_real_version() -> None:
+    """The presenter is wired with the version read from the VERSION file.
+
+    The report footer states the running version. That version was once
+    resolved from the taxonomy with "0" as the default for a missing key and
+    no taxonomy ever carried the key, so every report stated v0 and no test
+    noticed. The wiring is pinned here rather than left to be noticed again:
+    the composition root must construct the presenter with ``app_version``
+    taken from the package ``__version__``, which reads VERSION.
+    """
+    main_py = Path(__file__).resolve().parents[2] / "main.py"
+    assert main_py.is_file(), f"composition root not found: {main_py}"
+
+    tree = ast.parse(main_py.read_text(encoding="utf-8"), filename=str(main_py))
+    constructions = [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call) and _constructed_name(node) == PRESENTER
+    ]
+    assert constructions, f"{PRESENTER} is never constructed in main.py"
+
+    for call in constructions:
+        supplied = {
+            keyword.value
+            for keyword in call.keywords
+            if keyword.arg == VERSION_ARGUMENT
+        }
+        assert supplied, f"{PRESENTER} is built without {VERSION_ARGUMENT}"
+        assert all(
+            isinstance(value, ast.Name) and value.id == VERSION_SOURCE
+            for value in supplied
+        ), f"{VERSION_ARGUMENT} must be {VERSION_SOURCE}, not a literal"
 
 
 def test_no_module_level_service_singletons() -> None:

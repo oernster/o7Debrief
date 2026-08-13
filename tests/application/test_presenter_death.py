@@ -30,7 +30,7 @@ from tests.application.fakes import at, number_format, spec
 
 
 def _presenter(labels: tuple[tuple[str, str], ...] = ()) -> DebriefPresenter:
-    return DebriefPresenter(spec(labels), number_format())
+    return DebriefPresenter(spec(labels), number_format(), app_version="1.2.3")
 
 
 def _death(detail: tuple) -> ConceptualMoment:

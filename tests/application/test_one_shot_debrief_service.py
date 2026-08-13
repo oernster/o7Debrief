@@ -85,7 +85,7 @@ def _build_service(
     return OneShotDebriefService(
         journal_source=source,
         debrief_builder=DebriefBuilder(the_spec),
-        presenter=DebriefPresenter(the_spec, number_format()),
+        presenter=DebriefPresenter(the_spec, number_format(), app_version="1.2.3"),
         export_service=DebriefExportService(
             exporters=exporters,
             sink=_RecordingSink(),

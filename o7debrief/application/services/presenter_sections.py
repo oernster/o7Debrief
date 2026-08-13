@@ -59,7 +59,9 @@ _JUMPS_HEADLINE = ("jumps", "Jumps")
 _BODIES_HEADLINE = ("bodies_scanned", "Bodies scanned")
 _KILLS_HEADLINE = ("kills", "Kills")
 _APP_NAME = ("footer.app_name", "o7 Debrief")
-_APP_VERSION = ("footer.app_version", "0")
+# There is deliberately no taxonomy key for the version. The VERSION file is
+# the single source of truth and the running version is injected from the
+# composition root, so a config file cannot state a version the build is not.
 _LICENSE = ("footer.license", "")
 _GENERATED = ("footer.generated", "")
 # Label shown beside a ladder whose tier did not change this period.
@@ -303,16 +305,22 @@ def build_ranks(debrief, fmt, resolver) -> tuple[RankChange, ...]:
     return tuple(changes)
 
 
-def build_footer(debrief, fmt, resolver) -> FooterView:
+def build_footer(debrief, fmt, resolver, app_version: str) -> FooterView:
     """Build the footer sub-view: app identity and the journal span.
 
     ``generated`` is resolved from the spec rather than a wall clock, since
     the presenter must not read the clock; the journal span comes from the
     session window's event-times.
+
+    ``app_version`` is passed in rather than resolved from the spec. It was a
+    spec lookup once, defaulting to "0" when the key was absent; no taxonomy
+    ever carried that key, so every report ever written stated v0. A version
+    is a fact about the running build rather than a display string, so it now
+    arrives from the composition root that reads VERSION.
     """
     return FooterView(
         app_name=resolver.generic(*_APP_NAME),
-        app_version=resolver.generic(*_APP_VERSION),
+        app_version=app_version,
         license=resolver.generic(*_LICENSE),
         generated=resolver.generic(*_GENERATED),
         journal_first=fmt.datetime(debrief.window.start.iso_utc),

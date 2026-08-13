@@ -18,7 +18,9 @@ _BIG_PAYOUT_MOMENT = 2000000
 
 
 def _present(debrief):
-    return DebriefPresenter(spec(), number_format()).present(debrief)
+    return DebriefPresenter(spec(), number_format(), app_version="1.2.3").present(
+        debrief
+    )
 
 
 def _populated_view():
@@ -167,7 +169,7 @@ def test_render_omits_optional_sections_when_empty() -> None:
 def test_render_shows_a_notice_about_an_unread_field() -> None:
     # A figure the report could not read is not a figure of zero.
     debrief = build.debrief(moments=(), activity=ActivityRollup(modes_used=()))
-    view = DebriefPresenter(spec(), number_format()).present(
+    view = DebriefPresenter(spec(), number_format(), app_version="1.2.3").present(
         debrief, (("MissionCompleted", "MercCoins"),)
     )
 
@@ -181,3 +183,11 @@ def test_render_omits_the_notices_section_for_a_clean_reading() -> None:
     md = MarkdownDebriefExporter().render(_populated_view()).decode("utf-8")
 
     assert "## Notices" not in md
+
+
+def test_render_states_the_running_version_in_the_footer() -> None:
+    """The footer names the version that produced the report, never v0."""
+    md = MarkdownDebriefExporter().render(_populated_view()).decode("utf-8")
+
+    assert "v1.2.3" in md
+    assert "v0 " not in md

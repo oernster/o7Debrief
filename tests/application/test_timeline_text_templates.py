@@ -71,7 +71,7 @@ class BlankRenderer:
 
 def _row_text(moment, renderer=None) -> str:
     debrief = build.debrief(moments=(moment,), activity=ActivityRollup(modes_used=()))
-    presenter = DebriefPresenter(spec(), number_format(), renderer)
+    presenter = DebriefPresenter(spec(), number_format(), renderer, app_version="1.2.3")
     return presenter.present(debrief).to_context()["timeline"][0]["text"]
 
 

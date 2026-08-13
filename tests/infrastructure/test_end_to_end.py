@@ -171,7 +171,7 @@ def _one_shot(journal_dir, export_dir, state_dir) -> OneShotDebriefService:
     return OneShotDebriefService(
         journal_source=FileJournalSource(journal_dir),
         debrief_builder=DebriefBuilder(spec),
-        presenter=DebriefPresenter(spec, _number_format(taxonomy)),
+        presenter=DebriefPresenter(spec, _number_format(taxonomy), app_version="1.2.3"),
         export_service=export_service,
         preferences_store=JsonPreferencesStore(state_dir),
         rank_store=JsonRankSnapshotStore(state_dir),

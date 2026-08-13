@@ -113,9 +113,9 @@ def test_an_event_no_rule_matches_is_not_reported() -> None:
 
 def test_the_notice_reaches_the_report_naming_the_event_and_the_field() -> None:
     debrief = build.debrief(moments=(), activity=ActivityRollup(modes_used=()))
-    view = DebriefPresenter(_spec(_rule()), number_format()).present(
-        debrief, ((_MISSION, _COINS_FIELD),)
-    )
+    view = DebriefPresenter(
+        _spec(_rule()), number_format(), app_version="1.2.3"
+    ).present(debrief, ((_MISSION, _COINS_FIELD),))
     expected = (
         "MissionCompleted carried no MercCoins, "
         "so any amount it should hold reads as zero."
@@ -126,15 +126,17 @@ def test_the_notice_reaches_the_report_naming_the_event_and_the_field() -> None:
 def test_the_notice_wording_is_configurable_through_the_spec() -> None:
     labels = (("label.diagnostic.missing_field", "{field} absent from {event}"),)
     debrief = build.debrief(moments=(), activity=ActivityRollup(modes_used=()))
-    view = DebriefPresenter(_spec(_rule(), labels=labels), number_format()).present(
-        debrief, ((_MISSION, _COINS_FIELD),)
-    )
+    view = DebriefPresenter(
+        _spec(_rule(), labels=labels), number_format(), app_version="1.2.3"
+    ).present(debrief, ((_MISSION, _COINS_FIELD),))
     assert view.to_context()["notices"] == ["MercCoins absent from MissionCompleted"]
 
 
 def test_a_clean_reading_produces_no_notices() -> None:
     debrief = build.debrief(moments=(), activity=ActivityRollup(modes_used=()))
-    view = DebriefPresenter(_spec(_rule()), number_format()).present(debrief)
+    view = DebriefPresenter(
+        _spec(_rule()), number_format(), app_version="1.2.3"
+    ).present(debrief)
     assert view.to_context()["notices"] == []
 
 

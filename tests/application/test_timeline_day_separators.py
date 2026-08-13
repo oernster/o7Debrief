@@ -43,7 +43,7 @@ _FALL_BACK_DAY = "Sun 25 Oct 2026"
 
 def _presenter() -> DebriefPresenter:
     """Return a presenter wired to the taxonomy labels and number format."""
-    return DebriefPresenter(spec(), number_format())
+    return DebriefPresenter(spec(), number_format(), app_version="1.2.3")
 
 
 def _moment(
