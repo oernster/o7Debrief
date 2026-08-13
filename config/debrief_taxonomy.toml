@@ -248,6 +248,25 @@ kind = "market_sell"
 credits_field = "TotalSale"
 text = "Sold {{ Count }} t of {{ Type }} for {{ TotalSale }} Cr."
 
+# An exchange at a raw, manufactured or encoded material trader. This is trading
+# without credits: the commander pays in one material and is paid in another, so
+# the rule names neither a credits_field nor a magnitude_field. There is no price
+# in the payload to read and inventing one would be worse than counting the
+# exchange, which is what the Trade section does with it.
+#
+# Both sides sit in nested objects (Paid.Material, Received.Quantity), which is
+# why the wording reaches into them. A raw material states only its internal
+# name ("ruthenium"); a manufactured or encoded one also states a readable
+# Material_Localised ("Military Supercapacitors"). The default filter prefers
+# the readable form and falls back to the internal name, so neither category
+# renders a blank and neither is guessed at.
+[[moment]]
+event = "MaterialTrade"
+domain = "trade"
+mode = "ship"
+kind = "material_trade"
+text = "Traded {{ Paid.Quantity }} {{ Paid.Material_Localised | default(Paid.Material, true) }} for {{ Received.Quantity }} {{ Received.Material_Localised | default(Received.Material, true) }} at the {{ TraderType }} trader."
+
 [[moment]]
 event = "MiningRefined"
 domain = "mining"
@@ -269,12 +288,20 @@ credits_field = "Reward"
 coins_field = "MercCoins"
 text = "Completed {{ LocalisedName }} for {{ Faction }} ({{ Reward }} Cr, {{ MercCoins }} Merc Coins)."
 
+# A single engineering roll. The wording names the engineer as well as the
+# blueprint, grade and module, because a session's rolls are otherwise
+# indistinguishable from one another: 261 of them in one session all read
+# "Engineer Craft" and told the reader nothing about what had been modified or
+# by whom. Module and BlueprintName are the journal's internal tokens
+# ("hpt_multicannon_gimbal_medium", "Weapon_Overcharged") and are shown as
+# stated, since the journal offers no readable form for either and inventing
+# one would put a word in the report the journal never used.
 [[moment]]
 event = "EngineerCraft"
 domain = "engineering"
 mode = "ship"
 kind = "engineer_craft"
-text = "Applied {{ BlueprintName }} grade {{ Level }} to {{ Module }}."
+text = "Applied {{ BlueprintName }} grade {{ Level }} to {{ Module }} at {{ Engineer }}."
 
 [[moment]]
 event = "CarrierJump"
@@ -336,7 +363,7 @@ text = "Lost the Nomad."
 # Ship-launched fighters (the F63 Condor, GU-97, Taipan and the Guardian hybrids
 # Trident/Javelin/Lance, each with loadout variants such as Gelid or Rogue).
 # They share LaunchFighter with the Nomad, so these fighter rules MUST follow the
-# Nomad slv_deploy rule above: the first rule whose filter matches wins, and the
+# Nomad slv_deploy rule above: the first rule whose filter matches wins; the
 # fighter deploy has no filter (it catches every non-Nomad LaunchFighter). The
 # fighter type is named from the LaunchFighter loadout; DockFighter and
 # FighterDestroyed carry only the vehicle ID, so their type is recovered by

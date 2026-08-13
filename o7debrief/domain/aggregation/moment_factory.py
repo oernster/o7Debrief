@@ -63,6 +63,11 @@ _VEHICLE_ID_FIELD = "ID"
 # Synthetic detail key carrying the resolved vehicle type to the presenter.
 VESSEL_TYPE_MARK = "VesselType"
 
+# Carried onto a moment whose rule declares no row wording. The presenter then
+# shows the moment's label, which is what every row did before the taxonomy's
+# templates were read at all.
+_NO_TEMPLATE = ""
+
 
 def _magnitude_from(event: RawEvent, rule: MomentRule) -> float:
     """Read the numeric magnitude named by the rule, else the default.
@@ -102,9 +107,9 @@ def _credits_from(event: RawEvent, rule: MomentRule) -> Credits:
 def _coins_from(event: RawEvent, rule: MomentRule) -> Credits:
     """Read the scalar Merc Coins delta named by the rule, else zero.
 
-    Coins are a separate currency from credits; a rule that names no coin field,
-    or an event that omits it or carries a non-integer there, yields zero rather
-    than a guessed value.
+    Coins are a separate currency from credits. A rule that names no coin field
+    (or an event that omits it or carries a non-integer there) yields zero
+    rather than a guessed value.
     """
     if rule.coins_field is None:
         return Credits.zero()
@@ -264,6 +269,7 @@ def _moment_from(
         credits_delta=_credits_from(event, rule),
         coins_delta=_coins_from(event, rule),
         detail=event.fields + extra_detail,
+        text_template=rule.text_template or _NO_TEMPLATE,
     )
 
 

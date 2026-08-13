@@ -10,8 +10,10 @@ resolve from the taxonomy with no display string hardcoded in code.
 
 The TOML uses lower-case keys (for example ``on_foot``) while the domain enums
 use upper-case member names (``ON_FOOT``); the mappings below bridge the two.
-Moment labels are derived from each moment's ``kind`` (titleised) so the timeline
-shows a readable, brace-free label rather than the raw Jinja text template.
+Each moment carries two pieces of wording. Its ``text`` template is the row the
+report should show, rendered later against the event payload. Its label is the
+``kind`` titleised, a readable brace-free fallback used when a rule declares no
+template or the payload cannot satisfy the one it declares.
 
 British spelling is used in comments. No em dashes appear anywhere.
 """
@@ -58,6 +60,10 @@ _CREDITS_ITEM_FIELDS = "credits_item_fields"
 _COINS_FIELD = "coins_field"
 _WHERE_FIELD = "where_field"
 _WHERE_CONTAINS = "where_contains"
+# The moment's row wording. Every [[moment]] has declared one since the taxonomy
+# was written; nothing read the key, so it parsed and was discarded and every
+# row in every report fell back to its kind label instead.
+_TEXT = "text"
 _SCHEMA_VERSION = "schema_version"
 _APP_NAME = "app_name"
 _LICENSE = "license"
@@ -183,6 +189,7 @@ def _build_rules(data: dict[str, Any]) -> tuple[MomentRule, ...]:
                 coins_field=moment.get(_COINS_FIELD),
                 where_field=moment.get(_WHERE_FIELD),
                 where_contains=_where_tokens(moment.get(_WHERE_CONTAINS)),
+                text_template=moment.get(_TEXT),
             )
         )
     return tuple(rules)
@@ -234,8 +241,8 @@ def _moment_labels(data: dict[str, Any]) -> list[tuple[str, str]]:
     """Return an event-type to readable-label pair for every ``[[moment]]``.
 
     The label is the moment's ``kind`` titleised (for example ``scan_body`` to
-    "Scan Body"), giving the timeline a clean, brace-free label derived from
-    taxonomy data rather than the raw Jinja text template.
+    "Scan Body"). It is the fallback wording, used when a rule declares no text
+    template or the event payload cannot satisfy the one it declares.
     """
     pairs: list[tuple[str, str]] = []
     for moment in data.get(_MOMENT, []):

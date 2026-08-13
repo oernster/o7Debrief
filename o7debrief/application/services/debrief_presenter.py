@@ -13,6 +13,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from o7debrief.application.dto.debrief_view import DebriefView
+from o7debrief.application.ports.text_template_renderer import TextTemplateRenderer
 from o7debrief.application.services.label_resolver import LabelResolver
 from o7debrief.application.services.presenter_domains import (
     build_domain_sections,
@@ -54,12 +55,24 @@ class DebriefPresenter:
     The ``spec`` and the debrief it presents are domain objects, referred to
     here only as forward references so this module imports just the
     application layer. Their attributes are read by duck typing.
+
+    ``text_renderer`` words each timeline row from the taxonomy template the
+    moment carries. It is optional because rendering is an enrichment rather
+    than a requirement: without one, every row states its label, which is what
+    the report did before the templates were read at all. The composition root
+    supplies the real one; a caller that only wants figures need not.
     """
 
-    def __init__(self, spec: RollupSpec, number_format: NumberFormat) -> None:
+    def __init__(
+        self,
+        spec: RollupSpec,
+        number_format: NumberFormat,
+        text_renderer: TextTemplateRenderer | None = None,
+    ) -> None:
         self._spec = spec
         self._formatter = ValueFormatter(number_format)
         self._resolver = LabelResolver(spec)
+        self._text_renderer = text_renderer
 
     def _notices(self, missing_fields: tuple[tuple[str, str], ...]) -> tuple[str, ...]:
         """Word each unread field as a notice, in the order they were found."""
@@ -88,8 +101,10 @@ class DebriefPresenter:
             header=build_header(debrief, fmt, resolver),
             headline=build_headline(debrief, fmt, resolver),
             domains=build_domain_sections(debrief.activity, fmt, resolver),
-            timeline=build_timeline(debrief, fmt, resolver),
-            timeline_categories=build_timeline_categories(debrief, fmt, resolver),
+            timeline=build_timeline(debrief, fmt, resolver, self._text_renderer),
+            timeline_categories=build_timeline_categories(
+                debrief, fmt, resolver, self._text_renderer
+            ),
             ranks=build_ranks(debrief, fmt, resolver),
             milestones=build_milestones(debrief.moments, self._spec, resolver),
             footer=build_footer(debrief, fmt, resolver),

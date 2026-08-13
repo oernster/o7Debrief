@@ -64,6 +64,7 @@ from o7debrief.infrastructure import (
     FilesystemSink,
     GitHubReleaseSource,
     HtmlDebriefExporter,
+    JinjaTextTemplateRenderer,
     JsonPreferencesStore,
     JsonRankSnapshotStore,
     MarkdownDebriefExporter,
@@ -426,7 +427,7 @@ def _build_one_shot(
     journal_source = FileJournalSource(str(journal_dir))
     recorder = SessionRecorder(journal_source)
     builder = DebriefBuilder(spec)
-    presenter = DebriefPresenter(spec, number_format)
+    presenter = DebriefPresenter(spec, number_format, JinjaTextTemplateRenderer())
 
     exporters = (HtmlDebriefExporter(), MarkdownDebriefExporter())
     sink = FilesystemSink(str(export_dir))

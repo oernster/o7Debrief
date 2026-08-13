@@ -58,6 +58,7 @@ class MomentKind(Enum):
     SELL_EXPLORATION = auto()
     MARKET_BUY = auto()
     MARKET_SELL = auto()
+    MATERIAL_TRADE = auto()
     REFINE = auto()
     MISSION_COMPLETE = auto()
     ENGINEER_CRAFT = auto()

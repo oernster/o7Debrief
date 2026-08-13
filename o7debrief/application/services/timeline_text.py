@@ -1,17 +1,36 @@
 """Row-text formatting for the session-log timeline.
 
-Most moments render as their configured label. A few kinds carry payload the
-report should surface instead: a death names who (or what) killed the
-commander and how, then the victim it cost; a ship-launched-vehicle row names
-the vehicle; a bounty names the ship that was destroyed. Because NPCs can now
-fly any ship, the killer ship and the bounty target are read straight from the
-journal rather than from a fixed list.
+A row is worded one of three ways, tried in this order.
+
+1. A few kinds are assembled here in code, because their wording is conditional
+   in ways a template should not carry: a death names who (or what) killed the
+   commander and how, then the victim it cost and any rebuy; a
+   ship-launched-vehicle row names the vehicle; a bounty names the ship that was
+   destroyed; a mission names its faction and any Merc Coins. Because NPCs can
+   now fly any ship, the killer ship and the bounty target are read straight
+   from the journal rather than from a fixed list.
+2. Otherwise the moment's taxonomy template is rendered against its detail,
+   which is the raw journal payload. This is how a row states what actually
+   happened ("Applied Weapon_Overcharged grade 5 to hpt_multicannon_gimbal_
+   medium at Tod 'The Blaster' McQuinn") rather than merely naming its kind.
+3. Failing both, the moment's label, which names the kind and claims nothing
+   else.
+
+Step 2 did not exist for a long time and its absence was the report's largest
+defect: every template in the taxonomy parsed and was discarded, so every row
+fell through to step 3 and a session of 261 engineering rolls printed
+"Engineer Craft" 261 times, naming no blueprint, grade, module or engineer.
+
+The fallback is deliberate rather than defensive. A template naming a field the
+payload lacks yields no text at all (the renderer port returns ``None``); a row
+then states its kind instead of a sentence with a hole in it. A partially
+rendered sentence would read to a commander as a fact.
 
 This module is application-layer and imports no domain symbols: it reads the
-moment by attribute (``kind.name``, ``detail``, ``label``) and routes all
-wording through the label resolver, so nothing here hardcodes a display string.
-Its one import is of the victim detail keys, taken from the module that stamps
-them so the two never drift apart.
+moment by attribute (``kind.name``, ``detail``, ``label``, ``text_template``)
+and routes all wording through the label resolver, so nothing here hardcodes a
+display string. Its one import is of the victim detail keys, taken from the
+module that stamps them so the two never drift apart.
 British spelling is used in comments. No em dashes appear anywhere.
 """
 
@@ -26,6 +45,11 @@ from o7debrief.application.services.death_details import (
 )
 
 __all__ = ["row_text"]
+
+# The moment attribute carrying the taxonomy's row template, read by name so
+# this module keeps its no-domain-import rule, plus its absent/empty value.
+_TEMPLATE_ATTR = "text_template"
+_NO_TEMPLATE = ""
 
 # Death rows. A death names its killer(s) or the cause; the wording is
 # spec-overridable. The _Localised variant of a name or ship is preferred so a
@@ -265,11 +289,33 @@ def _mission_text(moment, resolver, fmt) -> str:
     return line
 
 
-def row_text(moment, resolver, fmt) -> str:
+def _templated_text(moment, renderer) -> str | None:
+    """Return the moment's rendered taxonomy wording, else None.
+
+    None covers every reason a template cannot speak for this moment: no
+    renderer was supplied; the rule declared no template; the renderer could not
+    satisfy it against this payload; it rendered to nothing. A row that rendered
+    to whitespace is treated as no text at all, since an empty row tells the
+    reader less than the label does.
+    """
+    if renderer is None:
+        return None
+    template = getattr(moment, _TEMPLATE_ATTR, _NO_TEMPLATE)
+    if not template:
+        return None
+    rendered = renderer.render(template, dict(moment.detail))
+    if rendered is None or not rendered.strip():
+        return None
+    return rendered.strip()
+
+
+def row_text(moment, resolver, fmt, renderer=None) -> str:
     """Return the session-log text for a moment, enriched where the kind needs it.
 
     The formatter is passed for the few rows that surface an amount (a mission's
-    Merc Coins reward); name-only rows ignore it.
+    Merc Coins reward); name-only rows ignore it. The renderer words every other
+    row from the taxonomy template. Without one (or where a template cannot be
+    satisfied) the row falls back to the moment's label.
     """
     kind = moment.kind.name
     if kind == _DEATH_KIND:
@@ -280,4 +326,4 @@ def row_text(moment, resolver, fmt) -> str:
         return _bounty_text(moment, resolver)
     if kind == _MISSION_KIND:
         return _mission_text(moment, resolver, fmt)
-    return moment.label
+    return _templated_text(moment, renderer) or moment.label

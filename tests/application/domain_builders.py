@@ -54,6 +54,7 @@ def moment(
     coins: int = 0,
     detail: tuple[tuple[str, object], ...] = (),
     system: str | None = None,
+    text_template: str = "",
 ) -> ConceptualMoment:
     """Build a single ConceptualMoment, optionally tagged with a star system."""
     if system is not None:
@@ -68,6 +69,7 @@ def moment(
         credits_delta=Credits(credits),
         coins_delta=Credits(coins),
         detail=detail,
+        text_template=text_template,
     )
 
 

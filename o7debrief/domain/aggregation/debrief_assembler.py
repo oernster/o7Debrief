@@ -56,8 +56,8 @@ STAR_POS_FIELD = "StarPos"
 # Count contributed by a single moment occurrence.
 _ONE_OCCURRENCE = 1
 # Indices into the ordered star positions: the first reading, whose shape every
-# later one must match, and the second, from which each position is paired with
-# its predecessor to form a leg.
+# later one must match; then the second, from which each position is paired
+# with its predecessor to form a leg.
 _FIRST_POSITION = 0
 _SECOND_POSITION = 1
 # Starting values for the distance and leg-count accumulators.
@@ -192,17 +192,22 @@ def _trade(moments: tuple[ConceptualMoment, ...]) -> TradeRollup:
     """Build the trade rollup.
 
     ``spent`` comes from the buy moment's magnitude rather than its credit
-    delta. The journal states the cost outright in ``TotalCost``, but a buy
+    delta. The journal states the cost outright in ``TotalCost``; even so, a buy
     deliberately carries no credit delta so that spending never inflates an
     income total. Routing the stated cost through the magnitude channel keeps
     that separation while ending a real defect: ten purchases used to report
     nought credits spent.
+
+    ``material_trades`` is a bare count. A material-trader exchange is paid for
+    in materials rather than credits and the journal states no price, so there
+    is nothing to sum and nothing that belongs in either credit column.
     """
     return TradeRollup(
         buys=_count(moments, MomentKind.MARKET_BUY),
         sells=_count(moments, MomentKind.MARKET_SELL),
         spent=Credits(round(_sum_magnitude(moments, MomentKind.MARKET_BUY))),
         earned=_sum_credits(moments, MomentKind.MARKET_SELL),
+        material_trades=_count(moments, MomentKind.MATERIAL_TRADE),
     )
 
 

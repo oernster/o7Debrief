@@ -38,6 +38,12 @@ class ConceptualMoment:
     # its own channel so it never folds into the session net-credits figure,
     # and defaults to zero for the many moments that carry no coin reward.
     coins_delta: Credits = field(default_factory=Credits.zero)
+    # The taxonomy's row wording for this moment, carried verbatim from the
+    # matching rule. The domain does not render it: rendering needs a template
+    # engine, which is infrastructure, so the moment merely carries the template
+    # alongside the detail it is rendered against and the presenter does the
+    # rest. Empty means the rule declared no wording and the label stands.
+    text_template: str = ""
 
     def __post_init__(self) -> None:
         if not self.label:

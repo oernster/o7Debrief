@@ -37,6 +37,7 @@ _BUYS = ("trade.buys", "Buys")
 _SELLS = ("trade.sells", "Sells")
 _SPENT = ("trade.spent", "Spent")
 _EARNED = ("trade.earned", "Earned")
+_MATERIAL_TRADES = ("trade.material_trades", "Material trades")
 _REFINED = ("mining.refined", "Refined")
 _COMPLETED = ("missions.completed", "Completed")
 _REWARDS = ("missions.rewards", "Rewards")
@@ -116,6 +117,7 @@ def _trade_stats(rollup, fmt, resolver) -> tuple[DomainStat, ...]:
         _stat(resolver, _SELLS, fmt.integer(rollup.sells)),
         _stat(resolver, _SPENT, fmt.credits(rollup.spent.value)),
         _stat(resolver, _EARNED, fmt.credits(rollup.earned.value)),
+        _stat(resolver, _MATERIAL_TRADES, fmt.integer(rollup.material_trades)),
     )
 
 

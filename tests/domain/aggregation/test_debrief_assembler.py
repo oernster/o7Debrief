@@ -105,6 +105,9 @@ def test_full_session_populates_every_rollup() -> None:
         # spending stays out of every income total.
         _moment(MomentKind.MARKET_BUY, ActivityDomain.TRADE, 8, magnitude=1000),
         _moment(MomentKind.MARKET_SELL, ActivityDomain.TRADE, 9, credits=4000),
+        # A material-trader exchange is paid for in materials, so it states no
+        # price and contributes to neither credit column.
+        _moment(MomentKind.MATERIAL_TRADE, ActivityDomain.TRADE, 9),
         _moment(MomentKind.REFINE, ActivityDomain.MINING, 10),
         _moment(
             MomentKind.MISSION_COMPLETE,
@@ -178,6 +181,7 @@ def test_full_session_populates_every_rollup() -> None:
     assert activity.trade.sells == 1
     assert activity.trade.spent.value == 1000
     assert activity.trade.earned.value == 4000
+    assert activity.trade.material_trades == 1
     assert activity.mining.refined == 1
     assert activity.missions.completed == 1
     assert activity.missions.rewards.value == 15000

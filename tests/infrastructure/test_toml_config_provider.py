@@ -1,13 +1,14 @@
 """Tests for TomlConfigProvider against the real taxonomy file.
 
 These prove the shipped ``config/debrief_taxonomy.toml`` parses into a spec the
-application can consume: the moment rules carry the credit and magnitude fields the
-rollups read, the mode mapping bridges ``foot`` to ON_FOOT, and the flat label
-map uses exactly the keys the LabelResolver looks up.
+application can consume: the moment rules carry the credit and magnitude fields
+the rollups read, the mode mapping bridges ``foot`` to ON_FOOT and the flat
+label map uses exactly the keys the LabelResolver looks up.
 """
 
 from __future__ import annotations
 
+import tomllib
 from pathlib import Path
 
 from o7debrief.domain.value_objects.enums import (
@@ -17,8 +18,34 @@ from o7debrief.domain.value_objects.enums import (
 )
 from o7debrief.infrastructure.config.toml_config_provider import TomlConfigProvider
 
+# Every key a [[moment]] table may declare. The provider reads each one onto the
+# MomentRule; anything outside this set parses fine and is then silently thrown
+# away, which is exactly how the "text" key was lost. It was declared on all
+# twenty-nine moments from the start; nothing ever read it, so every row in
+# every report fell back to its kind label. A session of 261 engineering rolls
+# printed "Engineer Craft" 261 times. Nothing failed, because a dropped key
+# looks identical to a key nobody wanted. This set is the guard against the
+# next one; adding a key to the taxonomy now means teaching the provider to
+# read it or naming it here on purpose.
+_READ_MOMENT_KEYS = frozenset(
+    {
+        "event",
+        "kind",
+        "domain",
+        "mode",
+        "text",
+        "magnitude_field",
+        "credits_field",
+        "credits_array_field",
+        "credits_item_fields",
+        "coins_field",
+        "where_field",
+        "where_contains",
+    }
+)
+
 # Number of [[moment]] rules defined in the shipped taxonomy.
-_EXPECTED_RULES = 29
+_EXPECTED_RULES = 30
 # Threshold magnitudes declared in the taxonomy [thresholds] table.
 _LONG_JUMP_LY = 50.0
 _BIG_PAYOUT = 1000000
@@ -49,6 +76,56 @@ def test_rules_carry_kind_domain_and_mode() -> None:
     assert jump.kind is MomentKind.JUMP
     assert jump.domain is ActivityDomain.TRAVEL
     assert jump.mode is ActivityMode.SHIP
+
+
+def _raw_moments() -> list[dict]:
+    """Return the [[moment]] tables straight from the shipped taxonomy."""
+    with _taxonomy_path().open("rb") as handle:
+        return tomllib.load(handle)["moment"]
+
+
+def test_every_taxonomy_moment_key_is_actually_read() -> None:
+    """No [[moment]] declares a key the provider quietly discards."""
+    unread = {
+        (moment["event"], key)
+        for moment in _raw_moments()
+        for key in moment
+        if key not in _READ_MOMENT_KEYS
+    }
+    assert not unread, f"taxonomy keys parsed but never read: {sorted(unread)}"
+
+
+def test_every_moment_declares_row_wording() -> None:
+    """Each rule carries the text template its taxonomy entry declares."""
+    spec = _provider().load()
+    missing = [rule.event_type for rule in spec.rules if not rule.text_template]
+    assert not missing, f"moments with no row wording: {missing}"
+
+
+def test_engineer_craft_wording_names_the_work_and_the_engineer() -> None:
+    """The engineering row states blueprint, grade, module and engineer."""
+    craft = _provider().load().rule_for("EngineerCraft")
+    assert craft is not None
+    assert craft.text_template == (
+        "Applied {{ BlueprintName }} grade {{ Level }} to {{ Module }} "
+        "at {{ Engineer }}."
+    )
+
+
+def test_material_trade_rule_is_trade_with_no_credit_flow() -> None:
+    """A material-trader exchange is a trade moment that reads no credits.
+
+    It is paid for in materials and the journal states no price, so naming a
+    credits or magnitude field would invent one.
+    """
+    trade = _provider().load().rule_for("MaterialTrade")
+    assert trade is not None
+    assert trade.kind is MomentKind.MATERIAL_TRADE
+    assert trade.domain is ActivityDomain.TRADE
+    assert trade.mode is ActivityMode.SHIP
+    assert trade.credits_field is None
+    assert trade.credits_array_field is None
+    assert trade.magnitude_field is None
 
 
 def test_foot_mode_maps_to_on_foot() -> None:

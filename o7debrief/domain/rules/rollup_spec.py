@@ -50,6 +50,16 @@ class MomentRule:
     case-insensitive substrings, any one of which appearing in that field
     satisfies the filter. When ``where_field`` is unset or ``where_contains`` is
     empty the rule matches every occurrence.
+
+    ``text_template`` is the taxonomy's row wording for this moment: a template
+    rendered against the raw event payload so a row can state what actually
+    happened rather than merely naming its kind. It rides the rule (data) rather
+    than living in code, which is the whole point of the taxonomy. It is
+    ``None`` for a rule that declares no wording; the reader then falls back to
+    the moment's label. The template was declared in the taxonomy from the
+    start but was not carried here, so every row in every report fell back to
+    its label: 261 engineering rolls all read "Engineer Craft" and named neither
+    blueprint, grade nor engineer.
     """
 
     event_type: str
@@ -63,6 +73,7 @@ class MomentRule:
     coins_field: str | None = None
     where_field: str | None = None
     where_contains: tuple[str, ...] = ()
+    text_template: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -84,7 +95,7 @@ class RollupSpec:
     labels: tuple[tuple[str, str], ...]
 
     def rule_for(self, event_type: str) -> MomentRule | None:
-        """Return the first rule matching ``event_type``, or ``None`` if absent."""
+        """Return the first rule matching ``event_type``; ``None`` if absent."""
         for rule in self.rules:
             if rule.event_type == event_type:
                 return rule
@@ -102,7 +113,7 @@ class RollupSpec:
         return tuple(rule for rule in self.rules if rule.event_type == event_type)
 
     def label_for(self, key: str, default: str) -> str:
-        """Return the configured label for ``key``, or ``default``."""
+        """Return the configured label for ``key``; else ``default``."""
         for label_key, label_value in self.labels:
             if label_key == key:
                 return label_value

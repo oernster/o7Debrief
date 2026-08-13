@@ -60,6 +60,9 @@ from o7debrief.infrastructure import TomlConfigProvider  # noqa: E402
 from o7debrief.infrastructure.render.html_renderer import (  # noqa: E402
     HtmlDebriefExporter,
 )
+from o7debrief.infrastructure.render.jinja_text_renderer import (  # noqa: E402
+    JinjaTextTemplateRenderer,
+)
 
 _TAXONOMY = _ROOT / "config" / "debrief_taxonomy.toml"
 _OUT = _ROOT / "docs" / "example-report.html"
@@ -83,6 +86,16 @@ _NET_CREDITS = -2323000
 # a reading the app could not take, which is the opposite of what it shows.
 _CREDIT_BALANCE = 1204335000
 _SYSTEMS_VISITED = 2
+
+# Two rows whose wording the app builds from a taxonomy template against the
+# real journal payload. The specimen states them outright, because it has no
+# journal to render from; each is written exactly as the app renders it, so the
+# sample shows the detail a real row carries rather than the name of its kind.
+_CRAFT_ROW = (
+    "Applied Weapon_Overcharged grade 5 to hpt_multicannon_gimbal_medium "
+    "at Tod 'The Blaster' McQuinn."
+)
+_MATERIAL_TRADE_ROW = "Traded 90 ruthenium for 15 technetium at the raw trader."
 
 # One row per session-log moment: (kind, domain, mode, time, label, credits,
 # system). The label is the displayed text; the domain decides its category
@@ -118,7 +131,16 @@ _MOMENTS = (
         "ENGINEERING",
         "SHIP",
         "20:30:00",
-        "Applied a modification",
+        _CRAFT_ROW,
+        0,
+        None,
+    ),
+    (
+        "MATERIAL_TRADE",
+        "TRADE",
+        "SHIP",
+        "20:32:00",
+        _MATERIAL_TRADE_ROW,
         0,
         None,
     ),
@@ -177,7 +199,11 @@ def _activity() -> ActivityRollup:
         ),
         combat=CombatRollup(kills=3, bounties=Credits(725000), bonds=Credits(120000)),
         trade=TradeRollup(
-            buys=1, sells=1, spent=Credits(384000), earned=Credits(512000)
+            buys=1,
+            sells=1,
+            spent=Credits(384000),
+            earned=Credits(512000),
+            material_trades=1,
         ),
         mining=MiningRollup(refined=1),
         missions=MissionRollup(completed=1, rewards=Credits(680000)),
@@ -260,7 +286,8 @@ def _number_format() -> NumberFormat:
 def main() -> int:
     """Render the sample debrief to docs/example-report.html."""
     spec = ConfigLoadingService(TomlConfigProvider(str(_TAXONOMY))).load_spec()
-    view = DebriefPresenter(spec, _number_format()).present(_debrief())
+    presenter = DebriefPresenter(spec, _number_format(), JinjaTextTemplateRenderer())
+    view = presenter.present(_debrief())
     html = HtmlDebriefExporter().render(view).decode("utf-8")
     _OUT.write_text(html, encoding="utf-8")
     print(f"wrote {_OUT} ({len(html)} chars)")

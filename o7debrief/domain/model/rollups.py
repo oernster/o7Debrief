@@ -64,12 +64,21 @@ class CombatRollup:
 
 @dataclass(frozen=True, slots=True)
 class TradeRollup:
-    """Trade summary: market buys and sells with their credit flows."""
+    """Trade summary: market buys and sells, plus material-trader exchanges.
+
+    ``material_trades`` counts exchanges at a raw, manufactured or encoded
+    material trader. It is a plain count and carries no credit flow because a
+    material trade has none: the commander pays in one material and is paid in
+    another; the journal states no price. Counting it alongside the market
+    figures is the honest reading, since a session can trade heavily at the
+    material traders while buying and selling nothing on any commodity market.
+    """
 
     buys: int = 0
     sells: int = 0
     spent: Credits = field(default_factory=Credits.zero)
     earned: Credits = field(default_factory=Credits.zero)
+    material_trades: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -104,8 +113,8 @@ class CarrierRollup:
     """Fleet carrier summary: jumps performed and the distance they covered.
 
     A ``CarrierJump`` states no ``JumpDist``, so unlike a ship jump the distance
-    is not read but derived: each jump states the destination ``StarPos``, and
-    the straight-line gap between consecutive positions is the leg flown. That
+    is not read but derived: each jump states the destination ``StarPos``; the
+    straight-line gap between consecutive positions is the leg flown. That
     leaves the very first jump of a session with no measurable origin, because
     the carrier's position before it is not stated anywhere in the session.
     ``legs_measured`` and ``legs_total`` carry that gap explicitly so the report

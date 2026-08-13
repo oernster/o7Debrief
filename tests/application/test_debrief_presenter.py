@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from o7debrief.application.services.debrief_presenter import DebriefPresenter
 from o7debrief.application.services.presenter_sections import _delta_class
-from o7debrief.domain.model.rollups import ActivityRollup
+from o7debrief.domain.model.rollups import ActivityRollup, TradeRollup
 from o7debrief.domain.value_objects.enums import (
     ActivityDomain,
     ActivityMode,
@@ -290,6 +290,27 @@ def test_domain_sections_omit_absent_domains() -> None:
     assert context["domains"][0]["key"] == "travel"
     labels = [stat["label"] for stat in context["domains"][0]["stats"]]
     assert labels == ["Jumps", "Distance"]
+
+
+def test_trade_section_reports_material_trades_beside_the_market_figures() -> None:
+    """A session can trade heavily in materials and not at all on a market.
+
+    That is the ordinary engineering session: 31 exchanges at the raw,
+    manufactured and encoded traders with no commodity bought or sold. The
+    exchanges are counted; the four credit-bearing market figures stay at zero
+    rather than being padded with a number no journal field states.
+    """
+    activity = ActivityRollup(trade=TradeRollup(material_trades=31), modes_used=())
+    debrief = build.debrief(moments=(), activity=activity)
+
+    context = _presenter().present(debrief).to_context()
+    stats = {
+        stat["label"]: stat["value_display"] for stat in context["domains"][0]["stats"]
+    }
+
+    assert stats["Material trades"] == "31"
+    assert stats["Buys"] == "0"
+    assert stats["Spent"] == "0 Cr"
 
 
 def test_timeline_categories_group_by_domain_in_canonical_order() -> None:

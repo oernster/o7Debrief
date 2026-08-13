@@ -183,14 +183,15 @@ def _moment_system(moment) -> str | None:
     return None
 
 
-def _timeline_entry(moment, fmt, resolver) -> TimelineEntry:
+def _timeline_entry(moment, fmt, resolver, renderer) -> TimelineEntry:
     """Build one formatted timeline entry from a single moment.
 
     The row's icon is the moment's activity (domain) glyph, so it shows what
     was done; the control mode rides along as the compact tag and full label.
-    The row text comes from ``timeline_text.row_text``, which enriches death,
-    ship-launched-vehicle, bounty and mission rows and passes everything else
-    through. The formatter is handed on so a mission row can show its coins.
+    The row text comes from ``timeline_text.row_text``, which assembles death,
+    ship-launched-vehicle, bounty and mission rows itself and words every other
+    row from the moment's taxonomy template. The formatter is handed on so a
+    mission row can show its coins; the renderer so a template can be rendered.
     """
     mode = mode_string_from_name(moment.mode.name)
     return TimelineEntry(
@@ -199,19 +200,22 @@ def _timeline_entry(moment, fmt, resolver) -> TimelineEntry:
         mode_label=resolver.mode_label(mode),
         mode_tag=resolver.mode_tag(mode),
         icon=resolver.domain_icon(moment.domain.name.lower()),
-        text=row_text(moment, resolver, fmt),
+        text=row_text(moment, resolver, fmt, renderer),
         system=_moment_system(moment),
     )
 
 
-def build_timeline(debrief, fmt, resolver) -> tuple[TimelineEntry, ...]:
+def build_timeline(debrief, fmt, resolver, renderer=None) -> tuple[TimelineEntry, ...]:
     """Build one timeline entry per moment, most recent first."""
     return tuple(
-        _timeline_entry(moment, fmt, resolver) for moment in reversed(debrief.moments)
+        _timeline_entry(moment, fmt, resolver, renderer)
+        for moment in reversed(debrief.moments)
     )
 
 
-def build_timeline_categories(debrief, fmt, resolver) -> tuple[TimelineCategory, ...]:
+def build_timeline_categories(
+    debrief, fmt, resolver, renderer=None
+) -> tuple[TimelineCategory, ...]:
     """Group the timeline by activity domain, in the canonical domain order.
 
     Each category carries only its own moments, most recent first, so the
@@ -221,7 +225,9 @@ def build_timeline_categories(debrief, fmt, resolver) -> tuple[TimelineCategory,
     grouped: dict[str, list[TimelineEntry]] = {}
     for moment in reversed(debrief.moments):
         key = moment.domain.name.lower()
-        grouped.setdefault(key, []).append(_timeline_entry(moment, fmt, resolver))
+        grouped.setdefault(key, []).append(
+            _timeline_entry(moment, fmt, resolver, renderer)
+        )
     categories: list[TimelineCategory] = []
     for key in DOMAIN_ORDER:
         entries = grouped.get(key)

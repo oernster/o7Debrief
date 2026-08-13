@@ -56,6 +56,7 @@ def test_moment_kind_members() -> None:
         "SELL_EXPLORATION",
         "MARKET_BUY",
         "MARKET_SELL",
+        "MATERIAL_TRADE",
         "REFINE",
         "MISSION_COMPLETE",
         "ENGINEER_CRAFT",

@@ -2,7 +2,7 @@
 
 This layer wires the outside world (the Elite Dangerous journal files, the TOML
 taxonomy, the filesystem and the wall clock) to the application's ports. It may
-import the domain and the application layers but never the ui layer, and nothing
+import the domain and the application layers but never the ui layer. Nothing
 inside the domain, application or ui layers may import it: the composition root
 (``main.py``) is the only place that constructs these adapters.
 
@@ -29,6 +29,9 @@ from o7debrief.infrastructure.rank.json_rank_snapshot_store import (
     JsonRankSnapshotStore,
 )
 from o7debrief.infrastructure.render.html_renderer import HtmlDebriefExporter
+from o7debrief.infrastructure.render.jinja_text_renderer import (
+    JinjaTextTemplateRenderer,
+)
 from o7debrief.infrastructure.render.markdown_renderer import MarkdownDebriefExporter
 from o7debrief.infrastructure.sink.filesystem_sink import FilesystemSink
 from o7debrief.infrastructure.update.github_release_source import (
@@ -41,6 +44,7 @@ __all__ = [
     "FilesystemSink",
     "GitHubReleaseSource",
     "HtmlDebriefExporter",
+    "JinjaTextTemplateRenderer",
     "JsonPreferencesStore",
     "JsonRankSnapshotStore",
     "MarkdownDebriefExporter",
