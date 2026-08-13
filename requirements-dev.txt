@@ -8,9 +8,12 @@
 pytest>=8
 pytest-cov>=5
 
-# Formatting and linting (line length 88).
+# Formatting and linting (line length 88). Both linters are configured and both
+# are expected to be clean; see DEVELOPMENT-README.md for why ruff needs the
+# configuration it carries.
 black>=24
 flake8>=7
+ruff>=0.6
 
 # Standalone Windows build (buildexe.py / buildinstaller.py).
 Nuitka>=2.4

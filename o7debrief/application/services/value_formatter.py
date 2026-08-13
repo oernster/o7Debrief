@@ -10,7 +10,7 @@ purely to reformat them; the wall clock is never read here.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 __all__ = ["NumberFormat", "ValueFormatter"]
 
@@ -118,7 +118,7 @@ class ValueFormatter:
             normalised = normalised[: -len(_ZULU_SUFFIX)] + _UTC_OFFSET
         parsed = datetime.fromisoformat(normalised)
         if parsed.tzinfo is None:
-            parsed = parsed.replace(tzinfo=timezone.utc)
+            parsed = parsed.replace(tzinfo=UTC)
         return parsed
 
     def time(self, iso_utc: str) -> str:

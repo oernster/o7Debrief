@@ -36,7 +36,7 @@ _RECENT = (
 
 def _noop() -> None:
     """Do nothing; stands in for the dialog's injected action callbacks."""
-    return None
+    return
 
 
 def main() -> int:

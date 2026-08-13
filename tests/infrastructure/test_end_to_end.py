@@ -8,9 +8,8 @@ isolation, real credit rollups and both output formats written.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import tomllib
+from pathlib import Path
 
 from o7debrief.application.services.debrief_builder import DebriefBuilder
 from o7debrief.application.services.debrief_export_service import (
@@ -254,8 +253,8 @@ def test_all_history_debrief_spans_sessions_and_writes_no_snapshot(
     tmp_path, journal_dir_factory, write_journal_lines
 ) -> None:
     # The all-history debrief covers every session (both systems appear, unlike
-    # the last-session debrief that excludes the older one) and, being a
-    # read-only view, it persists no rank snapshot.
+    # the last-session debrief that excludes the older one). Being a read-only
+    # view, it persists no rank snapshot.
     journal_dir = journal_dir_factory()
     write_journal_lines(journal_dir, _OLDER_SESSION + _LATEST_SESSION)
     state_dir = tmp_path / "state"

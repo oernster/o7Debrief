@@ -14,7 +14,7 @@ import sys
 import tempfile
 import threading
 import traceback
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from types import TracebackType
 
@@ -45,17 +45,17 @@ def log_step(message: str, log_path: Path | None = None) -> None:
     """Append one timestamped step to the installer log, ignoring failure.
 
     A crash log alone was not enough. The setup program's worst failures are
-    the quiet ones: an install that reports success and launches nothing, or a
+    the quiet ones: an install that reports success and launches nothing; a
     window that closes with the work half done. Neither raises, so neither
-    leaves a traceback, and by the time the user says something went wrong the
-    machine has usually been changed again and the evidence is gone. Recording
+    leaves a traceback. By the time the user says something went wrong the
+    machine has usually been changed again with the evidence gone. Recording
     each step as it happens is what makes the next such report answerable.
 
     Logging is best effort by design: a log that cannot be written must never
     become a reason the install itself fails.
     """
     path = log_path if log_path is not None else installer_log_path()
-    stamp = datetime.now(timezone.utc).strftime(_STAMP_FORMAT)
+    stamp = datetime.now(UTC).strftime(_STAMP_FORMAT)
     try:
         with path.open("a", encoding="utf-8") as handle:
             handle.write(_STEP_LINE.format(stamp=stamp, message=message))

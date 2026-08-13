@@ -30,7 +30,7 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements-dev.txt
 ```
 
-`requirements-dev.txt` pulls in `requirements.txt` as well, so this one command covers everything: the runtime dependencies (PySide6 and Jinja2), the test runner, the coverage plugin, the formatter, the linter and Nuitka for the builds. To run the app without any of the development tooling, install `requirements.txt` alone.
+`requirements-dev.txt` pulls in `requirements.txt` as well, so this one command covers everything: the runtime dependencies (PySide6 and Jinja2), the test runner, the coverage plugin, the formatter, both linters and Nuitka for the builds. To run the app without any of the development tooling, install `requirements.txt` alone.
 
 `tomllib` is part of the Python 3.13 standard library, so configuration loading needs no extra package.
 
@@ -74,7 +74,14 @@ echo "EXIT=$LASTEXITCODE"
 
 One exception is deliberate. The scripts under `tools/` add the repository root to `sys.path` (and set the Qt scaling environment) before importing from the package, so their imports must stay below that bootstrap; each carries a `# noqa: E402` marker to say so. `tests/installer/test_worker_shutdown.py` does the same thing for the same reason. Do not let an import sorter move or strip those markers, because reordering the imports breaks the scripts.
 
-This matters if you reach for `ruff`. The project has no ruff configuration, so ruff runs with E402 disabled, decides every one of those markers is unused and offers to remove them and re-sort the imports. Under `flake8`, which is what the project actually configures, the same markers are load-bearing and the tree is clean. So `ruff --fix` goes nowhere near `tools/` or that installer test; a plain `ruff check` on the rest of the tree is clean and worth running.
+`ruff` is configured in `pyproject.toml` and the tree is clean under it too:
+
+```powershell
+ruff check .
+echo "EXIT=$LASTEXITCODE"
+```
+
+The configuration exists because of those markers. ruff does not enable E402 by default, so out of the box it read all thirty-eight deliberate suppressions in the tree as unused directives and `ruff --fix` would have stripped them and re-sorted the imports they protect. The fix was to enable E402, which is the rule flake8 already enforces, so a clean run of either linter now means the same thing. Four files still carry a `RUF100` per-file ignore, because ruff's E402 tolerates a few statements before an import that flake8 does not (setting `QT_SCALE_FACTOR`, calling `pytest.importorskip`) and so calls those particular markers unnecessary. flake8 disagrees and flake8 is what the project enforces: remove them and it reports fifteen E402 errors. Take `ruff --fix` nowhere near those four files.
 
 ## Build the executable
 

@@ -26,6 +26,7 @@ dev = [
     "pytest-cov>=5",
     "black>=24",
     "flake8>=7",
+    "ruff>=0.6",
 ]
 
 [tool.setuptools.packages.find]
@@ -39,6 +40,39 @@ version = { file = "VERSION" }
 [tool.black]
 line-length = 88
 target-version = ["py313"]
+
+[tool.ruff]
+# black is the formatter of record, so ruff is told the same shape rather than
+# being left to disagree with it.
+line-length = 88
+target-version = "py313"
+
+[tool.ruff.lint]
+# flake8 is the linter the project enforces and it reports E402, so the deferred
+# imports in tools/ and in the installer worker test carry a deliberate
+# `# noqa: E402` each. ruff does not enable E402 by default, which made it read
+# every one of those markers as an unused directive; `ruff --fix` would then have
+# stripped the markers and re-sorted the imports they exist to protect, breaking
+# the scripts. Enabling the rule here is what makes the two linters agree about
+# the code they both read, so a clean flake8 run and a clean ruff run mean the
+# same thing.
+extend-select = ["E402"]
+
+[tool.ruff.lint.per-file-ignores]
+# Four files where the two linters genuinely disagree, rather than four
+# exemptions of convenience. ruff's E402 tolerates a few statements before an
+# import that flake8 does not, so it reads the marker on those imports as an
+# unnecessary suppression while flake8 reports the import without it. That was
+# checked rather than assumed: removing the markers makes flake8 report fifteen
+# E402 errors across these files. flake8 is the linter this project enforces, so
+# the markers stay and ruff is told not to call them unused here. The last entry
+# is the same disagreement over a capture script's deliberate private read, which
+# ruff would only accept if SLF001 were enabled across the tree, where it would
+# fire on every test that reaches into an object it is testing.
+"tools/capture_home_dialog.py" = ["RUF100"]
+"tools/capture_tray_menu.py" = ["RUF100"]
+"tools/capture_installer_window.py" = ["RUF100"]
+"tests/installer/test_worker_shutdown.py" = ["RUF100"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

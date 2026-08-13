@@ -8,7 +8,7 @@ only converts a recorded event-time string into a comparable instant.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from o7debrief.domain.errors import InvalidEventTimeError
 
@@ -51,7 +51,7 @@ class EventTime:
                 f"Unparseable timestamp: {timestamp!r}"
             ) from exc
         if parsed.tzinfo is None:
-            parsed = parsed.replace(tzinfo=timezone.utc)
+            parsed = parsed.replace(tzinfo=UTC)
         return cls(iso_utc=timestamp, epoch_s=parsed.timestamp())
 
     def __lt__(self, other: EventTime) -> bool:

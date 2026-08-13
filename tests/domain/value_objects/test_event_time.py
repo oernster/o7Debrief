@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -31,7 +31,7 @@ def test_parse_with_explicit_offset() -> None:
 def test_parse_naive_input_is_assumed_utc() -> None:
     stamp = "2024-01-01T10:00:00"
     result = EventTime.parse(stamp)
-    expected = datetime(2024, 1, 1, 10, 0, 0, tzinfo=timezone.utc).timestamp()
+    expected = datetime(2024, 1, 1, 10, 0, 0, tzinfo=UTC).timestamp()
     assert result.epoch_s == expected
     assert result.iso_utc == stamp
 

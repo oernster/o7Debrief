@@ -10,7 +10,7 @@ British spelling is used in comments. No em dashes appear anywhere.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 __all__ = ["SystemClock"]
 
@@ -20,4 +20,4 @@ class SystemClock:
 
     def now_utc(self) -> str:
         """Return the current UTC time as a timezone-aware ISO-8601 string."""
-        return datetime.now(timezone.utc).isoformat()
+        return datetime.now(UTC).isoformat()

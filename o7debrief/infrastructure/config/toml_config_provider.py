@@ -20,10 +20,9 @@ British spelling is used in comments. No em dashes appear anywhere.
 
 from __future__ import annotations
 
+import tomllib
 from pathlib import Path
 from typing import Any
-
-import tomllib
 
 from o7debrief.domain.rules.rollup_spec import MomentRule, RollupSpec, ThresholdSet
 from o7debrief.domain.value_objects.enums import (
