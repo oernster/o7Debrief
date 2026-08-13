@@ -33,6 +33,7 @@ from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from o7debrief import __version__
+from o7debrief.application.dto.history_options import HistoryOptions
 from o7debrief.application.services.auto_debrief_trigger import (
     AutoDebriefTrigger,
 )
@@ -41,6 +42,7 @@ from o7debrief.application.services.config_loading_service import (
 )
 from o7debrief.application.services.debrief_builder import DebriefBuilder
 from o7debrief.application.services.debrief_export_service import (
+    BundleWriting,
     DebriefExportService,
 )
 from o7debrief.application.services.debrief_presenter import (
@@ -60,9 +62,11 @@ from o7debrief.application.services.update_service import (
 # The composition root alone reaches into infrastructure.
 from o7debrief.infrastructure import (
     FileJournalSource,
+    FilesystemBundleSink,
     FilesystemDebriefArchive,
     FilesystemSink,
     GitHubReleaseSource,
+    HtmlBundleExporter,
     HtmlDebriefExporter,
     JinjaTextTemplateRenderer,
     JsonPreferencesStore,
@@ -171,6 +175,21 @@ _KEY_THOUSANDS = "thousands"
 _KEY_DURATION_FORMAT = "duration_format"
 _KEY_TIME_FORMAT = "time_format"
 _KEY_DATETIME_FORMAT = "datetime_format"
+_KEY_DATE_FORMAT = "date_format"
+_KEY_MONTH_FORMAT = "month_format"
+_KEY_TIMEZONE_LABEL = "timezone_label"
+
+# The taxonomy table and keys that bound and split a whole-history debrief.
+_HISTORY_TABLE = "history"
+_KEY_ENTRIES_PER_PAGE = "entries_per_page"
+_KEY_PAGE_BYTES_TARGET = "page_bytes_target"
+_KEY_BYTES_PER_ENTRY = "bytes_per_entry_estimate"
+_KEY_SINGLE_FILE = "single_file"
+_KEY_SINGLE_FILE_MAX = "single_file_max_entries"
+_KEY_TRUNCATION_NOTICE = "truncation_notice_format"
+_KEY_ROLLUP_ENABLED = "rollup_enabled"
+_KEY_ROLLUP_AFTER_DAYS = "rollup_after_days"
+_KEY_ROLLUP_TEXT = "rollup_text_format"
 
 # Candidate function names for journal-directory discovery, tried in order so
 # the composition root binds to whichever name the infrastructure layer used.
@@ -419,6 +438,31 @@ def _load_number_format(taxonomy_path: Path) -> NumberFormat:
         duration_format=table[_KEY_DURATION_FORMAT],
         time_format=table[_KEY_TIME_FORMAT],
         datetime_format=table[_KEY_DATETIME_FORMAT],
+        date_format=table[_KEY_DATE_FORMAT],
+        month_format=table[_KEY_MONTH_FORMAT],
+        timezone_label=table[_KEY_TIMEZONE_LABEL],
+    )
+
+
+def _load_history_options(taxonomy_path: Path) -> HistoryOptions:
+    """Build the history limits from the taxonomy ``[history]`` table.
+
+    Same reasoning as the number format above: the composition root is the one
+    layer that owns concrete I/O, so it is the one that reads the file.
+    """
+    with taxonomy_path.open("rb") as handle:
+        data = tomllib.load(handle)
+    table = data[_HISTORY_TABLE]
+    return HistoryOptions(
+        entries_per_page=table[_KEY_ENTRIES_PER_PAGE],
+        page_bytes_target=table[_KEY_PAGE_BYTES_TARGET],
+        bytes_per_entry_estimate=table[_KEY_BYTES_PER_ENTRY],
+        single_file=table[_KEY_SINGLE_FILE],
+        single_file_max_entries=table[_KEY_SINGLE_FILE_MAX],
+        truncation_notice_format=table[_KEY_TRUNCATION_NOTICE],
+        rollup_enabled=table[_KEY_ROLLUP_ENABLED],
+        rollup_after_days=table[_KEY_ROLLUP_AFTER_DAYS],
+        rollup_text_format=table[_KEY_ROLLUP_TEXT],
     )
 
 
@@ -636,7 +680,15 @@ def _build_one_shot(
     exporters = (HtmlDebriefExporter(), MarkdownDebriefExporter())
     sink = FilesystemSink(str(export_dir))
     clock = SystemClock()
-    export_service = DebriefExportService(exporters, sink, clock)
+    # The history report is paged into a bundle rather than written as one
+    # document that grows on every quit; Markdown has no bundle form and so
+    # falls back to the capped single document.
+    bundles = BundleWriting(
+        exporters=(HtmlBundleExporter(),),
+        sink=FilesystemBundleSink(str(export_dir)),
+        options=_load_history_options(taxonomy_path),
+    )
+    export_service = DebriefExportService(exporters, sink, clock, bundles)
 
     rank_store = JsonRankSnapshotStore(str(state_dir))
     rank_analyzer = RankAnalyzer()

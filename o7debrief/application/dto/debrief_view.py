@@ -118,6 +118,20 @@ class TimelineEntry:
     reads as what was done rather than which control mode held it. The
     control context rides along as ``mode_tag`` (the compact S/R/F marker)
     and ``mode_label`` (its full label).
+
+    ``day_display`` is the formatted calendar day this row falls on and is
+    always set; ``day_key`` and ``month_key`` are the sortable ISO day and
+    year-month it falls in, internal grouping keys never shown to a reader.
+    All three are read in the same zone the time is shown in, so a row can
+    never be filed under a day it does not belong to. ``category_key`` names
+    the activity domain the row belongs to, so a page of the log can be split
+    by category without rebuilding it.
+
+    ``day_separator`` carries the day heading a renderer must draw above this
+    row, and is empty on every row that needs none. Unlike the two above it is
+    a property of the set the row was rendered in, not of the moment: a set
+    covering one day marks nothing at all, so it renders exactly as it did
+    before separators existed.
     """
 
     time_display: str
@@ -127,6 +141,11 @@ class TimelineEntry:
     icon: str
     text: str
     system: str | None
+    day_display: str = ""
+    day_key: str = ""
+    month_key: str = ""
+    category_key: str = ""
+    day_separator: str = ""
 
     def as_dict(self) -> dict:
         """Return the timeline entry as a plain dict."""
@@ -138,6 +157,11 @@ class TimelineEntry:
             "icon": self.icon,
             "text": self.text,
             "system": self.system,
+            "day_display": self.day_display,
+            "day_key": self.day_key,
+            "month_key": self.month_key,
+            "category_key": self.category_key,
+            "day_separator": self.day_separator,
         }
 
 
@@ -217,6 +241,8 @@ class FooterView:
     generated: str
     journal_first: str
     journal_last: str
+    timezone: str = ""
+    truncation_notice: str = ""
 
     def as_dict(self) -> dict:
         """Return the footer as a plain dict in contract key order."""
@@ -227,6 +253,8 @@ class FooterView:
             "generated": self.generated,
             "journal_first": self.journal_first,
             "journal_last": self.journal_last,
+            "timezone": self.timezone,
+            "truncation_notice": self.truncation_notice,
         }
 
 
@@ -242,6 +270,10 @@ class DebriefView:
     milestones: tuple[Milestone, ...]
     footer: FooterView
     timeline_categories: tuple[TimelineCategory, ...] = ()
+    # Each month the log touches, paired with its display heading. The pager
+    # keys a page on a month and needs its wording, and formatting belongs to
+    # the presenter, so the mapping is carried rather than derived downstream.
+    month_titles: tuple[tuple[str, str], ...] = ()
     # Warnings about the reading itself rather than about the session: a
     # figure the report could not read is not a figure of zero, so it says so
     # rather than letting a silent default pass for a measurement.
@@ -266,4 +298,5 @@ class DebriefView:
             "milestones": [milestone.as_dict() for milestone in self.milestones],
             "footer": self.footer.as_dict(),
             "notices": list(self.notices),
+            "month_titles": dict(self.month_titles),
         }

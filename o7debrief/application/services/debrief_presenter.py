@@ -23,6 +23,7 @@ from o7debrief.application.services.presenter_sections import (
     build_footer,
     build_header,
     build_headline,
+    build_month_titles,
     build_ranks,
     build_timeline,
     build_timeline_categories,
@@ -105,6 +106,7 @@ class DebriefPresenter:
             timeline_categories=build_timeline_categories(
                 debrief, fmt, resolver, self._text_renderer
             ),
+            month_titles=build_month_titles(debrief, fmt),
             ranks=build_ranks(debrief, fmt, resolver),
             milestones=build_milestones(debrief.moments, self._spec, resolver),
             footer=build_footer(debrief, fmt, resolver),

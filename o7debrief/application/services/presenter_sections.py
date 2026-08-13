@@ -22,6 +22,7 @@ from o7debrief.application.dto.debrief_view import (
     TimelineCategory,
     TimelineEntry,
 )
+from o7debrief.application.services.day_grouping import with_day_separators
 from o7debrief.application.services.label_resolver import mode_string_from_name
 from o7debrief.application.services.presenter_domains import DOMAIN_ORDER
 from o7debrief.application.services.timeline_text import row_text
@@ -30,6 +31,7 @@ __all__ = [
     "build_footer",
     "build_header",
     "build_headline",
+    "build_month_titles",
     "build_ranks",
     "build_timeline",
     "build_timeline_categories",
@@ -194,22 +196,31 @@ def _timeline_entry(moment, fmt, resolver, renderer) -> TimelineEntry:
     mission row can show its coins; the renderer so a template can be rendered.
     """
     mode = mode_string_from_name(moment.mode.name)
+    instant = moment.occurred_at.iso_utc
     return TimelineEntry(
-        time_display=fmt.time(moment.occurred_at.iso_utc),
+        time_display=fmt.time(instant),
+        day_display=fmt.date(instant),
+        day_key=fmt.day_key(instant),
+        month_key=fmt.month_key(instant),
         mode=mode,
         mode_label=resolver.mode_label(mode),
         mode_tag=resolver.mode_tag(mode),
         icon=resolver.domain_icon(moment.domain.name.lower()),
+        category_key=moment.domain.name.lower(),
         text=row_text(moment, resolver, fmt, renderer),
         system=_moment_system(moment),
     )
 
 
+def _entries(moments, fmt, resolver, renderer) -> tuple[TimelineEntry, ...]:
+    """Return one formatted entry per moment, in the order given."""
+    return tuple(_timeline_entry(moment, fmt, resolver, renderer) for moment in moments)
+
+
 def build_timeline(debrief, fmt, resolver, renderer=None) -> tuple[TimelineEntry, ...]:
     """Build one timeline entry per moment, most recent first."""
-    return tuple(
-        _timeline_entry(moment, fmt, resolver, renderer)
-        for moment in reversed(debrief.moments)
+    return with_day_separators(
+        _entries(reversed(debrief.moments), fmt, resolver, renderer)
     )
 
 
@@ -222,27 +233,40 @@ def build_timeline_categories(
     report can offer per-category views beside the full session log.
     Domains with no moments this session are omitted.
     """
-    grouped: dict[str, list[TimelineEntry]] = {}
+    grouped: dict[str, list] = {}
     for moment in reversed(debrief.moments):
         key = moment.domain.name.lower()
-        grouped.setdefault(key, []).append(
-            _timeline_entry(moment, fmt, resolver, renderer)
-        )
+        grouped.setdefault(key, []).append(moment)
     categories: list[TimelineCategory] = []
     for key in DOMAIN_ORDER:
-        entries = grouped.get(key)
-        if not entries:
+        moments = grouped.get(key)
+        if not moments:
             continue
+        entries = with_day_separators(_entries(moments, fmt, resolver, renderer))
         categories.append(
             TimelineCategory(
                 key=key,
                 label=resolver.domain_title(key),
                 icon=resolver.domain_icon(key),
                 count=len(entries),
-                entries=tuple(entries),
+                entries=entries,
             )
         )
     return tuple(categories)
+
+
+def build_month_titles(debrief, fmt) -> tuple[tuple[str, str], ...]:
+    """Return each month the log touches, paired with its display heading.
+
+    A paged history keys a page on the month it covers and has to head that
+    page with the month in words. Formatting is the presenter's job, so the
+    wording is resolved here once per month rather than per row.
+    """
+    titles: dict[str, str] = {}
+    for moment in debrief.moments:
+        instant = moment.occurred_at.iso_utc
+        titles.setdefault(fmt.month_key(instant), fmt.month(instant))
+    return tuple(titles.items())
 
 
 def build_ranks(debrief, fmt, resolver) -> tuple[RankChange, ...]:
@@ -293,4 +317,5 @@ def build_footer(debrief, fmt, resolver) -> FooterView:
         generated=resolver.generic(*_GENERATED),
         journal_first=fmt.datetime(debrief.window.start.iso_utc),
         journal_last=fmt.datetime(debrief.window.end.iso_utc),
+        timezone=fmt.timezone_label(),
     )

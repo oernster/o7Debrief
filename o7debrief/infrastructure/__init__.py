@@ -29,22 +29,32 @@ from o7debrief.infrastructure.preferences.json_preferences_store import (
 from o7debrief.infrastructure.rank.json_rank_snapshot_store import (
     JsonRankSnapshotStore,
 )
+from o7debrief.infrastructure.render.html_bundle_exporter import (
+    BUNDLE_DIRECTORY_NAME,
+    HtmlBundleExporter,
+)
 from o7debrief.infrastructure.render.html_renderer import HtmlDebriefExporter
 from o7debrief.infrastructure.render.jinja_text_renderer import (
     JinjaTextTemplateRenderer,
 )
 from o7debrief.infrastructure.render.journal_names import NameHumaniser
 from o7debrief.infrastructure.render.markdown_renderer import MarkdownDebriefExporter
+from o7debrief.infrastructure.sink.filesystem_bundle_sink import (
+    FilesystemBundleSink,
+)
 from o7debrief.infrastructure.sink.filesystem_sink import FilesystemSink
 from o7debrief.infrastructure.update.github_release_source import (
     GitHubReleaseSource,
 )
 
 __all__ = [
+    "BUNDLE_DIRECTORY_NAME",
     "FileJournalSource",
+    "FilesystemBundleSink",
     "FilesystemDebriefArchive",
     "FilesystemSink",
     "GitHubReleaseSource",
+    "HtmlBundleExporter",
     "HtmlDebriefExporter",
     "JinjaTextTemplateRenderer",
     "JsonPreferencesStore",

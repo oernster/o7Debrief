@@ -18,6 +18,9 @@ from typing import TYPE_CHECKING
 
 from o7debrief.application.dto.preferences import VALID_EXPORT_FORMATS
 from o7debrief.application.services.debrief_naming import debrief_prefix
+from o7debrief.infrastructure.render.html_bundle_exporter import (
+    BUNDLE_DIRECTORY_NAME,
+)
 
 if TYPE_CHECKING:  # pragma: no cover - type-only import, no runtime dependency
     from o7debrief.application.ports.preferences_store import PreferencesStore
@@ -26,6 +29,10 @@ __all__ = ["FilesystemDebriefArchive"]
 
 # Separator between a suffix and the rest of a filename, e.g. the dot in ".html".
 _SUFFIX_DOT = "."
+# The file a reader opens inside a history bundle. The bundle is a directory
+# rather than a file, so the archive lists this rather than the directory: the
+# recents list and the browser both want something openable.
+_BUNDLE_ENTRY = "index.html"
 
 
 class FilesystemDebriefArchive:
@@ -55,6 +62,10 @@ class FilesystemDebriefArchive:
         suffix, so in-flight temporary files and unrelated files are ignored.
         The timestamped name sorts lexically, so a reverse name sort is exactly
         newest first without reading any file modification time.
+
+        The history bundle heads the list whenever it exists. It is not dated,
+        because it is rewritten in place rather than produced afresh each run,
+        so it is always the current one rather than one of a series.
         """
         directory = self._effective_dir()
         if not directory.is_dir():
@@ -69,4 +80,15 @@ class FilesystemDebriefArchive:
             and entry.suffix in suffixes
         ]
         matches.sort(key=lambda entry: entry.name, reverse=True)
-        return [str(entry) for entry in matches]
+        return _bundle_first(directory) + [str(entry) for entry in matches]
+
+
+def _bundle_first(directory: Path) -> list[str]:
+    """Return the history bundle's entry point if the bundle is present.
+
+    A bundle is a directory, so the ordinary file scan cannot see it and the
+    recents list would silently lose the history report the moment it stopped
+    being one document.
+    """
+    entry = directory / BUNDLE_DIRECTORY_NAME / _BUNDLE_ENTRY
+    return [str(entry)] if entry.is_file() else []

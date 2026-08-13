@@ -16,6 +16,7 @@ from __future__ import annotations
 from jinja2 import Environment
 
 from o7debrief.application.dto.debrief_view import DebriefView
+from o7debrief.infrastructure.render.html_styles import STYLESHEET
 from o7debrief.infrastructure.render.icons import emoji_for
 
 __all__ = ["HtmlDebriefExporter"]
@@ -27,10 +28,14 @@ _EXTENSION = "html"
 _ENCODING = "utf-8"
 # Name under which the icon-to-emoji helper is exposed to the template.
 _EMOJI_FILTER = "emoji"
+# Context name under which the stylesheet receives the tab keys.
+_TAB_KEYS = "tab_keys"
 
-# The whole report as one self-contained template: all CSS inlined, no scripts.
-_TEMPLATE = """{% macro timeline_row(entry) -%}
-      <li>
+# The report as one self-contained template: the shared stylesheet inlined
+# between the head and the body, and no scripts anywhere.
+_HEAD = """{% macro timeline_row(entry) -%}
+{% if entry.day_separator %}      <li class="daysep">{{ entry.day_separator }}</li>
+{% endif %}      <li>
         <span class="t">{{ entry.time_display }}</span>
         <span class="ico">{{ entry.icon | emoji }}</span>
         <span>
@@ -46,91 +51,9 @@ _TEMPLATE = """{% macro timeline_row(entry) -%}
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{ footer.app_name }} - Commander {{ header.commander }}</title>
 <style>
-:root {
-  --bg: #0d0d10; --panel: #16161d; --edge: #2a2a33;
-  --accent: #f07b05; --accent-soft: #f8a24a;
-  --text: #d7d7da; --muted: #8a8a93;
-  --pos: #5fd07a; --neg: #e06f6f; --neutral: #8a8a93;
-}
-* { box-sizing: border-box; }
-body {
-  margin: 0; padding: 2rem 1rem; background: var(--bg); color: var(--text);
-  font-family: "Consolas", "DejaVu Sans Mono", monospace; line-height: 1.5;
-}
-.wrap { max-width: 60rem; margin: 0 auto; }
-h1 { color: var(--accent); font-size: 1.6rem; margin: 0 0 0.25rem;
-  letter-spacing: 0.04em; }
-h2 { color: var(--accent-soft); font-size: 1.05rem; text-transform: uppercase;
-  letter-spacing: 0.04em; border-bottom: 1px solid var(--edge);
-  padding-bottom: 0.3rem; margin: 2rem 0 1rem; }
-.sub { color: var(--muted); margin: 0 0 1.5rem; }
-.panel { background: var(--panel); border: 1px solid var(--edge);
-  border-radius: 6px; padding: 1rem 1.2rem; }
-.meta { display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 0.6rem 1.5rem; }
-.meta span { color: var(--muted); font-size: 0.78rem; text-transform: uppercase;
-  display: block; }
-/* The route is one cell, not a From cell and a To cell. As two they wrapped
-   apart, leaving the origin at the end of one row and the destination at the
-   start of the next, which read as two unrelated facts. */
-.meta .route .arrow { display: inline; color: var(--muted); padding: 0 0.4rem;
-  font-size: 1rem; text-transform: none; }
-.grid { display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 1rem; }
-.metric { background: var(--panel); border: 1px solid var(--edge);
-  border-radius: 6px; padding: 0.9rem 1rem; }
-.metric .label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; }
-.metric .value { font-size: 1.5rem; color: var(--accent); margin-top: 0.2rem; }
-.metric .delta { font-size: 0.85rem; margin-top: 0.2rem; }
-.positive { color: var(--pos); } .negative { color: var(--neg); }
-.neutral { color: var(--neutral); }
-.card .title { color: var(--accent-soft); font-size: 1rem; margin-bottom: 0.5rem; }
-.stats { list-style: none; margin: 0; padding: 0; }
-/* A stat row is a label and a figure on one line. The gap stops them touching
-   when the label is long ("Modifications261"); the figure never wraps, because a
-   value broken across two lines ("766.5" then "ly") stops reading as one
-   quantity and no longer lines up with the figures above and below it. The
-   label may wrap instead, since prose survives wrapping and a number does not. */
-.stats li { display: flex; justify-content: space-between; align-items: baseline;
-  gap: 0.9rem; border-bottom: 1px dotted var(--edge); padding: 0.25rem 0; }
-.stats li span:first-child { color: var(--muted); min-width: 0; }
-.stats li span:last-child { white-space: nowrap; text-align: right;
-  flex: 0 0 auto; font-variant-numeric: tabular-nums; }
-.note { color: var(--muted); font-style: italic; margin-top: 0.5rem; }
-.timeline { list-style: none; margin: 0; padding: 0; }
-.timeline li { display: grid; grid-template-columns: 5.5rem 2rem 1fr; gap: 0.5rem;
-  padding: 0.3rem 0; border-bottom: 1px solid var(--edge); }
-.timeline .t { color: var(--muted); }
-.timeline .mode { color: var(--muted); font-size: 0.78rem; }
-.timeline .sys { color: var(--accent-soft); }
-.logtabs-radio { position: absolute; left: -9999px; opacity: 0; }
-.logtabs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.8rem; }
-.logtabs label { cursor: pointer; padding: 0.3rem 0.7rem;
-  border: 1px solid var(--edge); border-radius: 4px; color: var(--muted);
-  font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.03em; }
-.logtabs label:hover { color: var(--text); border-color: var(--accent-soft); }
-.logpanel { display: none; }
-{% if timeline %}
-#logtab-all:checked ~ #panel-all { display: block; }
-#logtab-all:checked ~ .logtabs label[for="logtab-all"] {
-  background: var(--accent); color: var(--bg); border-color: var(--accent); }
-{% for cat in timeline_categories %}
-#logtab-{{ cat.key }}:checked ~ #panel-{{ cat.key }} { display: block; }
-#logtab-{{ cat.key }}:checked ~ .logtabs label[for="logtab-{{ cat.key }}"] {
-  background: var(--accent); color: var(--bg); border-color: var(--accent); }
-{% endfor %}
-{% endif %}
-.ranks, .milestones { list-style: none; margin: 0; padding: 0; }
-.ranks li, .milestones li { padding: 0.35rem 0; border-bottom: 1px solid var(--edge); }
-.ranks li { display: flex; align-items: center; justify-content: space-between;
-  gap: 1rem; }
-.rank-bar { flex: 0 0 8rem; height: 0.55rem; background: var(--edge);
-  border-radius: 3px; overflow: hidden; }
-.rank-fill { display: block; height: 100%; background: var(--accent); }
-.promoted { color: var(--accent); }
-footer { color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem;
-  border-top: 1px solid var(--edge); padding-top: 1rem; }
-</style>
+"""
+
+_BODY = """</style>
 </head>
 <body>
 <div class="wrap">
@@ -255,11 +178,20 @@ footer { color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem;
     {{ footer.app_name }} v{{ footer.app_version }} &middot; {{ footer.license }}<br>
     {% if footer.generated %}Generated {{ footer.generated }} &middot; {% endif %}
     Journal {{ footer.journal_first }} to {{ footer.journal_last }}
+    {%- if footer.timezone %}<br>
+    All times shown in {{ footer.timezone }}, as the journal records them.
+    {%- endif %}
+    {%- if footer.truncation_notice %}<br>
+    <span class="trunc">{{ footer.truncation_notice }}</span>
+    {%- endif %}
   </footer>
 </div>
 </body>
 </html>
 """
+
+# One template: the head, the shared sheet, then the body.
+_TEMPLATE = _HEAD + STYLESHEET + _BODY
 
 
 class HtmlDebriefExporter:
@@ -274,5 +206,10 @@ class HtmlDebriefExporter:
 
     def render(self, view: DebriefView) -> bytes:
         """Render the view's context into self-contained HTML bytes."""
-        html = self._template.render(**view.to_context())
-        return html.encode(_ENCODING)
+        context = view.to_context()
+        # The stylesheet needs the category keys alone, not the categories, so
+        # the same sheet serves the bundle's pages without knowing their shape.
+        context[_TAB_KEYS] = [
+            category["key"] for category in context["timeline_categories"]
+        ]
+        return self._template.render(**context).encode(_ENCODING)

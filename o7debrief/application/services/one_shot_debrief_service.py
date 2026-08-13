@@ -11,6 +11,7 @@ forward references read by duck typing.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from o7debrief.application.dto.rank_snapshot import RankSnapshot
@@ -116,7 +117,10 @@ class OneShotDebriefService:
         deltas, _end_pcts = self._rank_analyzer.analyse(events, start_tiers, start_pcts)
         debrief = self._debrief_builder.build_collected(commander, collection, deltas)
         view = self._presenter.present(debrief)
-        return self._export_service.export(view, request or self._default_request())
+        # The request says the view covers the whole journal, which is what
+        # sends it down the paged path rather than the one-file one.
+        chosen = replace(request or self._default_request(), history=True)
+        return self._export_service.export(view, chosen)
 
     def _carried_system(self, events: tuple[object, ...]) -> str | None:
         """Return the last system known from earlier history, else None.

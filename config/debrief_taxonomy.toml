@@ -756,3 +756,43 @@ thousands = true
 duration_format = "{hours}h {minutes}m"
 time_format = "%H:%M:%S"
 datetime_format = "%Y-%m-%d %H:%M:%S"
+# Day-separator wording for a report whose log spans more than one day.
+# Ordered day, month, year and spelled, so it cannot be read as either
+# MM/DD or DD/MM whatever locale the reader is in.
+date_format = "%a %d %b %Y"
+# Heading for one page of a paged history report, which covers one month.
+month_format = "%B %Y"
+# The zone every displayed time is in. Journal timestamps are UTC and the
+# report shows them unconverted, so the report says so rather than leaving
+# the reader to guess against their own clock.
+timezone_label = "UTC"
+
+# How a whole-history debrief is bounded and split. A history report is
+# regenerated every time the game closes and grows for ever, so these are the
+# limits that keep it a readable set of files rather than one document that
+# gets slower to open every month.
+[history]
+# The enforced cap on rows per page. Deterministic: the same log always splits
+# at the same rows, which is what lets an unchanged older page be left alone.
+entries_per_page = 1000
+# The size a page should stay under, in bytes. It is turned into a row count
+# through the estimate below rather than by rendering and measuring, because a
+# cap that depended on rendered size would move every page boundary whenever a
+# page's contents changed. The stricter of the two limits wins.
+page_bytes_target = 512000
+# Measured bytes one rendered log row costs, used only for that conversion.
+bytes_per_entry_estimate = 400
+# Emit the history as one document instead of a bundle. Useful for sending the
+# whole thing to somebody as a single file; bounded by the cap below, and the
+# footer states how many rows were left out.
+single_file = false
+single_file_max_entries = 2000
+truncation_notice_format = "Showing the most recent {shown} log entries. {omitted} older entries are not in this file; generate the paged history report to read them."
+# Fold rows older than the threshold into one summary row per day per
+# category. Off by default because it discards detail. It is the only setting
+# here that bounds the total size rather than merely dividing it. The age is
+# measured back from the newest row in the journal, never from the wall clock,
+# so the same journal always produces the same report.
+rollup_enabled = false
+rollup_after_days = 90
+rollup_text_format = "{count} {label} entries"

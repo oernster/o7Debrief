@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 from o7debrief.application.services.debrief_presenter import DebriefPresenter
+from o7debrief.domain.model.conceptual_moment import ConceptualMoment
 from o7debrief.domain.model.rollups import ActivityRollup
+from o7debrief.domain.value_objects.credits import Credits
 from o7debrief.domain.value_objects.enums import (
     ActivityDomain,
+    ActivityMode,
     MomentKind,
     RankLadder,
 )
+from o7debrief.domain.value_objects.event_time import EventTime
 from o7debrief.infrastructure.render.html_renderer import HtmlDebriefExporter
 from tests.application import domain_builders as build
 from tests.application.fakes import number_format, spec
@@ -224,3 +228,55 @@ def test_render_omits_the_notices_section_for_a_clean_reading() -> None:
     html = HtmlDebriefExporter().render(_populated_view()).decode("utf-8")
 
     assert "<h2>Notices</h2>" not in html
+
+
+def _dated_moment(iso: str):
+    """Build one travel moment at an explicit UTC instant."""
+    return ConceptualMoment(
+        kind=MomentKind.JUMP,
+        domain=ActivityDomain.TRAVEL,
+        mode=ActivityMode.SHIP,
+        occurred_at=EventTime.parse(iso),
+        label=MomentKind.JUMP.name,
+        magnitude=0.0,
+        credits_delta=Credits(0),
+        coins_delta=Credits(0),
+        detail=(),
+        text_template="",
+    )
+
+
+def _dated_html(*isos: str) -> str:
+    """Render a report whose log holds exactly these instants."""
+    debrief = build.debrief(
+        moments=tuple(_dated_moment(iso) for iso in isos),
+        activity=ActivityRollup(),
+    )
+    return HtmlDebriefExporter().render(_present(debrief)).decode("utf-8")
+
+
+def test_render_draws_no_day_separator_for_a_single_day_log() -> None:
+    """A one-day log emits no separator markup at all.
+
+    The stylesheet still declares the rule, since the sheet is one fixed block;
+    what must not appear is a single separator row in the log itself.
+    """
+    html = _dated_html("2026-08-13T09:00:00Z", "2026-08-13T15:15:30Z")
+
+    assert '<li class="daysep">' not in html
+
+
+def test_render_draws_one_day_separator_per_day_newest_first() -> None:
+    """Each day with rows gets a heading, in the log's descending order."""
+    html = _dated_html("2026-08-13T16:00:30Z", "2026-08-14T10:36:35Z")
+
+    assert '<li class="daysep">Fri 14 Aug 2026</li>' in html
+    assert '<li class="daysep">Thu 13 Aug 2026</li>' in html
+    assert html.index("Fri 14 Aug 2026") < html.index("Thu 13 Aug 2026")
+
+
+def test_render_names_the_timezone_in_the_footer() -> None:
+    """The footer states which clock every displayed time belongs to."""
+    html = _dated_html("2026-08-13T09:00:00Z")
+
+    assert "All times shown in UTC" in html

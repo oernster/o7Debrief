@@ -89,3 +89,31 @@ def test_missing_directory_returns_empty(tmp_path: Path) -> None:
 
     assert archive.count() == 0
     assert archive.list_page(0, 10) == ()
+
+
+def test_the_history_bundle_is_listed_by_its_index_and_heads_the_list(
+    tmp_path,
+) -> None:
+    """A bundle is a directory, so the file scan alone would lose the report.
+
+    It heads the list because it is rewritten in place rather than produced
+    afresh each run, so it is always the current history rather than one of a
+    dated series.
+    """
+    (tmp_path / "debrief_2026-08-13_10-00-00.html").write_text("x", encoding="utf-8")
+    bundle = tmp_path / "debrief_history"
+    (bundle / "pages").mkdir(parents=True)
+    index = bundle / "index.html"
+    index.write_text("y", encoding="utf-8")
+
+    archive = FilesystemDebriefArchive(tmp_path, FakePreferencesStore())
+
+    assert archive.count() == 2
+    assert archive.list_page(0, 10)[0] == str(index)
+
+
+def test_a_bundle_directory_with_no_index_is_not_listed(tmp_path) -> None:
+    """A half-written or emptied bundle offers nothing to open."""
+    (tmp_path / "debrief_history").mkdir()
+
+    assert FilesystemDebriefArchive(tmp_path, FakePreferencesStore()).count() == 0

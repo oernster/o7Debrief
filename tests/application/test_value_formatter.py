@@ -23,6 +23,9 @@ def _ungrouped() -> ValueFormatter:
         duration_format=fmt.duration_format,
         time_format=fmt.time_format,
         datetime_format=fmt.datetime_format,
+        date_format=fmt.date_format,
+        month_format=fmt.month_format,
+        timezone_label=fmt.timezone_label,
     )
     return ValueFormatter(plain)
 
@@ -105,3 +108,23 @@ def test_parse_handles_explicit_offset_without_z() -> None:
 def test_parse_handles_naive_timestamp() -> None:
     # No offset and no Z exercises the tzinfo-None branch (assumed UTC).
     assert _grouped().datetime("2026-06-15T10:30:45") == "2026-06-15 10:30:45"
+
+
+def test_date_returns_an_unambiguous_spelled_day() -> None:
+    """The day is spelled, so it cannot be read as either MM/DD or DD/MM."""
+    assert _grouped().date("2026-08-13T15:15:30Z") == "Thu 13 Aug 2026"
+
+
+def test_date_reads_the_instant_in_utc_not_a_local_zone() -> None:
+    """An instant late in the UTC day stays on that day, whatever the reader's clock.
+
+    Times are displayed unconverted, so the day must be read the same way or a
+    row lands under a heading it does not belong to.
+    """
+    assert _grouped().date("2026-08-13T23:50:00Z") == "Thu 13 Aug 2026"
+    assert _grouped().time("2026-08-13T23:50:00Z") == "23:50:00"
+
+
+def test_timezone_label_names_the_zone_the_report_quotes() -> None:
+    """The formatter carries the label so no renderer holds one of its own."""
+    assert _grouped().timezone_label() == "UTC"

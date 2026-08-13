@@ -280,6 +280,9 @@ def _number_format() -> NumberFormat:
         duration_format=table["duration_format"],
         time_format=table["time_format"],
         datetime_format=_SAMPLE_DATETIME_FORMAT,
+        date_format=table["date_format"],
+        month_format=table["month_format"],
+        timezone_label=table["timezone_label"],
     )
 
 

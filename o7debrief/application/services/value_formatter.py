@@ -34,6 +34,12 @@ _PERCENT_SIGN = "%"
 _CREDIT_ZERO = 0
 # Format mini-language precision for a distance: one decimal place.
 _ONE_DECIMAL_PLACE = ".1f"
+# Sortable year-month key used to group and to name a history page file. It is
+# never displayed, so it is fixed here rather than drawn from configuration.
+_MONTH_KEY_FORMAT = "%Y-%m"
+# Sortable ISO day key, used to group rows for a daily rollup and to measure
+# the age of a row in whole days. Never displayed, so likewise fixed here.
+_DAY_KEY_FORMAT = "%Y-%m-%d"
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,6 +53,9 @@ class NumberFormat:
     duration_format: str
     time_format: str
     datetime_format: str
+    date_format: str
+    month_format: str
+    timezone_label: str
 
 
 class ValueFormatter:
@@ -128,3 +137,34 @@ class ValueFormatter:
     def datetime(self, iso_utc: str) -> str:
         """Return the full date and time of an event-time, formatted."""
         return self._parse(iso_utc).strftime(self._fmt.datetime_format)
+
+    def date(self, iso_utc: str) -> str:
+        """Return only the calendar day of an event-time, formatted.
+
+        The day is read in the same zone the times are shown in, which is UTC,
+        because ``_parse`` never converts. Grouping rows by a day computed in
+        one zone while showing times in another would file entries under the
+        wrong heading, so both must come from the same instant untouched.
+        """
+        return self._parse(iso_utc).strftime(self._fmt.date_format)
+
+    def month(self, iso_utc: str) -> str:
+        """Return the calendar month of an event-time, formatted for display."""
+        return self._parse(iso_utc).strftime(self._fmt.month_format)
+
+    def month_key(self, iso_utc: str) -> str:
+        """Return the sortable year-month an event-time falls in.
+
+        This is an internal grouping key, never shown to a reader, so its shape
+        is fixed here rather than configured: it exists to sort and to name a
+        page file, and both break if a reader can change it.
+        """
+        return self._parse(iso_utc).strftime(_MONTH_KEY_FORMAT)
+
+    def day_key(self, iso_utc: str) -> str:
+        """Return the sortable ISO calendar day an event-time falls in."""
+        return self._parse(iso_utc).strftime(_DAY_KEY_FORMAT)
+
+    def timezone_label(self) -> str:
+        """Return the label naming the zone every displayed time is in."""
+        return self._fmt.timezone_label

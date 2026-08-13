@@ -45,6 +45,11 @@ _TIMELINE_KEYS = {
     "icon",
     "text",
     "system",
+    "day_display",
+    "day_key",
+    "month_key",
+    "category_key",
+    "day_separator",
 }
 _TIMELINE_CATEGORY_KEYS = {"key", "label", "icon", "count", "entries"}
 _RANK_KEYS = {
@@ -64,6 +69,8 @@ _FOOTER_KEYS = {
     "generated",
     "journal_first",
     "journal_last",
+    "timezone",
+    "truncation_notice",
 }
 
 
@@ -163,6 +170,7 @@ def test_to_context_yields_exact_contract_shape() -> None:
         "milestones",
         "footer",
         "notices",
+        "month_titles",
     }
     assert set(context["header"]) == _HEADER_KEYS
     assert set(context["footer"]) == _FOOTER_KEYS

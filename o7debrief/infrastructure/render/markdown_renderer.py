@@ -145,7 +145,12 @@ def _milestones(lines: list[str], milestones: list[dict]) -> None:
 
 
 def _footer(lines: list[str], footer: dict) -> None:
-    """Append the footer: app identity and the journal span."""
+    """Append the footer: app identity, the journal span and any caveats.
+
+    The zone note and the truncation notice matter more here than in the HTML
+    report, because Markdown is what gets pasted into a chat window where a
+    reader has no way to ask the file what it left out.
+    """
     generated = f"Generated {footer['generated']} | " if footer["generated"] else _BLANK
     lines.append(
         f"_{footer['app_name']} v{footer['app_version']} | {footer['license']}_"
@@ -154,6 +159,13 @@ def _footer(lines: list[str], footer: dict) -> None:
         f"_{generated}Journal {footer['journal_first']} to "
         f"{footer['journal_last']}_"
     )
+    if footer["timezone"]:
+        lines.append(
+            f"_All times shown in {footer['timezone']}, "
+            "as the journal records them._"
+        )
+    if footer["truncation_notice"]:
+        lines.append(f"_{footer['truncation_notice']}_")
 
 
 class MarkdownDebriefExporter:

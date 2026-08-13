@@ -61,6 +61,9 @@ def number_format() -> NumberFormat:
         duration_format="{hours}h {minutes}m",
         time_format="%H:%M:%S",
         datetime_format="%Y-%m-%d %H:%M:%S",
+        date_format="%a %d %b %Y",
+        month_format="%B %Y",
+        timezone_label="UTC",
     )
 
 
