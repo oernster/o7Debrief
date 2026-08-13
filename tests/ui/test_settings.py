@@ -9,6 +9,10 @@ from o7debrief.ui.windows.settings import SettingsDialog
 
 _DIR = "C:/Users/Cmdr/Downloads"
 
+# Controls that paint their own caption instead of using a QLabel, so the
+# theme's QLabel colour rule does not reach them.
+_CAPTION_CONTROL_SELECTORS = ("QRadioButton", "QCheckBox")
+
 
 def _noop_save(_fmt, _on, _dir):  # type: ignore[no-untyped-def]
     """A save callback that ignores its arguments."""
@@ -99,3 +103,26 @@ def test_settings_dialog_cancel_reports_nothing(qapp: QApplication) -> None:
     dialog.reject()
 
     assert saved == []
+
+
+def test_settings_dialog_theme_sets_a_colour_for_every_caption_control(
+    qapp: QApplication,
+) -> None:
+    """Every control that paints its own caption needs an explicit colour.
+
+    A QRadioButton and a QCheckBox draw their captions themselves rather than
+    through a QLabel, so the theme's QLabel rule never reached them and they
+    fell back to the desktop palette: near black on this near black dialog,
+    invisible on a dark Linux desktop while readable on Windows.
+
+    This asserts the rule exists rather than sampling the rendered pixels. A
+    pixel test cannot fail here: the offscreen platform used by the suite
+    supplies its own light default palette, so the captions render legibly
+    with or without the fix, and the very palette dependency that caused the
+    defect is the thing the test environment does not reproduce.
+    """
+    dialog = SettingsDialog(FORMAT_HTML, False, _DIR, _noop_save)
+    sheet = dialog.styleSheet()
+
+    for selector in _CAPTION_CONTROL_SELECTORS:
+        assert f"{selector} {{ color:" in sheet

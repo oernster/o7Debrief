@@ -124,16 +124,27 @@ def running_from_inside(install_dir: Path) -> bool:
 
     A path that cannot be resolved answers True, which is the safe direction:
     the caller then defers the deletion instead of attempting it in place.
+
+    The literal path is tested as well as the resolved one. ``resolve()``
+    follows symlinks, so an interpreter that is a symlink out of the directory
+    (a Linux venv's ``bin/python``, which points at the system Python) resolves
+    to somewhere else entirely and the directory it is actually running from
+    then looks unrelated. The caller's next act is an unconditional rmtree, so
+    a false answer here deletes a live directory; either path matching is
+    enough to defer.
     """
+    candidates = []
     try:
-        running = Path(sys.executable).resolve()
-        root = install_dir.resolve()
+        candidates.append((Path(sys.executable), install_dir))
+        candidates.append((Path(sys.executable).resolve(), install_dir.resolve()))
     except OSError:  # pragma: no cover
         # Defensive: resolve() does not raise for any path this environment can
         # produce, so no test can reach this. It is kept because answering True
         # defers the deletion, which is the safe direction.
         return True
-    return running == root or root in running.parents
+    return any(
+        running == root or root in running.parents for running, root in candidates
+    )
 
 
 def directory_size_kb(path: Path) -> int | None:

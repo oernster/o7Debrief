@@ -21,11 +21,21 @@ _SURFACE = "#16161d"
 _EDGE = "#2a2a33"
 _ACCENT_SOFT = "#f8a24a"
 TEXT_COLOUR = "#d7d7da"
+# Dimmed against the body text, so a disabled control reads as unavailable
+# rather than merely as low contrast.
+_DISABLED_TEXT = "#6d6d75"
 HEADING_COLOUR = "#f07b05"
 
 _STYLESHEET = f"""
 QDialog {{ background: {_BACKGROUND}; }}
 QLabel {{ color: {TEXT_COLOUR}; }}
+/* A QRadioButton and a QCheckBox draw their own text rather than through a
+   QLabel, so the QLabel rule above never reaches them.  Without these two they
+   fall back to the desktop palette's text colour, which on a dark desktop is
+   near black on this dark dialog and reads as disabled or as nothing at all. */
+QRadioButton {{ color: {TEXT_COLOUR}; }}
+QCheckBox {{ color: {TEXT_COLOUR}; }}
+QRadioButton:disabled, QCheckBox:disabled {{ color: {_DISABLED_TEXT}; }}
 QTextBrowser {{
     border: none;
     background: transparent;

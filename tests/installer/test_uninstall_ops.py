@@ -90,13 +90,30 @@ def test_remove_install_dir_deletes_a_directory_it_is_not_running_from(
     assert runner.detached == []
 
 
-def test_remove_install_dir_defers_when_it_holds_the_running_executable() -> None:
-    """The registered uninstaller cannot delete its own running image."""
+def test_remove_install_dir_defers_when_it_holds_the_running_executable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The registered uninstaller cannot delete its own running image.
+
+    The running executable is faked inside tmp_path rather than read from the
+    real ``sys.executable``. Handing this function a live system directory
+    makes the test's own safety depend on the guard it is testing: when the
+    guard says no, the next line is an unconditional rmtree of that directory.
+    This test previously passed ``Path(sys.executable).parent`` and deleted the
+    developer's venv bin directory on Linux, where the venv interpreter is a
+    symlink out to the system Python and the guard therefore answered False.
+    """
+    install_dir = tmp_path / "installed"
+    install_dir.mkdir()
+    running = install_dir / f"{APP_DISPLAY_NAME}Setup.exe"
+    running.write_text("x", encoding="utf-8")
+    monkeypatch.setattr(sys, "executable", str(running))
     runner = FakeRunner()
 
-    remove_install_dir(Path(sys.executable).parent, runner)
+    remove_install_dir(install_dir, runner)
 
     assert len(runner.detached) == 1
+    assert install_dir.exists()
 
 
 def test_uninstall_removes_shortcuts_registrations_and_files(

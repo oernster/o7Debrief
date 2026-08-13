@@ -16,4 +16,12 @@ exclude =
     *.build,
     *.dist,
     *.onefile-build,
-    *.egg-info
+    *.egg-info,
+    # The Flatpak build trees hold the sandbox's vendored site-packages, so
+    # linting them reports on PySide6 and shiboken6 rather than on this project.
+    # ruff skips them already by reading .gitignore; flake8 does not, so they
+    # are named here.
+    .flatpak-build,
+    .flatpak-builder,
+    .flatpak-repo,
+    .flatpak-wheels

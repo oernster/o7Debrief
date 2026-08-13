@@ -177,6 +177,30 @@ def test_running_from_inside_is_false_for_an_unrelated_directory(
     assert running_from_inside(tmp_path) is False
 
 
+def test_running_from_inside_holds_when_the_executable_is_a_symlink_out(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A symlinked interpreter still counts as running from its own directory.
+
+    This is the shape of a Linux virtual environment: ``venv/bin/python`` is a
+    symlink to the system interpreter, so resolving it leaves the directory
+    entirely. The caller deletes the directory outright when this answers
+    False, so the literal path has to be tested as well as the resolved one.
+    """
+    elsewhere = tmp_path / "system"
+    elsewhere.mkdir()
+    real = elsewhere / "python3"
+    real.write_text("x", encoding="utf-8")
+
+    install_dir = tmp_path / "installed"
+    install_dir.mkdir()
+    link = install_dir / "python3"
+    link.symlink_to(real)
+    monkeypatch.setattr(sys, "executable", str(link))
+
+    assert running_from_inside(install_dir) is True
+
+
 def test_directory_size_kb_totals_the_files(tmp_path: Path) -> None:
     kib = 1024
     (tmp_path / "a.bin").write_bytes(b"x" * (2 * kib))
