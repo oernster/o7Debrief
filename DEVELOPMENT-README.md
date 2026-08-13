@@ -213,7 +213,8 @@ installer/         The setup program, split so the privileged work is measurable
   cli.py           The command line the registered UninstallString re-invokes.
   constants.py     The names shared across the package.
   app.py           The setup program's composition root.
-config/            TOML taxonomy mapping raw events to moments.
+config/            TOML taxonomy: the event-to-moment mapping, the display
+                   formats and the limits that bound a history report.
 docs/              The GitHub Pages site, stamped with the version from VERSION.
 tools/             Development instruments (icon generation, screenshot capture,
                    the example report). Not part of the shipped package.
