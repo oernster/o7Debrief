@@ -508,13 +508,13 @@
         <div class="card">
           <div class="icon">&#128274;</div>
           <h3>Local-first</h3>
-          <p>No cloud, no account, no telemetry. Your journal never leaves your machine and the app needs no administrator rights to install.</p>
+          <p>No cloud, no account, no telemetry. Your journal never leaves your machine and the app needs no administrator rights to install. Nothing listens either: the app opens no port and accepts no connection, so the only network call it ever makes is the update check going out.</p>
         </div>
       </div>
     </section>
 
     <section id="interface">
-      <h2>Two ways in</h2>
+      <h2>Three ways in</h2>
       <div class="twoup">
         <figure>
           <img src="assets/home-screen.png" loading="lazy" alt="The o7 Debrief home screen showing the status line, the two debrief actions, recent reports and the Settings, About and Close buttons">
@@ -525,6 +525,7 @@
           <figcaption>Right-click for the full menu.</figcaption>
         </figure>
       </div>
+      <p class="caption">The third is simply launching o7 Debrief again. It does not start a second copy; the one already running opens its home screen, so the Start menu shortcut reaches the app rather than appearing to do nothing.</p>
     </section>
 
     <section id="screenshot">
@@ -573,6 +574,10 @@
           <p>Windows 10 and Windows 11. It runs quietly from the system tray and reads the Player Journal that Elite Dangerous writes on your PC.</p>
         </div>
         <div class="card">
+          <h3>Does o7 Debrief run on Linux?</h3>
+          <p>Not yet. A Flatpak build exists in the repository, along with journal discovery for Proton and Wine prefixes and a Linux equivalent of the start-on-sign-in setting; none of it has ever been built or run on a Linux machine. It is source you can build rather than a platform o7 Debrief supports, with the repository recording exactly what has and has not been verified. Windows is the platform every release is built and tested on.</p>
+        </div>
+        <div class="card">
           <h3>How do I install or upgrade o7 Debrief?</h3>
           <p>Run the setup program. It installs for your user account only, so it never asks for administrator rights. It names the phase it is in and shows its progress as it works. Upgrading over a copy that is still running in the tray is handled for you: setup offers to close it and carry on. The same program repairs and uninstalls.</p>
         </div>
@@ -585,7 +590,7 @@
       <p class="section-sub">Download the newest release with one click. Free and
         LGPL-3.0, local-first Windows software with no cloud, no account and no
         telemetry.</p>
-      <span class="dl-version" id="dl-version">Version <!--VERSION-->2.3.0<!--/VERSION--></span>
+      <span class="dl-version" id="dl-version">Version <!--VERSION-->2.4.0<!--/VERSION--></span>
       <div class="downloads">
         <div class="dl-card">
           <div class="ico">🪟</div>

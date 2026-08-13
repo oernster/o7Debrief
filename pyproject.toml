@@ -52,7 +52,7 @@ testpaths = ["tests"]
 # Five infrastructure sub-packages join the gate because they already stand at
 # 100% and have no OS-specific branch a test cannot reach. The rest of
 # infrastructure cannot: coverage carries a single fail-under, so gating a
-# layer measured at 79% would drag the whole threshold down and silently end
+# layer measured at 85% would drag the whole threshold down and silently end
 # the 100% gate on the pure layers. Those five stay integration-tested, as do
 # ui and main.py.
 addopts = "--cov=o7debrief.domain --cov=o7debrief.application --cov=o7debrief.infrastructure.archive --cov=o7debrief.infrastructure.autostart --cov=o7debrief.infrastructure.clock --cov=o7debrief.infrastructure.sink --cov=o7debrief.infrastructure.update --cov=installer.ops --cov=installer.state --cov-branch --cov-report=term-missing --cov-fail-under=100"

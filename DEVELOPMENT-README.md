@@ -72,9 +72,9 @@ flake8
 echo "EXIT=$LASTEXITCODE"
 ```
 
-One exception is deliberate. The scripts under `tools/` add the repository root to `sys.path` (and set the Qt scaling environment) before importing from the package, so their imports must stay below that bootstrap; each carries a `# noqa: E402` marker to say so. Do not let an import sorter move or strip them, because reordering those imports breaks the scripts.
+One exception is deliberate. The scripts under `tools/` add the repository root to `sys.path` (and set the Qt scaling environment) before importing from the package, so their imports must stay below that bootstrap; each carries a `# noqa: E402` marker to say so. `tests/installer/test_worker_shutdown.py` does the same thing for the same reason. Do not let an import sorter move or strip those markers, because reordering the imports breaks the scripts.
 
-This matters if you reach for `ruff`. The project has no ruff configuration, so `ruff check --isolated` runs with E402 disabled, decides every one of those markers is unused and offers to remove them and re-sort the imports. Under `flake8`, which is what the project actually configures, the same markers are load-bearing and the tree is clean. Take `ruff --fix` nowhere near `tools/`.
+This matters if you reach for `ruff`. The project has no ruff configuration, so ruff runs with E402 disabled, decides every one of those markers is unused and offers to remove them and re-sort the imports. Under `flake8`, which is what the project actually configures, the same markers are load-bearing and the tree is clean. So `ruff --fix` goes nowhere near `tools/` or that installer test; a plain `ruff check` on the rest of the tree is clean and worth running.
 
 ## Build the executable
 
@@ -97,6 +97,26 @@ To run the setup program from source without building it:
 ```powershell
 python installer_main.py
 ```
+
+## Build the Flatpak
+
+This one runs on Linux, from a checkout with the virtual environment created:
+
+```bash
+./build_flatpak.sh
+```
+
+The script writes its own manifest, launcher, desktop entry and metainfo rather than committing them, derives the whole icon set from the single master PNG at the repository root, pre-downloads the wheels on the host so the sandboxed build needs no network, then installs the app and produces `o7debrief.flatpak`. `./cleanup_flatpak.sh` removes only what that script produced, so the Nuitka build outputs are left alone.
+
+It has never been built or run on a Linux machine. [TECH_DEBT.md](TECH_DEBT.md) item 4 records exactly what has and has not been verified, which is worth reading before you trust it.
+
+## Stamp the version into the site
+
+```powershell
+python stamp_version.py
+```
+
+`VERSION` at the repository root is the single source of truth. The runtime and `pyproject.toml` read it directly; the GitHub Pages site under `docs/` cannot, so each page carries a delimited `<!--VERSION-->` token that this script overwrites from `VERSION`. It is idempotent and prints the files it touched. Both `buildexe.py` and `buildinstaller.py` call it at the start of a build, so a packaged release cannot ship a site showing the wrong version.
 
 ## Project layout
 
@@ -121,6 +141,7 @@ installer/         The setup program, split so the privileged work is measurable
   constants.py     The names shared across the package.
   app.py           The setup program's composition root.
 config/            TOML taxonomy mapping raw events to moments.
+docs/              The GitHub Pages site, stamped with the version from VERSION.
 tools/             Development instruments (icon generation, screenshot capture,
                    the example report). Not part of the shipped package.
 tests/
@@ -134,6 +155,9 @@ main.py            The single composition root.
 installer_main.py  Entry point for the setup program.
 buildexe.py        Nuitka standalone build.
 buildinstaller.py  Windows installer build.
+build_flatpak.sh   Linux Flatpak build; writes its own manifest and packaging files.
+cleanup_flatpak.sh Removes only what the Flatpak build produced.
+stamp_version.py   Stamps VERSION into the docs/ site.
 VERSION            The single source of truth for the version.
 ```
 
