@@ -44,9 +44,9 @@ This is a verification gap rather than a defect and it closes with evidence rath
 
 So this item is now waiting on a played Operation rather than on any work.
 
-## 2. The Flatpak builds and runs; parts of it are still unproven
+## 2. The Linux release works end to end; three narrower assumptions are unproven
 
-`build_flatpak.sh`, `cleanup_flatpak.sh` and `LinuxAutostart` were written on a Windows machine with no Linux, no `flatpak-builder` and no Elite Dangerous under Proton. That is no longer the whole story: the Flatpak has now been built and run on a real Ubuntu machine. What that settled and what it did not is worth stating exactly, because the gap between the two is what is left of this item.
+`build_flatpak.sh`, `cleanup_flatpak.sh` and `LinuxAutostart` were written on a Windows machine with no Linux, no `flatpak-builder` and no Elite Dangerous under Proton. Since then the Flatpak has been built and run on a real Ubuntu machine and more recently used through a real play session there. What that settled and what it did not is worth stating exactly, because the gap between the two is what is left of this item.
 
 Settled by running it:
 
@@ -61,17 +61,25 @@ Verified before that and still only that:
 - `LinuxAutostart` is unit-tested at 100% branch coverage against a temporary directory.
 - The summon route was run for real on Windows across two processes: a second launch leaves the marker, exits cleanly and the running instance consumes it and opens its window. What that does not prove is the sandbox part of it, below.
 
-Still unverified: whether the sandbox can actually read a Proton prefix, whether the autostart entry survives a real session start and whether `webbrowser.open` reaches a host browser through the portal from inside the sandbox. Those need a machine with the game installed rather than another build.
+### The play path has now been walked
 
-Three things remain most likely to be wrong:
+The two largest unknowns are gone, settled by playing the game rather than by more reading. On an Ubuntu machine with Elite Dangerous under Proton, the Flatpak was launched by hand, left watching in the background through a real session and produced a debrief when the game closed. The report opened by itself in a browser on the host.
 
-- **The Steam-as-Flatpak journal path.** `--filesystem=home` does not cover `~/.var/app`, which is why the manifest carries a second explicit `--filesystem=~/.var/app/com.valvesoftware.Steam:ro`. If that line is wrong or insufficient, discovery fails on a machine that plainly has a journal; the report then says no journal directory rather than saying it was not allowed to look.
-- **Opening the debrief.** The Windows path opens the file with `webbrowser`; inside the sandbox that has to travel through the portal to a browser on the host. It is the whole point of the Linux release and it is entirely untested.
-- **The summon route's sandbox assumption.** Launching the app again opens the home window rather than exiting in silence. It is no longer the only route to a tray-less desktop, since the app now opens that window itself when no tray appears; it remains the route back after the window is closed. It rests on one thing this machine cannot check: inside a flatpak each instance gets its own `XDG_RUNTIME_DIR`, so the lock file and the summon marker are placed in `$XDG_RUNTIME_DIR/app/$FLATPAK_ID`, the directory flatpak shares between instances of one application. If that is wrong or not mounted as expected, two launches take two locks: a second tray appears and the summon marker is never seen. It is written from the documented sandbox layout and verified only against a temporary directory standing in for it.
+That single run settles three things at once:
 
-What closes the rest is a Linux machine with Elite Dangerous installed under Proton, not further reading. Until a debrief has been generated from a real journal there and opened in a browser, the end-to-end Linux path is built but not proven and no document should claim otherwise.
+- **The sandbox can read a Proton prefix.** Discovery found the live journal inside the prefix and the watcher tailed it while the game wrote to it. This was the assumption most likely to be wrong and the one whose failure looks like a missing journal on a machine that plainly has one.
+- **The debrief opens on the host.** `webbrowser.open` reached a real browser from inside the sandbox through the portal. It was described here as entirely untested and as the whole point of the Linux release; it works.
+- **Session bracketing behaves the same there.** The debrief was generated at the end of the session from a journal written by the game rather than by a fixture. Its footer states the shipped version, so the packaged Linux build reads `VERSION` correctly too.
 
-Two things have moved since that was written and the wording above is narrower than it was because of them. The Flatpak bundle is now published as a release asset rather than being something a reader had to build, so the documents and the site offer it and say plainly which part of it is unproven, rather than declining to mention a file that is plainly there for download. What that does not change is the substance of this item: the install path is proven and the play path is not, so nothing anywhere claims the second.
+### What is still open
+
+Three narrower assumptions remain, none of which that run exercised:
+
+- **The autostart entry across a real session start.** The app was launched by hand. Whether the XDG autostart entry is written correctly, survives a sign-out and starts o7 Debrief watching before the game runs is still unverified. It is also the setting most users will actually rely on.
+- **The summon route inside the sandbox.** Launching the app a second time should reach the copy already running. Inside a flatpak each instance is otherwise given its own `XDG_RUNTIME_DIR`, so the lock and the summon marker are placed in `$XDG_RUNTIME_DIR/app/$FLATPAK_ID`, the directory flatpak shares between instances. If that is wrong or not mounted as expected, two launches take two locks: a second tray appears and the marker is never seen. Proven on Windows across two processes; inside the sandbox it is still written from the documented layout and tested only against a temporary directory standing in for it. Closing it needs nothing more than launching the Flatpak twice.
+- **Steam installed as a Flatpak.** `--filesystem=home` does not cover `~/.var/app`, which is why the manifest carries a second explicit `--filesystem=~/.var/app/com.valvesoftware.Steam:ro`. The run above proves discovery for the Steam layout on that machine; it does not exercise that second line, which covers a different layout.
+
+So the shape of this item has inverted. It was "the install works and the play path is unproven". It is now "the play path works and three narrower assumptions are unproven", two of which close on the next Linux session and neither of which stops a player getting a debrief.
 
 ---
 

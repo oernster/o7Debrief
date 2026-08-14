@@ -182,7 +182,7 @@ This one runs on Linux, from a checkout with the virtual environment created:
 
 The script writes its own manifest, launcher, desktop entry and metainfo rather than committing them, derives the whole icon set from the single master PNG at `assets/o7Debrief.png`, pre-downloads the wheels on the host so the sandboxed build needs no network, then installs the app and produces `o7debrief.flatpak`. `./cleanup_flatpak.sh` reverses it: it removes the build trees, the wheels, the generated manifest and packaging files and the bundle; it uninstalls the app as well, since a cleanup that left the one thing actually installed on the machine would not be one. Pass `--keep-installed` to clear the artefacts and keep the app. It touches nothing the other two delivery paths produced, so the Nuitka build outputs are left alone.
 
-The bundle it produces is what each release publishes as `o7debrief.flatpak`. It has been built, installed and run on Ubuntu. What has not been proven is producing a debrief from a real journal inside a Proton prefix, so [TECH_DEBT.md](TECH_DEBT.md) item 2 records exactly what has and has not been verified and is worth reading before you trust it.
+The bundle it produces is what each release publishes as `o7debrief.flatpak`. It has been built, installed and used through a real play session on Ubuntu, with Elite Dangerous under Proton: the journal was read from inside the prefix and the debrief opened in a browser on the host. [TECH_DEBT.md](TECH_DEBT.md) item 2 records the narrower assumptions still unproven (the autostart entry across a session start, the summon route inside the sandbox and a Steam that is itself a Flatpak) and is worth reading before you trust those.
 
 ## Refresh the site from VERSION
 
