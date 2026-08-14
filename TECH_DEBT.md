@@ -44,7 +44,7 @@ This is a verification gap rather than a defect and it closes with evidence rath
 
 So this item is now waiting on a played Operation rather than on any work.
 
-## 2. The Linux release works end to end; three narrower assumptions are unproven
+## 2. The Linux release works end to end; two narrower assumptions are unproven
 
 `build_flatpak.sh`, `cleanup_flatpak.sh` and `LinuxAutostart` were written on a Windows machine with no Linux, no `flatpak-builder` and no Elite Dangerous under Proton. Since then the Flatpak has been built and run on a real Ubuntu machine and more recently used through a real play session there. What that settled and what it did not is worth stating exactly, because the gap between the two is what is left of this item.
 
@@ -71,15 +71,18 @@ That single run settles three things at once:
 - **The debrief opens on the host.** `webbrowser.open` reached a real browser from inside the sandbox through the portal. It was described here as entirely untested and as the whole point of the Linux release; it works.
 - **Session bracketing behaves the same there.** The debrief was generated at the end of the session from a journal written by the game rather than by a fixture. Its footer states the shipped version, so the packaged Linux build reads `VERSION` correctly too.
 
+Starting at sign-in is settled too. It took a defect with it: tested on a real reboot it did not start at all. Inside a flatpak the sandbox redirects `XDG_CONFIG_HOME` to the app's own private configuration under `~/.var/app`, so the autostart entry was written where no session reads it. Worse, `is_enabled` read that same private path back and reported the setting as on. Silent in both directions. The adapter now ignores `XDG_CONFIG_HOME` under a flatpak and writes to the real `~/.config/autostart`, which the manifest already granted. That has been confirmed the only way it can be: tick the setting, reboot, find o7 Debrief already watching.
+
+One thing about it is worth stating for Linux users rather than treating as debt. A flatpak install cannot arrive with the setting already on, since enabling autostart is necessarily an action the user takes afterwards and an app should not turn it on by itself. The Windows setup program can offer the choice while installing; on Linux it is always a trip into Settings once. That is a platform difference rather than a gap.
+
 ### What is still open
 
-Three narrower assumptions remain, none of which that run exercised:
+Two narrower assumptions remain, neither of which any run so far exercised:
 
-- **The autostart entry across a real session start.** This one was tried and it failed: the setting was on, Ubuntu was rebooted and o7 Debrief did not start. The cause is found and fixed. Inside a flatpak the sandbox redirects `XDG_CONFIG_HOME` to the app's own private configuration under `~/.var/app`, so the entry was being written there rather than to the session's `~/.config/autostart`, where nothing ever read it. It failed silently in both directions, because `is_enabled` read the same private path back and reported the setting as on. The adapter now ignores `XDG_CONFIG_HOME` under a flatpak and writes to the real path, which the manifest already grants. What remains is confirming it: install the next build, tick the setting and reboot. Until that happens this is a fix rather than a verified one. A stale entry may also still sit under `~/.var/app/uk.co.oernster.o7Debrief/config/autostart` from before.
 - **The summon route inside the sandbox.** Launching the app a second time should reach the copy already running. Inside a flatpak each instance is otherwise given its own `XDG_RUNTIME_DIR`, so the lock and the summon marker are placed in `$XDG_RUNTIME_DIR/app/$FLATPAK_ID`, the directory flatpak shares between instances. If that is wrong or not mounted as expected, two launches take two locks: a second tray appears and the marker is never seen. Proven on Windows across two processes; inside the sandbox it is still written from the documented layout and tested only against a temporary directory standing in for it. Closing it needs nothing more than launching the Flatpak twice.
 - **Steam installed as a Flatpak.** `--filesystem=home` does not cover `~/.var/app`, which is why the manifest carries a second explicit `--filesystem=~/.var/app/com.valvesoftware.Steam:ro`. The run above proves discovery for the Steam layout on that machine; it does not exercise that second line, which covers a different layout.
 
-So the shape of this item has inverted. It was "the install works and the play path is unproven". It is now "the play path works and three narrower assumptions are unproven", two of which close on the next Linux session and neither of which stops a player getting a debrief.
+So the shape of this item has inverted. It was "the install works and the play path is unproven". It is now "the play path works and two narrower assumptions are unproven", both of which close on the next Linux session and neither of which stops a player getting a debrief.
 
 ---
 
