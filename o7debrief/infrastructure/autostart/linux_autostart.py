@@ -14,12 +14,15 @@ the game.
 The directory is injectable so a test writes into a temporary tree rather than
 the user's real session configuration.
 
-Two notes for the sandboxed build. The autostart directory sits outside the
+Three notes for the sandboxed build. The autostart directory sits outside the
 flatpak's own data, so the manifest must grant ``xdg-config/autostart:create``
-or every toggle here fails silently. And the command written into the entry is
-run by the host session rather than from inside the sandbox, so for a flatpak it
-has to be a ``flatpak run`` invocation; the composition root decides that,
-because only it knows how the running copy was started.
+or every toggle here fails silently. The entry must also be written to the real
+``~/.config/autostart`` rather than to ``XDG_CONFIG_HOME``, which the sandbox
+redirects to the app's own private configuration; see ``_default_dir``. And the
+command written into the entry is run by the host session rather than from
+inside the sandbox, so for a flatpak it has to be a ``flatpak run`` invocation;
+the composition root decides that, because only it knows how the running copy
+was started.
 
 British spelling is used in comments. No em dashes appear anywhere.
 """
@@ -35,6 +38,12 @@ __all__ = ["LinuxAutostart"]
 _ENV_XDG_CONFIG_HOME = "XDG_CONFIG_HOME"
 _DEFAULT_CONFIG_DIR = ".config"
 _AUTOSTART_DIR_NAME = "autostart"
+
+# Set by flatpak inside the sandbox. Its presence means XDG_CONFIG_HOME points
+# at the app's private configuration rather than the session's, so the autostart
+# entry has to be written to the real ~/.config/autostart instead. See
+# _default_dir for why writing to the private path fails silently.
+_ENV_FLATPAK_ID = "FLATPAK_ID"
 
 # Identity of the entry this adapter owns. The file name is the app id, which is
 # the desktop convention and keeps it from colliding with anything else.
@@ -128,7 +137,23 @@ class LinuxAutostart:
 
 
 def _default_dir() -> Path:
-    """Return the user's XDG autostart directory."""
+    """Return the user's XDG autostart directory.
+
+    Inside a flatpak this must ignore ``XDG_CONFIG_HOME``. The sandbox sets it
+    to the app's own private configuration directory under ``~/.var/app``,
+    which nothing outside the sandbox ever reads, so an entry written there is
+    invisible to the session that was supposed to launch it. The failure is
+    silent in both directions: the file is created, no error is raised and
+    ``is_enabled`` then reads the same private path back and reports the
+    setting as on, so the checkbox agrees with itself while the session starts
+    nothing.
+
+    The host's real ``~/.config/autostart`` is mounted into the sandbox at its
+    true path by the manifest's ``xdg-config/autostart:create`` grant, so under
+    a flatpak that path is both correct and reachable.
+    """
+    if os.environ.get(_ENV_FLATPAK_ID):
+        return Path.home() / _DEFAULT_CONFIG_DIR / _AUTOSTART_DIR_NAME
     config_home = os.environ.get(_ENV_XDG_CONFIG_HOME)
     base = Path(config_home) if config_home else Path.home() / _DEFAULT_CONFIG_DIR
     return base / _AUTOSTART_DIR_NAME

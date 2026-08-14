@@ -593,7 +593,7 @@
         </div>
         <div class="card">
           <h3>Does o7 Debrief run on Linux?</h3>
-          <p>Yes, with one honest caveat. Every release publishes a Flatpak. On Ubuntu with Elite Dangerous under Proton it has been left watching through a real session: it read the journal from inside the prefix, produced the debrief when the game closed and opened that report in a browser on the host. The parts that matter most are therefore proven rather than intended. What has not been exercised is narrower: starting it from the sign-in setting rather than by hand, launching it again to summon the window inside the sandbox and the case where Steam itself is installed as a Flatpak. The repository records exactly what has and has not been verified. Windows is the platform every release is built and tested on.</p>
+          <p>Yes, with one honest caveat. Every release publishes a Flatpak. On Ubuntu with Elite Dangerous under Proton it has been left watching through a real session: it read the journal from inside the prefix, produced the debrief when the game closed and opened that report in a browser on the host. The parts that matter most are therefore proven rather than intended. Starting it from the sign-in setting did not work in the Flatpak before this release, because the entry was written inside the sandbox's own configuration rather than the session's; that is fixed here, so tick the setting off and on again after upgrading. What has not been exercised is narrower still: launching it again to summon the window inside the sandbox and the case where Steam itself is installed as a Flatpak. The repository records exactly what has and has not been verified. Windows is the platform every release is built and tested on.</p>
         </div>
         <div class="card">
           <h3>How do I install or upgrade o7 Debrief?</h3>
@@ -608,7 +608,7 @@
       <p class="section-sub">Download the newest release with one click. Free and
         LGPL-3.0, local-first software with no cloud, no account and no
         telemetry.</p>
-      <span class="dl-version" id="dl-version">Version <!--VERSION-->2.5.2<!--/VERSION--></span>
+      <span class="dl-version" id="dl-version">Version <!--VERSION-->2.5.3<!--/VERSION--></span>
       <div class="downloads">
         <div class="dl-card">
           <div class="ico">🪟</div>
@@ -627,7 +627,7 @@
           <a class="btn primary" href="https://github.com/oernster/o7Debrief/releases/latest/download/o7debrief.flatpak">
             Download for Linux</a>
           <p class="meta" data-asset="o7debrief.flatpak">Flatpak bundle (.flatpak)</p>
-          <p class="how">Install with <code>flatpak install o7debrief.flatpak</code>. On Ubuntu it has watched a real session with the game under Proton and opened the finished debrief in a browser on the host. Starting it from the sign-in setting rather than by hand is not yet proven.</p>
+          <p class="how">Install with <code>flatpak install o7debrief.flatpak</code>. On Ubuntu it has watched a real session with the game under Proton and opened the finished debrief in a browser on the host. Starting it from the sign-in setting was broken in the Flatpak before this release and is fixed here; tick the setting off and on again after upgrading.</p>
         </div>
       </div>
       <p class="dl-links">

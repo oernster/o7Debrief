@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from o7debrief.infrastructure.autostart import linux_autostart
 from o7debrief.infrastructure.autostart.linux_autostart import LinuxAutostart
 
 _COMMAND = "flatpak run uk.co.oernster.o7Debrief"
@@ -139,6 +140,8 @@ def test_an_entry_that_cannot_be_read_reads_as_disabled(
 
 
 def test_the_default_directory_follows_xdg_config_home(monkeypatch) -> None:
+    """Outside a sandbox the XDG variable is authoritative, as the spec says."""
+    monkeypatch.delenv(linux_autostart._ENV_FLATPAK_ID, raising=False)
     monkeypatch.setenv("XDG_CONFIG_HOME", "/tmp/cfg")
 
     assert LinuxAutostart().entry_path == Path(
@@ -147,9 +150,30 @@ def test_the_default_directory_follows_xdg_config_home(monkeypatch) -> None:
 
 
 def test_the_default_directory_falls_back_to_dot_config(monkeypatch) -> None:
+    monkeypatch.delenv(linux_autostart._ENV_FLATPAK_ID, raising=False)
     monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: Path("/home/cmdr")))
 
     assert LinuxAutostart().entry_path == Path(
         "/home/cmdr/.config/autostart/uk.co.oernster.o7Debrief.desktop"
     )
+
+
+def test_inside_a_flatpak_the_sandbox_config_home_is_ignored(monkeypatch) -> None:
+    """The entry must land where the host session reads, not in the sandbox.
+
+    A flatpak sets XDG_CONFIG_HOME to the app's own private configuration under
+    ~/.var/app. An autostart entry written there is never read by the session
+    that was meant to launch it and nothing reports a failure, which is exactly
+    how the setting came to look enabled while starting nothing at all.
+    """
+    monkeypatch.setenv(linux_autostart._ENV_FLATPAK_ID, "uk.co.oernster.o7Debrief")
+    monkeypatch.setenv(
+        linux_autostart._ENV_XDG_CONFIG_HOME,
+        str(Path.home() / ".var" / "app" / "uk.co.oernster.o7Debrief" / "config"),
+    )
+
+    resolved = linux_autostart._default_dir()
+
+    assert resolved == Path.home() / ".config" / "autostart"
+    assert ".var" not in str(resolved)
