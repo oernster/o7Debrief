@@ -155,3 +155,22 @@ def test_an_empty_vocabulary_still_produces_readable_english() -> None:
     # rather than folded away; the "int" marker likewise has no entry to drop it.
     assert bare.module("int_sensors_size5_class2") == "Int Sensors (size 5, class 2)"
     assert bare.blueprint("Sensor_LongRange") == "Long Range Sensor"
+
+
+def test_a_dropped_category_leaves_only_the_effect() -> None:
+    """The game's catch-all bucket describes its filing, not the Commander's work."""
+    vocabulary = HumaniseVocabulary(drop_categories=("Misc",))
+
+    assert NameHumaniser(vocabulary).blueprint("Misc_LightWeight") == "Light Weight"
+
+
+def test_a_blueprint_of_one_part_states_that_part() -> None:
+    """With no effect to lead with, the category stands on its own."""
+    assert _humaniser().blueprint("Sensor") == "Sensor"
+
+
+def test_a_numbered_part_the_vocabulary_does_not_name_is_kept() -> None:
+    """A gap in the vocabulary shows up in the report rather than losing a word."""
+    decoded = _humaniser().module("hpt_railgun_burst4_size2_class3")
+
+    assert "Burst4" in decoded

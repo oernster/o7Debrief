@@ -2,7 +2,7 @@
 
 A standing reference to the project's outstanding technical debt. It records what is still open, weighs whether each item is worth doing and gives the rationale. Every item is a behaviour-preserving internal concern: nothing here proposes reverting a feature or changing any UI or UX behaviour. Scope is the whole repository (the `o7debrief` package, the composition root, the taxonomy configuration, the bespoke installer and the delivery scripts) read against `ARCHITECTURE.md`, `TESTING.md` and the tests under `tests/structural/`.
 
-This is the most rigorously enforced project in the portfolio. `tests/structural/` holds seven separate suites: layering, domain purity (including a ban on reading the clock), a composition-root whitelist, a magic-numbers test that exists nowhere else in the account, a 400-line cap over `o7debrief/`, `installer/`, `tests/` and the repository root, a desktop-identity check pinning the Linux application id across the build script and the composition root; and a prose-style check enforcing the em-dash and comma rules across every file that carries prose. The domain and application layers are gated at 100% branch coverage, as are the setup program's operations and state model. The list below is short because there is not much left.
+This is the most rigorously enforced project in the portfolio. `tests/structural/` holds seven separate suites: layering, domain purity (including a ban on reading the clock), a composition-root whitelist, a magic-numbers test that exists nowhere else in the account, a 400-line cap over `o7debrief/`, `installer/`, `tests/` and the repository root, a desktop-identity check pinning the Linux application id across the build script and the composition root; and a prose-style check enforcing the em-dash and comma rules across every file that carries prose. Every layer that can be gated is: the domain, the application layer, the whole of infrastructure and the setup program's operations and state model all stand at 100% branch coverage. What is left below is the two items that close with evidence rather than with code.
 
 ---
 
@@ -37,25 +37,14 @@ The consequence is worse than a possibly misspelled key. A schema that tracks th
 
 The local journals hold **zero** `MissionCompleted` events across all 77 files. Every occurrence of "Coin" in them is another commander's chat message. So the mission path as a whole, not only the coins field, has never been exercised against real data here; no amount of reading the existing journals can confirm anything.
 
-This is a verification gap rather than a defect and it closes with evidence rather than with code: complete a real Operation, read the journal line and confirm both the event and the key. Two things are worth doing regardless of the outcome:
+This is a verification gap rather than a defect and it closes with evidence rather than with code: complete a real Operation, read the journal line and confirm both the event and the key. Nothing further can be built for it, because both things worth building are built:
 
-- Add a note beside the config value recording what it was confirmed against.
-- Surface a one-time diagnostic when a rule names a `coins_field` that is absent from an event it otherwise matched. That converts a silent zero into something observable without weakening the domain rule. It is now the more valuable half: it would report which event actually carries the reward the first time one is paid.
+- The config value carries a note recording what it was confirmed against, which is nothing. The comment there previously read as though the name had been confirmed against a real journal, which was the opposite of the truth.
+- A rule naming a field its matching event did not carry is surfaced as a notice in the report (`application/services/field_diagnostics.py`). That converts a silent zero into something observable without weakening the domain rule; it is also what will report which event actually carries the reward the first time one is paid.
 
-## 2. Most of infrastructure is tested but cannot join the hard gate
+So this item is now waiting on a played Operation rather than on any work.
 
-`addopts` gates `o7debrief.domain`, `o7debrief.application`, five infrastructure sub-packages (`archive`, `autostart`, `clock`, `sink`, `update`), `installer.ops` and `installer.state` at 100% branch coverage. Those five joined because they already stood at 100% with no unreachable branch. The other five (`config`, `journal`, `preferences`, `rank`, `render`) did not; the reason is structural rather than a lack of effort.
-
-Infrastructure as a whole measures **86%** branch coverage on Windows and the figure moves with the platform it is measured on, since each operating system leaves the other's discovery module unreachable. The shortfall is concentrated and explicable: `journal/windows_paths.py` is at 0% and `journal/paths.py` at 34%, both being OS-specific path discovery that a test on one machine cannot walk; `line_parser.py` (70%) and `event_mapper.py` (75%) carry malformed-input branches.
-
-The blocker is that coverage.py has a single `fail-under`. Gating a layer measured at 86% alongside layers held at 100% would drag the one threshold down to match it and quietly end the hard gate on the pure layers, which is a far worse outcome than the drift it would prevent. So the options are:
-
-- Raise the remaining sub-packages to 100% with fakes for the OS-specific discovery, then add them to `addopts`. Honest; the work is mostly in `journal/paths.py`.
-- Or run a second, separately floored coverage pass for infrastructure and wire it into the verification routine. That keeps the pure gate intact but adds a second command to remember, which is the kind of remembered step this project deliberately converts into rules.
-
-The UI omission is correct and should stay.
-
-## 3. The Flatpak builds and runs; parts of it are still unproven
+## 2. The Flatpak builds and runs; parts of it are still unproven
 
 `build_flatpak.sh`, `cleanup_flatpak.sh` and `LinuxAutostart` were written on a Windows machine with no Linux, no `flatpak-builder` and no Elite Dangerous under Proton. That is no longer the whole story: the Flatpak has now been built and run on a real Ubuntu machine. What that settled and what it did not is worth stating exactly, because the gap between the two is what is left of this item.
 

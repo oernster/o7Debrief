@@ -281,10 +281,19 @@ mode = "ship"
 kind = "mission_complete"
 credits_field = "Reward"
 # Operations pay a Merc Coins reward alongside credits. This names the journal
-# field carrying that amount. The reward is new game content not in the
-# published journal schema, so the key is assumed here (PascalCase like
-# "Reward") and confirmed against a real completed-Operation journal; if the
-# live journal spells it differently, change only this value.
+# field carrying that amount.
+#
+# Confirmed against: nothing yet. The name is inferred from the journal's usual
+# PascalCase (as in "Reward" above) and has never been read from a real
+# completed-Operation entry. Frontier's journal manual stopped at 2021 and the
+# community schema for MissionCompleted lists no coin field of any spelling, so
+# the reward may even ride a different event. If the live journal spells it
+# differently, change only this value; if it carries the reward elsewhere, the
+# rule above is the thing to move.
+#
+# A wrong guess is not silent: field_diagnostics reports a rule that names a
+# field its matching event did not carry, so the report raises a notice instead
+# of stating a reward of zero. That notice is the evidence this needs.
 coins_field = "MercCoins"
 text = "Completed {{ LocalisedName }} for {{ Faction }} ({{ Reward }} Cr, {{ MercCoins }} Merc Coins)."
 

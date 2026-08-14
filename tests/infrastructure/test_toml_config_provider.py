@@ -262,3 +262,43 @@ def test_footer_labels_come_from_meta() -> None:
     spec = _provider().load()
     assert spec.label_for("label.footer.app_name", "MISS") == "o7 Debrief"
     assert spec.label_for("label.footer.license", "MISS") == "LGPL-3.0-or-later"
+
+
+def test_the_humanise_vocabulary_is_read_from_the_shipped_taxonomy() -> None:
+    """The decoder's whole vocabulary is configuration, so it is read not built."""
+    vocabulary = _provider().humanise_vocabulary()
+
+    assert vocabulary.ratings
+    assert vocabulary.words
+    assert vocabulary.mounts
+
+
+def test_a_taxonomy_without_a_humanise_table_yields_the_defaults(tmp_path) -> None:
+    """An older taxonomy still loads; the decoder degrades to title-casing."""
+    taxonomy = tmp_path / "bare.toml"
+    taxonomy.write_text('[meta]\nschema_version = "1"\n', encoding="utf-8")
+
+    vocabulary = TomlConfigProvider(taxonomy).humanise_vocabulary()
+
+    assert vocabulary.ratings == ()
+    assert vocabulary.words == {}
+
+
+def test_meta_without_an_app_name_or_licence_contributes_no_footer_labels(
+    tmp_path,
+) -> None:
+    """The footer labels are optional: a taxonomy stating neither states neither."""
+    taxonomy = tmp_path / "nameless.toml"
+    taxonomy.write_text(
+        '[meta]\nschema_version = "1"\n'
+        "[thresholds]\n"
+        "long_jump_ly = 50\n"
+        "big_payout_credits = 1000000\n"
+        "high_value_exobio_credits = 1000000\n",
+        encoding="utf-8",
+    )
+
+    spec = TomlConfigProvider(taxonomy).load()
+
+    assert spec.label_for("label.footer.app_name", "MISS") == "MISS"
+    assert spec.label_for("label.footer.license", "MISS") == "MISS"

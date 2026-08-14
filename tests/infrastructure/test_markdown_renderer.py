@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from o7debrief.application.services.debrief_presenter import DebriefPresenter
 from o7debrief.domain.model.rollups import ActivityRollup
 from o7debrief.domain.value_objects.enums import (
@@ -191,3 +193,24 @@ def test_render_states_the_running_version_in_the_footer() -> None:
 
     assert "v1.2.3" in md
     assert "v0 " not in md
+
+
+def test_a_domain_note_is_rendered_beneath_its_stats() -> None:
+    """A section can qualify its own figures, for example an unmeasured leg."""
+    view = _populated_view()
+    noted = replace(view.domains[0], note="Distance covers 8 of 9 jumps.")
+    view = replace(view, domains=(noted,) + view.domains[1:])
+
+    md = MarkdownDebriefExporter().render(view).decode("utf-8")
+
+    assert "_Distance covers 8 of 9 jumps._" in md
+
+
+def test_the_timezone_line_is_omitted_when_none_is_stated() -> None:
+    """The footer states the zone only when there is one to state."""
+    view = _populated_view()
+    view = replace(view, footer=replace(view.footer, timezone=""))
+
+    md = MarkdownDebriefExporter().render(view).decode("utf-8")
+
+    assert "All times shown in" not in md

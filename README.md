@@ -21,7 +21,7 @@ o7 Debrief watches the Journal while you play, brackets each session by its `Shu
 
 o7 Debrief runs on Windows as a standalone executable. That is the platform every release is built and tested on.
 
-**Linux ships as a Flatpak, with one part of it still unproven.** Each release publishes `o7debrief.flatpak` alongside the Windows setup program and the Flatpak has been built, installed and run on Ubuntu. What has not been proven is the part that matters most: no debrief has yet been generated on Linux from a real journal inside a Proton prefix and no report has been opened in a host browser from inside the sandbox. Both need a machine with the game installed rather than another build. So the Linux bundle is real and installable rather than theoretical, while the end-to-end path a player actually walks is described below as intended behaviour; [TECH_DEBT.md](TECH_DEBT.md) item 3 records exactly what has and has not been verified.
+**Linux ships as a Flatpak, with one part of it still unproven.** Each release publishes `o7debrief.flatpak` alongside the Windows setup program and the Flatpak has been built, installed and run on Ubuntu. What has not been proven is the part that matters most: no debrief has yet been generated on Linux from a real journal inside a Proton prefix and no report has been opened in a host browser from inside the sandbox. Both need a machine with the game installed rather than another build. So the Linux bundle is real and installable rather than theoretical, while the end-to-end path a player actually walks is described below as intended behaviour; [TECH_DEBT.md](TECH_DEBT.md) item 2 records exactly what has and has not been verified.
 
 On Linux the game itself runs under Proton or Wine, so the journal sits inside the game's prefix. o7 Debrief finds it without being told: it looks through the Steam compatdata prefixes (including Steam installed as a Flatpak), honours `STEAM_COMPAT_DATA_PATH` and `WINEPREFIX`, then falls back to a plain `~/.wine` prefix, trying both the `steamuser` and the real user name at each.
 
@@ -71,7 +71,7 @@ macOS is not supported.
 | Desktop UI | PySide6 (system tray and minimal windows) |
 | Report templating | Jinja2 (HTML) |
 | Configuration | stdlib `tomllib` (TOML taxonomy) |
-| Testing | pytest with pytest-cov (100% gate on domain, application, five infrastructure sub-packages and the setup program's operations and state) |
+| Testing | pytest with pytest-cov (100% branch gate on domain, application, the whole infrastructure layer and the setup program's operations and state) |
 | Packaging | Nuitka (standalone Windows executable), Flatpak (Linux) |
 | Licence | LGPL-3.0 |
 
@@ -87,7 +87,7 @@ To run from source during development, see [DEVELOPMENT-README.md](DEVELOPMENT-R
 
 ## Test
 
-The project enforces 100% line and branch coverage on the domain and application layers, on the infrastructure sub-packages that can reach it and on the setup program's operations and state model.
+The project enforces 100% line and branch coverage on the domain and application layers, on the whole infrastructure layer and on the setup program's operations and state model.
 
 ```powershell
 pytest

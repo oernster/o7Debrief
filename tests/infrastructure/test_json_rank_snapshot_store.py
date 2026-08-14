@@ -50,6 +50,15 @@ def test_load_returns_none_on_corrupt_file(tmp_path: Path) -> None:
     assert store.load(_commander()) is None
 
 
+def test_json_that_is_not_an_object_is_not_a_snapshot(tmp_path: Path) -> None:
+    """A file can hold valid JSON and still be nothing this store can read."""
+    store = JsonRankSnapshotStore(tmp_path)
+    stored = Path(tmp_path) / f"rank_{_commander().fid}.json"
+    stored.write_text("[1, 2, 3]", encoding="utf-8")
+
+    assert store.load(_commander()) is None
+
+
 def test_unsafe_fid_is_sanitised_but_still_roundtrips(tmp_path: Path) -> None:
     store = JsonRankSnapshotStore(tmp_path)
     commander = _commander("F/12:34")

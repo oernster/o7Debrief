@@ -83,13 +83,16 @@ testpaths = ["tests"]
 # model are gated rather than left unmeasured; installer/ui and installer/app.py
 # are the Qt client and are excluded on the same grounds as o7debrief/ui.
 #
-# Five infrastructure sub-packages join the gate because they already stand at
-# 100% and have no OS-specific branch a test cannot reach. The rest of
-# infrastructure cannot: coverage carries a single fail-under, so gating a
-# layer measured at 86% would drag the whole threshold down and silently end
-# the 100% gate on the pure layers. The rest of infrastructure stays
-# integration-tested, as do ui and main.py.
-addopts = "--cov=o7debrief.domain --cov=o7debrief.application --cov=o7debrief.infrastructure.archive --cov=o7debrief.infrastructure.autostart --cov=o7debrief.infrastructure.clock --cov=o7debrief.infrastructure.sink --cov=o7debrief.infrastructure.update --cov=installer.ops --cov=installer.state --cov-branch --cov-report=term-missing --cov-fail-under=100"
+# The whole infrastructure layer joins them. It was held out while it measured
+# 86%, the shortfall being the OS-specific journal discovery a test on one
+# machine cannot walk. That turned out to be a gap in the tests rather than a
+# property of the code: discovery builds its candidate paths from environment
+# variables and a home directory, so it is ordinary logic and is now driven
+# through a stand-in for os, with only the final existence check touching the
+# filesystem. Naming the layer rather than its sub-packages is deliberate: a
+# new adapter is gated the moment it is added rather than when someone
+# remembers to list it.
+addopts = "--cov=o7debrief.domain --cov=o7debrief.application --cov=o7debrief.infrastructure --cov=installer.ops --cov=installer.state --cov-branch --cov-report=term-missing --cov-fail-under=100"
 
 [tool.coverage.run]
 branch = true

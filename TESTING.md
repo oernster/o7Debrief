@@ -8,28 +8,27 @@ A hard coverage gate of 100% line and branch coverage applies to these packages:
 
 - `o7debrief.domain`
 - `o7debrief.application`
-- `o7debrief.infrastructure.archive`
-- `o7debrief.infrastructure.autostart`
-- `o7debrief.infrastructure.clock`
-- `o7debrief.infrastructure.sink`
-- `o7debrief.infrastructure.update`
+- `o7debrief.infrastructure`
 - `installer.ops`
 - `installer.state`
 
 The first two are the deterministic core: the reducer, the value objects, the `SessionDebrief` aggregate, the use cases and the ports. They are pure logic with injected dependencies, so every line and branch can be reached by a fast, deterministic test. Holding them at 100% is what makes "the same journal bytes produce the same debrief" a property the suite actually proves, not a hope.
 
-The five infrastructure sub-packages are there because they already stood at 100% with no branch a test cannot reach. They are the adapters whose work is file and registry mechanics with no OS-specific discovery in them. The rest of infrastructure cannot join: measured as a whole the layer stands at 86% branch coverage on Windows, with the shortfall concentrated in `journal/windows_paths.py` and `journal/paths.py`, which walk operating-system-specific locations a test on one machine cannot reach. That figure moves with the machine it is measured on, which is the same fact stated a second way: on Linux `windows_paths.py` is unreachable and reads 0%, on Windows the Proton and Wine discovery in `paths.py` is. Neither platform can produce the whole number, so the layer cannot be gated from either. Coverage carries a single fail-under, so gating the layer alongside those held at 100% would drag the one threshold down and quietly end the hard gate on the pure layers. That trade is recorded as open debt rather than taken.
+Infrastructure is gated as a whole layer. For a long time it was not: five of its sub-packages stood at 100% and the layer as a whole measured 86%, the shortfall sitting in `journal/paths.py` and `journal/windows_paths.py`, which walk operating-system-specific locations. The reasoning was that no single machine can reach both, so neither platform could produce the whole number.
+
+That was true of running the discovery and false of testing it. Discovery decides which candidate paths to build from environment variables and a home directory, which is ordinary logic; only the final existence check touches the filesystem. So the candidates are now asserted as paths, driven through a hand-written stand-in for `os` (a shape `paths.py` already anticipated); only that last check uses real temporary directories. The Known Folders call is handled the same way, through a stand-in for the parts of `ctypes` the module reaches at call time. The layer reaches 100% branch coverage on Windows and the sub-packages are no longer listed one by one: naming the layer means a new adapter is gated the moment it is added rather than when somebody remembers to list it.
+
+What this deliberately does not claim is that the real WinAPI returns the right folder or that a Proton prefix sits where Steam puts it. Neither is provable in a unit test on any platform. What is proved is the decision logic around them, which is where the failure modes actually live: journal discovery going wrong is what makes the app report no journal on a machine that plainly has one.
 
 The installer pair are the setup program's operations and its state model. They do the most privileged work in the product (registry writes, shortcut creation, per-user deployment, uninstall) and they are Qt-free, so they are gated rather than left unmeasured. Three seams make that possible without touching a real installation: commands are run through an injectable runner, the registry keys are a value that a test replaces with a scratch set and the per-user locations come from environment variables the suite redirects. No mocking library is used; the doubles are hand-written and live in `tests/installer/fakes.py`.
 
-Four areas are deliberately excluded from the hard gate:
+Three areas are deliberately excluded from the hard gate:
 
-- The rest of `o7debrief.infrastructure` is integration-tested. Its correctness is in reading real Journal bytes, discovering the Journal directory, tailing from the right offset and writing files; that is exercised against sample journal fixtures, not measured by branch coverage of glue code.
 - `o7debrief.ui` is exercised with light Qt tests under an offscreen platform. Its correctness is in wiring user actions to use cases, which is verified behaviourally rather than chased to 100%.
 - The rest of the setup program is outside the measured set: `installer.ui` is its Qt client, `installer/app.py` is its composition root and `installer/cli.py` and `installer/constants.py` are the command line the registered `UninstallString` re-invokes and the names shared across the package. They are excluded on the same grounds as `o7debrief.ui` and `main.py`. One part of that client is tested anyway: `tests/installer/test_worker_shutdown.py` pins which thread the worker's results arrive on and that the thread is joined before the caller acts on them. A signal connected to a bare callable runs in the sending thread, so the teardown once asked the worker thread to wait for itself and the window hung. That is a defect no behavioural UI test would catch and no coverage figure would show, so it is pinned directly rather than left to the exclusion.
 - `main.py`, the composition root, is wiring. It is covered by the application running and by the structural composition-root test, not by a coverage target.
 
-Excluding these from the hard gate is a correctness decision, not a shortcut: a 100% target on IO and UI glue rewards mocking the real world, which is exactly where these layers must not be mocked.
+Excluding these from the hard gate is a correctness decision, not a shortcut: a 100% target on UI glue rewards mocking the real world, which is exactly where these layers must not be mocked. Infrastructure passes that test rather than escaping it. It is still integration-tested against sample journal fixtures and real temporary directories, exactly as before; the gate was reached by testing the decisions the adapters make, not by standing a fake in front of the filesystem.
 
 ## Test taxonomy
 

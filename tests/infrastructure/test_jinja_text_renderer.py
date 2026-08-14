@@ -15,6 +15,10 @@ from __future__ import annotations
 from o7debrief.infrastructure.render.jinja_text_renderer import (
     JinjaTextTemplateRenderer,
 )
+from o7debrief.infrastructure.render.journal_names import (
+    HumaniseVocabulary,
+    NameHumaniser,
+)
 
 # The shipped wording for the two rules this change exists to fix.
 _CRAFT_TEMPLATE = (
@@ -122,3 +126,36 @@ def test_a_broken_template_is_diagnosed_once_and_cached() -> None:
     assert renderer.render("{{ broken ", {}) is None
     assert renderer.render("{{ broken ", {}) is None
     assert renderer._compiled == {"{{ broken ": None}
+
+
+def test_a_humaniser_supplies_the_token_decoding_filters() -> None:
+    """With a humaniser wired in, a template can state English, not tokens."""
+    humaniser = NameHumaniser(
+        HumaniseVocabulary(
+            drop_prefixes=("int",),
+            ratings=("E", "D", "C", "B", "A"),
+            words={"sensors": "Sensors"},
+        )
+    )
+    renderer = JinjaTextTemplateRenderer(humaniser)
+
+    rendered = renderer.render(
+        "Fitted {{ Module | module }} ({{ Blueprint | blueprint }}, "
+        "{{ Material | material }}).",
+        {
+            "Module": "int_sensors_size5_class2",
+            "Blueprint": "Sensor_LongRange",
+            "Material": "Military Supercapacitors",
+        },
+    )
+
+    assert rendered == (
+        "Fitted 5D Sensors (Long Range Sensor, Military Supercapacitors)."
+    )
+
+
+def test_without_a_humaniser_those_filters_do_not_exist() -> None:
+    """An undefined filter yields nothing, so the row falls back to its label."""
+    assert (
+        _renderer().render("{{ Module | module }}", {"Module": "int_sensors"}) is None
+    )
