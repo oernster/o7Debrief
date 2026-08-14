@@ -98,6 +98,8 @@ Whether there is a tray to live in at all is treated as a property of the runnin
 
 A single `main.py` constructs the concrete infrastructure adapters and injects them into the application use cases, then hands those to the UI. This is the only place wiring happens (I5). There are no module-level singletons.
 
+The running version is injected from here too, because it is a fact about the build rather than a display string. The presenter requires it, so a report cannot be produced by a caller that does not know what version produced it.
+
 ### The setup program
 
 The `installer` package is a second, self-contained program that ships the first one. It imports nothing from `o7debrief` and is deliberately dependency-light: process detection is `tasklist`, version comparison is a tuple compare and shortcuts are written through the Windows scripting host, so the compiled onefile pulls in nothing beyond PySide6 and the standard library.
