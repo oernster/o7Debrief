@@ -289,7 +289,7 @@ def test_domain_sections_omit_absent_domains() -> None:
     assert len(context["domains"]) == 1
     assert context["domains"][0]["key"] == "travel"
     labels = [stat["label"] for stat in context["domains"][0]["stats"]]
-    assert labels == ["Jumps", "Distance"]
+    assert labels == ["Jumps", "Distance", "Settlements approached"]
 
 
 def test_trade_section_reports_material_trades_beside_the_market_figures() -> None:

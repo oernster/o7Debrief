@@ -41,7 +41,7 @@ def test_rollup_defaults_are_empty() -> None:
     assert SlvRollup().hangars_sold == 0
     assert SlfRollup().deployments == 0
     assert OnFootRollup().disembarks == 0
-    assert OnFootRollup().settlements == 0
+    assert FlightRollup().settlements == 0
 
 
 def test_empty_activity_rollup_has_no_active_domains() -> None:

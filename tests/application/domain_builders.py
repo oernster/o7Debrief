@@ -78,7 +78,7 @@ def moment(
 def full_activity() -> ActivityRollup:
     """Return an ActivityRollup with every one of the fourteen domains present."""
     return ActivityRollup(
-        flight=FlightRollup(jumps=3, distance_ly=120),
+        flight=FlightRollup(jumps=3, distance_ly=120, settlements=1),
         exploration=ExplorationRollup(
             bodies_scanned=5,
             bodies_mapped=2,
@@ -100,7 +100,7 @@ def full_activity() -> ActivityRollup:
         srv=SrvRollup(deployments=2),
         slv=SlvRollup(deployments=1, hangars_bought=1, hangars_sold=1),
         slf=SlfRollup(deployments=2),
-        on_foot=OnFootRollup(disembarks=3, settlements=1),
+        on_foot=OnFootRollup(disembarks=3),
         shipyard=ShipyardRollup(
             modules_bought=2,
             modules_sold=3,

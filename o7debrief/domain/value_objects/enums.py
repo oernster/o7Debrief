@@ -81,7 +81,7 @@ class MomentKind(Enum):
     VESSEL_HANGAR_BUY = auto()
     VESSEL_HANGAR_SELL = auto()
     DISEMBARK = auto()
-    SETTLEMENT_VISIT = auto()
+    SETTLEMENT_APPROACH = auto()
     PROMOTION = auto()
     SHIP_SWAP = auto()
     SHIP_PURCHASE = auto()

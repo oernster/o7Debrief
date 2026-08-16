@@ -74,7 +74,7 @@ def test_moment_kind_members() -> None:
         "VESSEL_HANGAR_BUY",
         "VESSEL_HANGAR_SELL",
         "DISEMBARK",
-        "SETTLEMENT_VISIT",
+        "SETTLEMENT_APPROACH",
         "PROMOTION",
         "SHIP_SWAP",
         "SHIP_PURCHASE",

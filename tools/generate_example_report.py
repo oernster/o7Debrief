@@ -157,11 +157,11 @@ _MOMENTS = (
     ("PROMOTION", "COMBAT", "SHIP", "20:40:00", "Promoted in Combat", 0, None),
     ("SRV_DEPLOY", "SRV", "SRV", "20:45:00", "Deployed the SRV", 0, None),
     (
-        "SETTLEMENT_VISIT",
-        "ON_FOOT",
-        "ON_FOOT",
+        "SETTLEMENT_APPROACH",
+        "TRAVEL",
+        "SHIP",
         "20:50:00",
-        "Visited a settlement",
+        "Approached a settlement",
         0,
         None,
     ),
@@ -191,7 +191,7 @@ def _moments() -> tuple[ConceptualMoment, ...]:
 def _activity() -> ActivityRollup:
     """A populated rollup across the domains, driving the headline and cards."""
     return ActivityRollup(
-        flight=FlightRollup(jumps=2, distance_ly=55.4),
+        flight=FlightRollup(jumps=2, distance_ly=55.4, settlements=1),
         exploration=ExplorationRollup(
             bodies_scanned=2,
             bodies_mapped=1,
@@ -211,7 +211,7 @@ def _activity() -> ActivityRollup:
         engineering=EngineeringRollup(crafted=1),
         exobiology=ExobiologyRollup(samples=1, sold=Credits(3800000)),
         srv=SrvRollup(deployments=1),
-        on_foot=OnFootRollup(disembarks=1, settlements=1),
+        on_foot=OnFootRollup(disembarks=1),
         modes_used=(ActivityMode.SHIP, ActivityMode.SRV, ActivityMode.ON_FOOT),
     )
 

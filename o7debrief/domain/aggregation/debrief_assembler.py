@@ -147,6 +147,7 @@ def _flight(moments: tuple[ConceptualMoment, ...]) -> FlightRollup:
     return FlightRollup(
         jumps=_count(moments, MomentKind.JUMP),
         distance_ly=_sum_magnitude(moments, MomentKind.JUMP),
+        settlements=_count(moments, MomentKind.SETTLEMENT_APPROACH),
     )
 
 
@@ -274,10 +275,7 @@ def _slf(moments: tuple[ConceptualMoment, ...]) -> SlfRollup:
 
 
 def _on_foot(moments: tuple[ConceptualMoment, ...]) -> OnFootRollup:
-    return OnFootRollup(
-        disembarks=_count(moments, MomentKind.DISEMBARK),
-        settlements=_count(moments, MomentKind.SETTLEMENT_VISIT),
-    )
+    return OnFootRollup(disembarks=_count(moments, MomentKind.DISEMBARK))
 
 
 def _modes_used(moments: tuple[ConceptualMoment, ...]) -> tuple[ActivityMode, ...]:

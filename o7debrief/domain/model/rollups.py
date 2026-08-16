@@ -42,6 +42,10 @@ class FlightRollup:
 
     jumps: int = 0
     distance_ly: float = 0.0
+    # Planetary settlements flown within range of. A place the ship went, so it
+    # belongs here rather than under On Foot, where it counted arrivals for a
+    # commander who never left the cockpit.
+    settlements: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -177,10 +181,9 @@ class SlfRollup:
 
 @dataclass(frozen=True, slots=True)
 class OnFootRollup:
-    """On-foot summary: disembarks and settlements visited."""
+    """On-foot summary: what the commander did outside the ship."""
 
     disembarks: int = 0
-    settlements: int = 0
 
 
 @dataclass(frozen=True, slots=True)

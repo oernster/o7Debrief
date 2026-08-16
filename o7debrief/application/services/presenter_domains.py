@@ -26,6 +26,7 @@ __all__ = ["DOMAIN_ORDER", "build_domain_sections", "build_milestones"]
 # wording is configurable and never hardcoded as a domain string.
 _JUMPS = ("flight.jumps", "Jumps")
 _DISTANCE = ("flight.distance", "Distance")
+_SETTLEMENTS = ("flight.settlements", "Settlements approached")
 _SCANNED = ("exploration.scanned", "Bodies scanned")
 _MAPPED = ("exploration.mapped", "Bodies mapped")
 _HONKS = ("exploration.honks", "Discovery scans")
@@ -74,7 +75,6 @@ _HANGARS_BOUGHT = ("slv.hangars_bought", "Hangars bought")
 _HANGARS_SOLD = ("slv.hangars_sold", "Hangars sold")
 _SLF_DEPLOYMENTS = ("slf.deployments", "Deployments")
 _DISEMBARKS = ("on_foot.disembarks", "Disembarks")
-_SETTLEMENTS = ("on_foot.settlements", "Settlements")
 
 # Milestone label keys, default text and icon for each notable kind, plus the
 # MomentKind member names matched by string so no enum import is needed.
@@ -115,6 +115,7 @@ def _flight_stats(rollup, fmt, resolver) -> tuple[DomainStat, ...]:
     return (
         _stat(resolver, _JUMPS, fmt.integer(rollup.jumps)),
         _stat(resolver, _DISTANCE, fmt.distance(rollup.distance_ly)),
+        _stat(resolver, _SETTLEMENTS, fmt.integer(rollup.settlements)),
     )
 
 
@@ -240,10 +241,7 @@ def _slf_stats(rollup, fmt, resolver) -> tuple[DomainStat, ...]:
 
 
 def _on_foot_stats(rollup, fmt, resolver) -> tuple[DomainStat, ...]:
-    return (
-        _stat(resolver, _DISEMBARKS, fmt.integer(rollup.disembarks)),
-        _stat(resolver, _SETTLEMENTS, fmt.integer(rollup.settlements)),
-    )
+    return (_stat(resolver, _DISEMBARKS, fmt.integer(rollup.disembarks)),)
 
 
 # Pairing of each ActivityRollup attribute to its domain key and stat builder.

@@ -161,10 +161,9 @@ def test_full_session_populates_every_rollup() -> None:
             mode=ActivityMode.ON_FOOT,
         ),
         _moment(
-            MomentKind.SETTLEMENT_VISIT,
-            ActivityDomain.ON_FOOT,
+            MomentKind.SETTLEMENT_APPROACH,
+            ActivityDomain.TRAVEL,
             21,
-            mode=ActivityMode.ON_FOOT,
         ),
     )
     debrief = assemble(_commander(), _window(), moments, (), _spec())
@@ -172,6 +171,7 @@ def test_full_session_populates_every_rollup() -> None:
 
     assert activity.flight.jumps == 2
     assert activity.flight.distance_ly == 20
+    assert activity.flight.settlements == 1
     assert activity.exploration.bodies_scanned == 1
     assert activity.exploration.bodies_mapped == 1
     assert activity.exploration.honks == 1
@@ -197,7 +197,6 @@ def test_full_session_populates_every_rollup() -> None:
     assert activity.slv.hangars_sold == 1
     assert activity.slf.deployments == 1
     assert activity.on_foot.disembarks == 1
-    assert activity.on_foot.settlements == 1
 
     assert activity.active_domains == (
         ActivityDomain.TRAVEL,

@@ -490,12 +490,19 @@ credits_array_field = "BioData"
 credits_item_fields = ["Value", "Bonus"]
 text = "Sold organic data."
 
+# Flying within range of a planetary settlement. This is a ship arriving
+# somewhere, not a commander getting out: the journal fires it whether or not
+# anybody ever leaves the cockpit; one real session approached three
+# settlements with no Disembark at all. It sat in the on-foot domain, so that
+# session's report claimed three settlements under On Foot for a commander who
+# never set foot outside. Approached rather than visited for the same reason:
+# the event states proximity and a commander may fly straight past.
 [[moment]]
 event = "ApproachSettlement"
-domain = "on_foot"
-mode = "foot"
-kind = "settlement_visit"
-text = "Arrived at {{ Name }}."
+domain = "travel"
+mode = "ship"
+kind = "settlement_approach"
+text = "Approached {{ Name }}."
 
 [[moment]]
 event = "Promotion"
