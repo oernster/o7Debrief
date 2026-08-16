@@ -52,9 +52,6 @@ _CREDITS_HEADLINE = ("net_credits", "Credits")
 # Shown in the value slot when the journal stated no balance at all. Distinct
 # wording is the whole point: it must not be mistakable for an amount.
 _BALANCE_UNKNOWN = ("credits.balance_unknown", "No reading")
-# Shown in the delta slot when the journal stated too few balances for the
-# session change to be measured. Never a zero, which would read as break-even.
-_CHANGE_UNKNOWN = ("credits.change_unknown", "Change unread")
 # Shown under the balance, naming when it was read. The journal states the
 # balance at a login and never again, so on a long session the figure above is
 # what the commander had when they sat down. Without this the reader takes a
@@ -167,11 +164,14 @@ def _net_credits_item(debrief, fmt, resolver) -> HeadlineItem:
         else fmt.credits(balance.value)
     )
     # A net change of None means the journal stated too few balances to measure
-    # one. The delta slot then says so rather than showing a zero the reader
-    # would take for a session that broke even.
-    delta_display = (
-        resolver.generic(*_CHANGE_UNKNOWN) if net is None else fmt.signed_credits(net)
-    )
+    # one. The slot is then left out entirely rather than saying so. The
+    # value slot above works the other way because it is not optional: something
+    # must occupy it, so "No reading" is what stops a blank being read as a
+    # balance. Nothing has to occupy the delta slot. Announcing every quantity
+    # the report did not measure is unbounded noise: the session did
+    # not measure the change, nor a thousand other things nobody asked about.
+    # What the events did come to is a real figure and has a card of its own.
+    delta_display = None if net is None else fmt.signed_credits(net)
     return HeadlineItem(
         label=resolver.headline_label(*_CREDITS_HEADLINE),
         value_display=value_display,

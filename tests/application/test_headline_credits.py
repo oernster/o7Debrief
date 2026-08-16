@@ -96,21 +96,30 @@ def test_a_loss_reads_as_a_loss() -> None:
     assert net["delta_display"] == "-20,110,001 Cr"
 
 
-def test_an_unmeasurable_change_is_never_rendered_as_a_zero() -> None:
-    """A session stating too few balances says so, rather than breaking even."""
+def test_an_unmeasurable_change_is_omitted_rather_than_announced() -> None:
+    """A change that could not be measured is left out, never worded.
+
+    It once read "Change unread", which is true and useless: it reports the
+    absence of one quantity out of the unbounded set the report did not
+    measure. What the session's events did come to is a real figure and has a
+    headline card of its own. Rendering a zero here would be worse still, since
+    a reader takes it for a session that broke even.
+    """
     net = _credits_headline(_quiet_debrief(net_credits=None))
 
-    assert net["delta_display"] == "Change unread"
-    assert net["delta_class"] == "neutral"
+    assert net["delta_display"] is None
 
 
-def test_the_unread_change_wording_is_configurable() -> None:
-    net = _credits_headline(
-        _quiet_debrief(net_credits=None),
-        labels=(("label.credits.change_unknown", "Not stated"),),
-    )
+def test_an_absent_balance_still_fills_the_value_slot() -> None:
+    """The value slot is not optional, which is why it words its absence.
 
-    assert net["delta_display"] == "Not stated"
+    Something must occupy it or a blank card reads as a balance of nothing.
+    The delta slot has no such obligation, so it is simply omitted.
+    """
+    net = _credits_headline(_quiet_debrief(net_credits=None, credits_balance=None))
+
+    assert net["value_display"] == "No reading"
+    assert net["delta_display"] is None
 
 
 def test_the_balance_says_when_it_was_read() -> None:
