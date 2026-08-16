@@ -168,3 +168,48 @@ def test_genuine_fighter_launch_is_not_a_nomad_deploy() -> None:
     spec = _spec((_NOMAD_DEPLOY_RULE,))
     moments = build_moments((_ev("LaunchFighter", 0, (("Loadout", "gu97"),)),), spec)
     assert moments == ()
+
+
+_SPEND_RULE = MomentRule(
+    event_type="ModuleBuy",
+    kind=MomentKind.MODULE_BUY,
+    domain=ActivityDomain.SHIPYARD,
+    mode=ActivityMode.SHIP,
+    magnitude_field=None,
+    credits_field=None,
+    spend_field="BuyPrice",
+)
+
+
+def test_a_cost_rides_the_spend_channel_and_never_the_credit_one() -> None:
+    """Credits is income, so a purchase there would read as money banked.
+
+    One large enough did exactly that and raised the major-payout milestone
+    for buying a frame shift drive.
+    """
+    moments = build_moments(
+        (_ev("ModuleBuy", 0, (("BuyPrice", 5374463),)),), _spec((_SPEND_RULE,))
+    )
+
+    assert moments[0].spend_delta.value == 5374463
+    assert moments[0].credits_delta.value == 0
+    assert moments[0].magnitude == 0.0
+
+
+def test_an_unreadable_or_absent_cost_yields_zero_rather_than_a_guess() -> None:
+    """A bool is rejected explicitly, since bool subclasses int."""
+    spec = _spec((_SPEND_RULE,))
+
+    assert build_moments((_ev("ModuleBuy", 0, ()),), spec)[0].spend_delta.value == 0
+    assert (
+        build_moments((_ev("ModuleBuy", 0, (("BuyPrice", "lots"),)),), spec)[
+            0
+        ].spend_delta.value
+        == 0
+    )
+    assert (
+        build_moments((_ev("ModuleBuy", 0, (("BuyPrice", True),)),), spec)[
+            0
+        ].spend_delta.value
+        == 0
+    )

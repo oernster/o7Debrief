@@ -239,11 +239,11 @@ event = "MarketBuy"
 domain = "trade"
 mode = "ship"
 kind = "market_buy"
-# The cost rides the magnitude channel rather than credits_field on purpose.
-# The journal states it outright in TotalCost, so reporting nought spent beside
-# ten purchases was a defect; but routing it through credits would fold
-# spending into an income total, which is exactly what that channel avoids.
-magnitude_field = "TotalCost"
+# The cost rides the spend channel, never credits. Credits is the income
+# channel, so a purchase routed through it reads as money banked. Spending used
+# to share the magnitude channel, which worked only while nothing summed
+# magnitude across kinds: magnitude is also a jump distance in light years.
+spend_field = "TotalCost"
 text = "Bought {{ Count }} t of {{ Type }} at {{ BuyPrice }} Cr each."
 
 [[moment]]
@@ -435,6 +435,11 @@ event = "ModuleBuy"
 domain = "slv"
 mode = "ship"
 kind = "vessel_hangar_buy"
+# The bay is counted on the vessel's own card rather than with outfitting.
+# The money is money wherever the item is counted: without these price fields
+# the hangar's cost and its sale were the one priced movement the session total
+# could not see, leaving it 697,076 Cr short on a real journal.
+spend_field = "BuyPrice"
 where_field = "BuyItem"
 where_contains = ["fighterbay"]
 text = "Bought a Vessel Hangar module."
@@ -444,6 +449,7 @@ event = "ModuleSell"
 domain = "slv"
 mode = "ship"
 kind = "vessel_hangar_sell"
+credits_field = "SellPrice"
 where_field = "SellItem"
 where_contains = ["fighterbay"]
 text = "Sold a Vessel Hangar module."
@@ -453,6 +459,7 @@ event = "ModuleSellRemote"
 domain = "slv"
 mode = "ship"
 kind = "vessel_hangar_sell"
+credits_field = "SellPrice"
 where_field = "SellItem"
 where_contains = ["fighterbay"]
 text = "Traded in a stored Vessel Hangar module."
@@ -514,10 +521,8 @@ event = "ModuleBuy"
 domain = "shipyard"
 mode = "ship"
 kind = "module_buy"
-# The price rides the magnitude channel, never credits. Credits is the income
-# channel: a purchase routed through it reads as money banked. One big enough
-# tripped the major-payout milestone for buying a drive.
-magnitude_field = "BuyPrice"
+# The price rides the spend channel, never credits. See MarketBuy above.
+spend_field = "BuyPrice"
 text = "Bought a {{ BuyItem | module }} for {{ BuyPrice | credits }}."
 
 [[moment]]
@@ -548,20 +553,20 @@ event = "ShipyardBuy"
 domain = "shipyard"
 mode = "ship"
 kind = "ship_purchase"
-# Spending, so the magnitude channel rather than credits. See module_buy.
-magnitude_field = "ShipPrice"
+# Spending, so the spend channel rather than credits. See module_buy.
+spend_field = "ShipPrice"
 text = "Bought {{ ShipType_Localised | default(ShipType, true) }} for {{ ShipPrice | credits }}."
 
 # A stored ship moved to the station the commander is at. It is neither a
 # purchase nor a sale, so it is counted on its own line: the fee is real money
 # and one transfer in a live journal cost 1,626,451 Cr. Spending, so the price
-# rides the magnitude channel. See module_buy.
+# rides the spend channel. See module_buy.
 [[moment]]
 event = "ShipyardTransfer"
 domain = "shipyard"
 mode = "ship"
 kind = "ship_transfer"
-magnitude_field = "TransferPrice"
+spend_field = "TransferPrice"
 text = "Had {{ ShipType_Localised | default(ShipType, true) }} transferred from {{ System }} for {{ TransferPrice | credits }}."
 
 [[moment]]

@@ -67,11 +67,21 @@ h2 { color: var(--accent-soft); font-size: 1.05rem; text-transform: uppercase;
    value broken across two lines ("766.5" then "ly") stops reading as one
    quantity and no longer lines up with the figures above and below it. The
    label may wrap instead, since prose survives wrapping and a number does not. */
-.stats li { display: flex; justify-content: space-between; align-items: baseline;
-  gap: 0.9rem; border-bottom: 1px dotted var(--edge); padding: 0.25rem 0; }
-.stats li span:first-child { color: var(--muted); min-width: 0; }
+.stats li { display: flex; flex-wrap: wrap; justify-content: space-between;
+  align-items: baseline; gap: 0.9rem; border-bottom: 1px dotted var(--edge);
+  padding: 0.25rem 0; }
+/* The label never shrinks below the widest word it holds. It carried
+   min-width: 0, which lets a flex item collapse past its own content: with a
+   long figure beside it the box went to zero width while the text carried on
+   painting, so "Earned from modules" ran straight under "1,966,278,800 Cr".
+   Keeping its intrinsic minimum means the row wraps instead, which is what
+   flex-wrap above is for: the figure takes a line of its own rather than
+   sharing one it does not fit on. */
+.stats li span:first-child { color: var(--muted); }
+/* margin-left: auto right-aligns the figure whether it shares the label's line
+   or has wrapped onto its own, where space-between alone would leave it left. */
 .stats li span:last-child { white-space: nowrap; text-align: right;
-  flex: 0 1 auto; font-variant-numeric: tabular-nums; }
+  flex: 0 1 auto; margin-left: auto; font-variant-numeric: tabular-nums; }
 /* A qualification of the figure above it ("over 0 of 1 jumps"), on its own
    line. It is prose, so it wraps where the figure may not; carried inside the
    figure's own string it made the whole cell unbreakable and a long one ran

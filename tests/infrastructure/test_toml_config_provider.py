@@ -42,6 +42,7 @@ _READ_MOMENT_KEYS = frozenset(
         "where_field",
         "where_contains",
         "where_present",
+        "spend_field",
     }
 )
 

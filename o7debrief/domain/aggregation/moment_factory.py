@@ -119,6 +119,21 @@ def _coins_from(event: RawEvent, rule: MomentRule) -> Credits:
     return Credits.zero()
 
 
+def _spend_from(event: RawEvent, rule: MomentRule) -> Credits:
+    """Read the scalar cost named by the rule, else zero.
+
+    Read exactly as the currency channels are. A rule naming no spend field
+    yields zero, as does an event omitting it or carrying a non-integer there,
+    rather than a guessed value.
+    """
+    if rule.spend_field is None:
+        return Credits.zero()
+    raw = event.get(rule.spend_field)
+    if isinstance(raw, int) and not isinstance(raw, bool):
+        return Credits(raw)
+    return Credits.zero()
+
+
 def _credits_from_array(event: RawEvent, rule: MomentRule) -> Credits:
     """Sum the rule's named item fields across its credit array, else zero.
 
@@ -271,6 +286,7 @@ def _moment_from(
         magnitude=_magnitude_from(event, rule),
         credits_delta=_credits_from(event, rule),
         coins_delta=_coins_from(event, rule),
+        spend_delta=_spend_from(event, rule),
         detail=event.fields + extra_detail,
         text_template=rule.text_template or _NO_TEMPLATE,
     )

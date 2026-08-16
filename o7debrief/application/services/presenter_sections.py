@@ -60,6 +60,16 @@ _CHANGE_UNKNOWN = ("credits.change_unknown", "Change unread")
 # what the commander had when they sat down. Without this the reader takes a
 # reading hours old for the balance now, which is the defect this removes.
 _BALANCE_READ_AT = ("credits.balance_read_at", "Read at login, {time}")
+# The priced-events headline. It sits in its own card rather than in the
+# credits card's delta slot precisely so it cannot be read as the session
+# change: the two are different figures and a reader glancing at one slot must
+# not come away with the other. Its note states what it does and does not cover.
+_PRICED_HEADLINE = ("priced_change", "Priced this session")
+_PRICED_NOTE_TEXT = (
+    "Income less outgoings across the events the journal prices."
+    " Not the balance change: the journal does not price everything."
+)
+_PRICED_NOTE = ("credits.priced_note", _PRICED_NOTE_TEXT)
 _JUMPS_HEADLINE = ("jumps", "Jumps")
 _BODIES_HEADLINE = ("bodies_scanned", "Bodies scanned")
 _KILLS_HEADLINE = ("kills", "Kills")
@@ -171,6 +181,24 @@ def _net_credits_item(debrief, fmt, resolver) -> HeadlineItem:
     )
 
 
+def _priced_change_item(debrief, fmt, resolver) -> HeadlineItem:
+    """Build the priced-events headline: what the session's priced events came to.
+
+    Separate from the credits card on purpose. The balance change is a level
+    difference and this is an event fold; they answer different questions and
+    are routinely different numbers, so putting this one in the credits card's
+    delta slot would invite exactly the misreading the note below prevents.
+    """
+    priced = debrief.priced_change
+    return HeadlineItem(
+        label=resolver.headline_label(*_PRICED_HEADLINE),
+        value_display=fmt.signed_credits(priced),
+        delta_display=None,
+        delta_class=_delta_class(priced),
+        note_display=resolver.generic(*_PRICED_NOTE),
+    )
+
+
 def _count_item(label_key: tuple[str, str], count: int, resolver, fmt) -> HeadlineItem:
     """Build a simple count headline item with no delta."""
     return HeadlineItem(
@@ -193,6 +221,7 @@ def build_headline(debrief, fmt, resolver) -> tuple[HeadlineItem, ...]:
     kills = activity.combat.kills if activity.combat is not None else _ZERO
     return (
         _net_credits_item(debrief, fmt, resolver),
+        _priced_change_item(debrief, fmt, resolver),
         _count_item(_JUMPS_HEADLINE, jumps, resolver, fmt),
         _count_item(_BODIES_HEADLINE, scanned, resolver, fmt),
         _count_item(_KILLS_HEADLINE, kills, resolver, fmt),

@@ -56,6 +56,13 @@ class SessionDebrief:
     # down, not when they got up. The report has to be able to say when it was
     # taken; otherwise a figure hours old reads as the balance now.
     credits_balance_at: EventTime | None = None
+    # What the session's priced events came to, income less outgoings. Unlike
+    # every level above it this IS folded from the moments, because it is a
+    # property of the events rather than a state the journal states. It exists
+    # because "change unread" is true and useless: the journal prices a great
+    # deal of what a session did even when it never restates the balance. That
+    # total is worth having provided it is never mistaken for the change.
+    priced_change: int = 0
     # How many distinct systems the session named, else None when it named
     # none at all and no history stated one either. None is deliberately not
     # zero: a commander is always somewhere, so a count of no systems is never

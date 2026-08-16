@@ -81,7 +81,7 @@ def test_outfitting_and_shipyard_trade_is_mapped_and_priced() -> None:
     modules for nearly two billion credits recorded none of it.
     """
     spec = _provider().load()
-    # Income rides the credits channel; spending rides magnitude, because
+    # Income rides the credits channel and spending its own, because
     # credits is the income channel and a purchase routed through it counts as
     # money banked. One big enough raised the major-payout milestone.
     income = {
@@ -102,8 +102,9 @@ def test_outfitting_and_shipyard_trade_is_mapped_and_priced() -> None:
         assert rule.domain is ActivityDomain.SHIPYARD, event
     for event, (field, kind) in spending.items():
         rule = next(r for r in spec.rules_for(event) if r.kind is kind)
-        assert rule.magnitude_field == field, event
+        assert rule.spend_field == field, event
         assert rule.credits_field is None, event
+        assert rule.magnitude_field is None, event
         assert rule.domain is ActivityDomain.SHIPYARD, event
 
 

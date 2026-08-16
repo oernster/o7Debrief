@@ -38,6 +38,14 @@ class ConceptualMoment:
     # its own channel so it never folds into the session net-credits figure,
     # and defaults to zero for the many moments that carry no coin reward.
     coins_delta: Credits = field(default_factory=Credits.zero)
+    # What this moment cost, on its own channel away from credits. Credits is
+    # the income channel, so a purchase routed through it counts as money
+    # banked. Spending used to ride the magnitude channel instead, which worked
+    # only because nothing summed magnitude across kinds: magnitude is also a
+    # jump distance in light years, so the two could not be totalled together.
+    # A channel of its own is what lets the session state what its priced
+    # events came to.
+    spend_delta: Credits = field(default_factory=Credits.zero)
     # The taxonomy's row wording for this moment, carried verbatim from the
     # matching rule. The domain does not render it: rendering needs a template
     # engine, which is infrastructure, so the moment merely carries the template

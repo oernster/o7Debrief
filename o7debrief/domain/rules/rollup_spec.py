@@ -79,6 +79,11 @@ class MomentRule:
     credits_array_field: str | None = None
     credits_item_fields: tuple[str, ...] = ()
     coins_field: str | None = None
+    # Names the payload key holding what the event cost. Kept apart from
+    # ``credits_field``, which is income: a purchase routed through that one
+    # counts as money banked and one large enough raised the major-payout
+    # milestone for buying a drive.
+    spend_field: str | None = None
     where_field: str | None = None
     where_contains: tuple[str, ...] = ()
     where_present: str | None = None

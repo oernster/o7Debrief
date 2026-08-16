@@ -61,6 +61,7 @@ _CREDITS_FIELD = "credits_field"
 _CREDITS_ARRAY_FIELD = "credits_array_field"
 _CREDITS_ITEM_FIELDS = "credits_item_fields"
 _COINS_FIELD = "coins_field"
+_SPEND_FIELD = "spend_field"
 _WHERE_FIELD = "where_field"
 _WHERE_CONTAINS = "where_contains"
 # A payload key that must merely be present for the rule to apply. It tells
@@ -243,6 +244,7 @@ def _build_rules(data: dict[str, Any]) -> tuple[MomentRule, ...]:
                 credits_array_field=moment.get(_CREDITS_ARRAY_FIELD),
                 credits_item_fields=tuple(moment.get(_CREDITS_ITEM_FIELDS, ())),
                 coins_field=moment.get(_COINS_FIELD),
+                spend_field=moment.get(_SPEND_FIELD),
                 where_field=moment.get(_WHERE_FIELD),
                 where_contains=_where_tokens(moment.get(_WHERE_CONTAINS)),
                 where_present=moment.get(_WHERE_PRESENT),

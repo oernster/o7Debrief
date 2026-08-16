@@ -32,6 +32,7 @@ def _moment(
     magnitude: float = 0.0,
     credits: int = 0,
     coins: int = 0,
+    spend: int = 0,
     detail: tuple = (),
 ) -> ConceptualMoment:
     return ConceptualMoment(
@@ -43,6 +44,7 @@ def _moment(
         magnitude=magnitude,
         credits_delta=Credits(credits),
         coins_delta=Credits(coins),
+        spend_delta=Credits(spend),
         detail=detail,
     )
 
@@ -103,7 +105,7 @@ def test_full_session_populates_every_rollup() -> None:
         _moment(MomentKind.BOND, ActivityDomain.COMBAT, 7, credits=20000),
         # A buy states its cost on the magnitude channel, never on credits, so
         # spending stays out of every income total.
-        _moment(MomentKind.MARKET_BUY, ActivityDomain.TRADE, 8, magnitude=1000),
+        _moment(MomentKind.MARKET_BUY, ActivityDomain.TRADE, 8, spend=1000),
         _moment(MomentKind.MARKET_SELL, ActivityDomain.TRADE, 9, credits=4000),
         # A material-trader exchange is paid for in materials, so it states no
         # price and contributes to neither credit column.

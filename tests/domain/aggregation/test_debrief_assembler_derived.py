@@ -3,9 +3,10 @@
 A count is easy: the rollup tallies moments of a kind. These cover the figures
 that need a value read or worked out, which is where every silent zero in this
 application has come from. A jump distance is stated as a real quantity and was
-being discarded by an int-only reader; a purchase states its cost but must not
-join an income total; a carrier states where it arrived and never how far it
-came; and the session's net change is a reading passed in, not a fold.
+being discarded by an int-only reader; a purchase states its cost on a channel
+of its own so it never joins an income total; a carrier states where it arrived
+and never how far it came; the session's net change is a reading passed in
+rather than a fold.
 """
 
 from __future__ import annotations
@@ -94,13 +95,13 @@ def test_carrier_distance_drops_malformed_positions_rather_than_guessing() -> No
     assert round(carrier.distance_ly) == 500
 
 
-def test_trade_spending_comes_from_the_buy_magnitude() -> None:
+def test_trade_spending_comes_from_the_buy_spend_channel() -> None:
     # The journal states a purchase cost in TotalCost, which rides the
     # magnitude channel so spending never joins an income total. Reporting
     # nought spent beside a set of purchases was the defect this closes.
     moments = (
-        _moment(MomentKind.MARKET_BUY, ActivityDomain.TRADE, 1, magnitude=223155),
-        _moment(MomentKind.MARKET_BUY, ActivityDomain.TRADE, 2, magnitude=76950),
+        _moment(MomentKind.MARKET_BUY, ActivityDomain.TRADE, 1, spend=223155),
+        _moment(MomentKind.MARKET_BUY, ActivityDomain.TRADE, 2, spend=76950),
     )
     trade = assemble(_commander(), _window(), moments, (), _spec()).activity.trade
     assert trade.buys == 2
