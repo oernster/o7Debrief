@@ -466,6 +466,16 @@
           <p>The credit change is the difference between your balance at each end of the session, so a rebuy, an outfitting bill or a hold full of tritium counts against you exactly as it did in game. A session that ended poorer says so.</p>
         </div>
         <div class="card">
+          <div class="icon">&#128339;</div>
+          <h3>A balance that says its age</h3>
+          <p>The journal states your balance when you log in and never again, so on a long session that figure is what you had when you sat down. The report prints the moment it was read beneath it, rather than letting a reading hours old pass for a current one.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#128295;</div>
+          <h3>Outfitting and the shipyard</h3>
+          <p>Modules and ships bought and sold, counted and priced on each side rather than netted off, so a refit reads as the two things it was. Ship transfers get their own line, since a transfer buys nothing and still costs. Each one is a row in the log naming the item and the price.</p>
+        </div>
+        <div class="card">
           <div class="icon">&#128506;</div>
           <h3>Distance travelled</h3>
           <p>The light years your ship covered, read from the distance each jump states. Your fleet carrier is measured too, worked out from where it arrived, since a carrier jump never records how far it came.</p>
@@ -503,7 +513,7 @@
         <div class="card">
           <div class="icon">&#128736;</div>
           <h3>Every row says what you did</h3>
-          <p>An engineering roll names the blueprint, the grade, the module and the engineer who applied it, so an evening of two hundred rolls reads as the work it was rather than two hundred identical lines. It reads in English too: the journal calls a module int_sensors_size5_class2 and the report calls it a 5D Sensors. Where the journal did not record something a row needs, the row says less rather than guessing.</p>
+          <p>An engineering roll names the blueprint, the grade, the module and the engineer who applied it, so an evening of two hundred rolls reads as the work it was rather than two hundred identical lines. Applying an experimental effect is its own row and its own figure, because the journal reports it as a roll and it is not one. It reads in English too: the journal calls a module int_sensors_size5_class2 and the report calls it a 5D Sensors. Where the journal did not record something a row needs, the row says less rather than guessing.</p>
         </div>
         <div class="card">
           <div class="icon">&#128142;</div>
@@ -542,7 +552,7 @@
       <h2>Example output</h2>
       <div class="shot">
         <a href="example-report.html" title="Open the full example report">
-          <img src="assets/screenshot.png" loading="lazy" alt="An o7 Debrief report showing the session header, headline totals with a credit balance beside the change, the per-domain activity cards and rank progress">
+          <img src="assets/screenshot.png" loading="lazy" alt="An o7 Debrief history report showing the history header with its start, end, duration, route and systems visited; headline totals with the credit balance, the change beside it and the moment the balance was read; and the per-domain activity cards, among them Outfitting and Shipyard, an Engineering card split between modification rolls and experimental effects, plus a Fleet Carrier distance stating how many of its jumps the total covers">
         </a>
         <p class="caption">A debrief covering a commander's whole journal history. <a href="example-report.html">Open the full example report &rarr;</a></p>
       </div>
@@ -573,7 +583,7 @@
         </div>
         <div class="card">
           <h3>What does an Elite Dangerous debrief track?</h3>
-          <p>Credits, jumps, distance travelled by your ship and your fleet carrier, scans across exploration, mining, trading, bounty hunting and exobiology, plus missions and Operations (naming each mission and the Merc Coins an Operation pays, kept separate from your credits), deaths (who died, in what, at whose hands and what the rebuy cost) and Commander rank progress, with every figure traced to a real journal entry. Where the journal states nothing, the report says so rather than printing a zero you would read as a real figure.</p>
+          <p>Credits, jumps, distance travelled by your ship and your fleet carrier, scans across exploration, mining, trading, bounty hunting and exobiology, outfitting and shipyard trade (modules and ships bought, sold and transferred, each side priced separately), engineering split between grade rolls and experimental effects, plus missions and Operations (naming each mission and the Merc Coins an Operation pays, kept separate from your credits), deaths (who died, in what, at whose hands and what the rebuy cost) and Commander rank progress, with every figure traced to a real journal entry. Where the journal states nothing, the report says so rather than printing a zero you would read as a real figure.</p>
         </div>
         <div class="card">
           <h3>Do I need to keep o7 Debrief running while I play?</h3>

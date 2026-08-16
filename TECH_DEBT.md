@@ -33,11 +33,13 @@ The name was searched for in the sources that would document it. None do.
 
 The consequence is worse than a possibly misspelled key. A schema that tracks the journal actively shows `MissionCompleted` unchanged, so the reward may ride a different event entirely or may not be journalled at all. The assumption is therefore open on two axes: the field name and the event that carries it.
 
-### It cannot be closed from this machine
+### The mission path is now exercised; the Operations reward still is not
 
-The local journals hold **zero** `MissionCompleted` events across all 77 files. Every occurrence of "Coin" in them is another commander's chat message. So the mission path as a whole, not only the coins field, has never been exercised against real data here; no amount of reading the existing journals can confirm anything.
+The local journals have since gained real missions. Across 82 files they hold 11 `MissionCompleted` events, so the mission path as a whole is no longer untested against real data: the events parse, the rule fires and the rows name the mission and its faction from a real journal rather than from a fixture. That much has moved.
 
-This is a verification gap rather than a defect and it closes with evidence rather than with code: complete a real Operation, read the journal line and confirm both the event and the key. Nothing further can be built for it, because both things worth building are built:
+The coins field has not. Every one of those 11 is an ordinary mission, none is an Operation and not one carries a field whose name contains either "merc" or "coin". Their full key set is Category, Category_Localised, Count, DestinationStation, DestinationSystem, Effect, Effect_Localised, Effects, Faction, FactionEffects, Influence, KillCount, LocalisedName, MaterialsReward, MissionID, Name, Name_Localised, Reputation, ReputationTrend, Reward, SystemAddress, TargetFaction, TargetType, TargetType_Localised and Trend: no coin field, no currency but credits. That is consistent with an ordinary mission paying no coins, so it neither confirms nor refutes the assumption. Every occurrence of "Coin" anywhere in the journals is still another commander's chat message.
+
+This remains a verification gap rather than a defect and it closes with evidence rather than with code: complete a real Operation, read the journal line and confirm both the event and the key. Nothing further can be built for it, because both things worth building are built:
 
 - The config value carries a note recording what it was confirmed against, which is nothing. The comment there previously read as though the name had been confirmed against a real journal, which was the opposite of the truth.
 - A rule naming a field its matching event did not carry is surfaced as a notice in the report (`application/services/field_diagnostics.py`). That converts a silent zero into something observable without weakening the domain rule; it is also what will report which event actually carries the reward the first time one is paid.
@@ -88,7 +90,6 @@ So the shape of this item has inverted. It was "the install works and the play p
 
 ## Looks like debt, not worth touching
 
-- `tests/domain/aggregation/test_moment_factory.py` (399). It sits at the top of the 381 to 399 danger band, so it wants taking to 350 when next touched. The size test covers `o7debrief/`, `installer/`, `tests/` and the repository root, so it will catch it the moment it grows.
 - The `tools/` scripts (`capture_home_dialog.py`, `capture_installer_window.py`, `capture_tray_menu.py`, `generate_example_report.py`, `make_icon.py`) printing to stdout. Development instruments, correctly separated from the package.
 - The very large number of single-name `__all__` declarations across `application/ports/` and `application/dto/`. Repetitive and correct: one concern per module. Most export exactly one name; the handful that export more export a cohesive cluster that has no meaning apart (a bundle and the files in it, a page and its tabs, a result and the port that returns it, the view and its sub-views), which is the same rule rather than an exception to it.
 - `schema_version="1.0.0"` appearing as a literal in a test fixture. Test data, not a version source.
