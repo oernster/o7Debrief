@@ -15,8 +15,10 @@ from tests.application import domain_builders as build
 from tests.application.fakes import number_format, spec
 
 
-def _carrier_stats(rollup: CarrierRollup, labels=()) -> dict[str, str]:
-    """Return the carrier section's stats as a label-to-value mapping."""
+def _carrier_stats(
+    rollup: CarrierRollup, labels=()
+) -> dict[str, tuple[str, str | None]]:
+    """Return the carrier stats as a label-to-(value, qualifier) mapping."""
     debrief = build.debrief(
         moments=(),
         activity=ActivityRollup(carrier=rollup, modes_used=()),
@@ -24,7 +26,10 @@ def _carrier_stats(rollup: CarrierRollup, labels=()) -> dict[str, str]:
     presenter = DebriefPresenter(spec(labels), number_format(), app_version="1.2.3")
     context = presenter.present(debrief).to_context()
     section = next(s for s in context["domains"] if s["key"] == "carrier")
-    return {stat["label"]: stat["value_display"] for stat in section["stats"]}
+    return {
+        stat["label"]: (stat["value_display"], stat["qualifier"])
+        for stat in section["stats"]
+    }
 
 
 def test_a_fully_measured_run_states_the_distance_plainly() -> None:
@@ -32,17 +37,22 @@ def test_a_fully_measured_run_states_the_distance_plainly() -> None:
         CarrierRollup(jumps=8, distance_ly=3296.15, legs_measured=8, legs_total=8)
     )
 
-    assert stats["Carrier jumps"] == "8"
-    assert stats["Distance"] == "3,296.2 ly"
+    assert stats["Carrier jumps"] == ("8", None)
+    assert stats["Distance"] == ("3,296.2 ly", None)
 
 
 def test_an_unmeasurable_first_leg_is_declared_rather_than_hidden() -> None:
-    """Nine jumps, eight measurable: the report says which legs it covers."""
+    """Nine jumps, eight measurable: the report says which legs it covers.
+
+    The qualification is a field of its own rather than part of the figure. As
+    one string the pair could not be broken across lines and a long one ran out
+    of its card and over the panel beside it.
+    """
     stats = _carrier_stats(
         CarrierRollup(jumps=9, distance_ly=3296.15, legs_measured=8, legs_total=9)
     )
 
-    assert stats["Distance"] == "3,296.2 ly (over 8 of 9 jumps)"
+    assert stats["Distance"] == ("3,296.2 ly", "over 8 of 9 jumps")
 
 
 def test_a_run_with_no_stated_positions_reports_no_distance() -> None:
@@ -50,7 +60,7 @@ def test_a_run_with_no_stated_positions_reports_no_distance() -> None:
         CarrierRollup(jumps=3, distance_ly=0.0, legs_measured=0, legs_total=3)
     )
 
-    assert stats["Distance"] == "0.0 ly (over 0 of 3 jumps)"
+    assert stats["Distance"] == ("0.0 ly", "over 0 of 3 jumps")
 
 
 def test_the_partial_wording_is_configurable() -> None:
@@ -60,9 +70,9 @@ def test_the_partial_wording_is_configurable() -> None:
         labels=(
             (
                 "label.carrier.distance_partial",
-                "{distance} across {measured}/{total} legs",
+                "across {measured}/{total} legs",
             ),
         ),
     )
 
-    assert stats["Distance"] == "3,296.2 ly across 8/9 legs"
+    assert stats["Distance"] == ("3,296.2 ly", "across 8/9 legs")

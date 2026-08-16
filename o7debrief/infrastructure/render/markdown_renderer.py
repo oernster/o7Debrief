@@ -68,6 +68,8 @@ def _headline(lines: list[str], headline: list[dict]) -> None:
         row = f"{item['label']}: {item['value_display']}"
         if item["delta_display"]:
             row += f" ({item['delta_display']})"
+        if item["note_display"]:
+            row += f" [{item['note_display']}]"
         lines.append(row)
     lines.append(_FENCE)
     lines.append(_BLANK)
@@ -82,7 +84,10 @@ def _domains(lines: list[str], domains: list[dict]) -> None:
     for domain in domains:
         lines.append(f"### {emoji_for(domain['icon'])} {domain['title']}")
         for stat in domain["stats"]:
-            lines.append(f"{_BULLET}{stat['label']}: {stat['value_display']}")
+            row = f"{_BULLET}{stat['label']}: {stat['value_display']}"
+            if stat["qualifier"]:
+                row += f" ({stat['qualifier']})"
+            lines.append(row)
         if domain["note"]:
             lines.append(f"_{domain['note']}_")
         lines.append(_BLANK)

@@ -80,6 +80,9 @@ _BODY = """</style>
       {% if item.delta_display %}
       <div class="delta {{ item.delta_class }}">{{ item.delta_display }}</div>
       {% endif %}
+      {% if item.note_display %}
+      <div class="hint">{{ item.note_display }}</div>
+      {% endif %}
     </div>
     {% endfor %}
   </div>
@@ -92,7 +95,9 @@ _BODY = """</style>
       <div class="title">{{ domain.icon | emoji }} {{ domain.title }}</div>
       <ul class="stats">
         {% for stat in domain.stats %}
-        <li><span>{{ stat.label }}</span><span>{{ stat.value_display }}</span></li>
+        <li><span>{{ stat.label }}</span><span>{{ stat.value_display
+          }}{% if stat.qualifier %}<span class="qual">{{ stat.qualifier
+          }}</span>{% endif %}</span></li>
         {% endfor %}
       </ul>
       {% if domain.note %}<div class="note">{{ domain.note }}</div>{% endif %}

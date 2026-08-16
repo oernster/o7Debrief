@@ -58,6 +58,7 @@ from o7debrief.application.services.update_service import (
     UpdateService,
     platform_key_for,
 )
+from o7debrief.application.services.value_formatter import ValueFormatter
 
 # The composition root alone reaches into infrastructure.
 from o7debrief.infrastructure import (
@@ -676,7 +677,7 @@ def _build_one_shot(
     presenter = DebriefPresenter(
         spec,
         number_format,
-        JinjaTextTemplateRenderer(humaniser),
+        JinjaTextTemplateRenderer(humaniser, ValueFormatter(number_format).credits),
         app_version=__version__,
     )
 

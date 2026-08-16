@@ -18,6 +18,8 @@ from tests.application.fakes import number_format, spec
 # taken from a real journal reading rather than invented.
 REAL_BALANCE = 33_455_794_489
 SESSION_PAYOUT = 750
+# The login that stated the balance, taken from the same real journal.
+READING_TIME = "2026-08-15T18:49:38Z"
 
 
 def _credits_headline(debrief, labels: tuple[tuple[str, str], ...] = ()) -> dict:
@@ -109,3 +111,39 @@ def test_the_unread_change_wording_is_configurable() -> None:
     )
 
     assert net["delta_display"] == "Not stated"
+
+
+def test_the_balance_says_when_it_was_read() -> None:
+    """The defect this closes: a login reading passing for the balance now.
+
+    The journal states a balance at a login and never again, so on a session
+    spanning nineteen hours of selling and outfitting the headline was the
+    figure the commander had before any of it. The reading stands, because it
+    is what the journal said; what it lacked was the moment it was taken.
+    """
+    net = _credits_headline(
+        _quiet_debrief(
+            net_credits=None,
+            credits_balance=REAL_BALANCE,
+            credits_balance_at=READING_TIME,
+        )
+    )
+
+    assert net["value_display"] == "33,455,794,489 Cr"
+    assert net["note_display"] == "Read at login, 2026-08-15 18:49:38"
+
+
+def test_no_reading_carries_no_reading_time() -> None:
+    """A time for a reading that never happened would contradict the slot above."""
+    net = _credits_headline(_quiet_debrief(net_credits=None, credits_balance=None))
+
+    assert net["note_display"] is None
+
+
+def test_the_reading_time_wording_is_configurable() -> None:
+    net = _credits_headline(
+        _quiet_debrief(credits_balance=REAL_BALANCE, credits_balance_at=READING_TIME),
+        labels=(("label.credits.balance_read_at", "as of {time}"),),
+    )
+
+    assert net["note_display"] == "as of 2026-08-15 18:49:38"

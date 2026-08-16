@@ -33,6 +33,7 @@ from o7debrief.domain.model.session_debrief import SessionDebrief
 from o7debrief.domain.rules.rollup_spec import RollupSpec
 from o7debrief.domain.value_objects.commander_id import CommanderId
 from o7debrief.domain.value_objects.credits import Credits
+from o7debrief.domain.value_objects.event_time import EventTime
 from o7debrief.domain.value_objects.system_name import SystemName
 
 __all__ = ["DebriefBuilder", "HistoryCollection"]
@@ -96,14 +97,19 @@ def _is_before(earlier: RawEvent, later: RawEvent) -> bool:
     return earlier.event_time.epoch_s < later.event_time.epoch_s
 
 
-def _balance_readings(events: tuple[RawEvent, ...]) -> tuple[int, ...]:
-    """Return every credit balance stated in ``events``, in order.
+def _balance_readings(
+    events: tuple[RawEvent, ...],
+) -> tuple[tuple[int, EventTime], ...]:
+    """Return every credit balance stated in ``events`` with when it was read.
 
     A boolean is rejected explicitly because bool is a subclass of int and a
-    stray True would otherwise read as a balance of one credit.
+    stray True would otherwise read as a balance of one credit. The reading
+    time travels with the amount because the journal states a balance only at
+    a login: on a long session the newest reading can be hours old and the
+    report has to be able to say so.
     """
     return tuple(
-        value
+        (value, event.event_time)
         for event in events
         if event.event_type in _BALANCE_EVENTS
         for value in (event.get(_BALANCE_FIELD),)
@@ -111,15 +117,21 @@ def _balance_readings(events: tuple[RawEvent, ...]) -> tuple[int, ...]:
     )
 
 
-def _latest_balance(events: tuple[RawEvent, ...]) -> Credits | None:
-    """Return the newest credit balance stated in ``events``, else None.
+def _latest_balance(
+    events: tuple[RawEvent, ...],
+) -> tuple[Credits | None, EventTime | None]:
+    """Return the newest credit balance in ``events`` and when it was read.
 
-    None means the journal offered no reading, which the report has to be able
-    to say. Returning zero instead would make "no reading" indistinguishable
-    from "no money", which is exactly the confusion this exists to remove.
+    (None, None) means the journal offered no reading, which the report has to
+    be able to say. Returning zero instead would make "no reading"
+    indistinguishable from "no money", which is exactly the confusion this
+    exists to remove.
     """
     readings = _balance_readings(events)
-    return Credits(readings[_LAST_READING]) if readings else None
+    if not readings:
+        return None, None
+    amount, read_at = readings[_LAST_READING]
+    return Credits(amount), read_at
 
 
 def _net_change(events: tuple[RawEvent, ...]) -> int | None:
@@ -138,7 +150,9 @@ def _net_change(events: tuple[RawEvent, ...]) -> int | None:
     readings = _balance_readings(events)
     if len(readings) < _READINGS_FOR_A_CHANGE:
         return None
-    return readings[_LAST_READING] - readings[_FIRST_READING]
+    latest, _ = readings[_LAST_READING]
+    earliest, _ = readings[_FIRST_READING]
+    return latest - earliest
 
 
 def _location_readings(
@@ -200,6 +214,7 @@ class DebriefBuilder:
         )
         ship_type, ship_name = history.latest()
         start_system, end_system, visited = _location_readings(events, carried_system)
+        balance, balance_at = _latest_balance(events)
         return assemble(
             commander,
             window,
@@ -208,11 +223,12 @@ class DebriefBuilder:
             self._spec,
             ship_type,
             ship_name,
-            _latest_balance(events),
-            start_system,
-            end_system,
-            visited,
-            _net_change(events),
+            credits_balance=balance,
+            credits_balance_at=balance_at,
+            start_system=start_system,
+            end_system=end_system,
+            systems_visited=visited,
+            net_credits_delta=_net_change(events),
         )
 
     def collect_history(
@@ -276,6 +292,7 @@ class DebriefBuilder:
         start_system = None if endpoints is None else SystemName(endpoints[0])
         end_system = None if endpoints is None else SystemName(endpoints[1])
         visited = None if endpoints is None else collection.location.distinct_count()
+        balance, balance_at = _latest_balance(collection.state_events)
         return assemble(
             commander,
             window,
@@ -284,9 +301,10 @@ class DebriefBuilder:
             self._spec,
             ship_type,
             ship_name,
-            _latest_balance(collection.state_events),
-            start_system,
-            end_system,
-            visited,
-            _net_change(collection.state_events),
+            credits_balance=balance,
+            credits_balance_at=balance_at,
+            start_system=start_system,
+            end_system=end_system,
+            systems_visited=visited,
+            net_credits_delta=_net_change(collection.state_events),
         )

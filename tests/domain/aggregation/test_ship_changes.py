@@ -52,7 +52,15 @@ def test_swap_names_both_ships_with_their_types_and_names() -> None:
     )
 
 
-def test_purchase_names_the_bought_ship_with_its_name() -> None:
+def test_a_purchase_is_not_recorded_here() -> None:
+    """ShipyardNew names the ship bought but states no price.
+
+    The purchase is recorded from the priced ShipyardBuy through the taxonomy
+    instead, so the row says what the ship cost and the sum reaches the
+    outfitting rollup. Recording it in both places would put two rows in the
+    timeline for one purchase. ShipyardNew is still read, for the ship names a
+    swap needs.
+    """
     events = (
         _ev(
             "ShipyardNew",
@@ -64,13 +72,11 @@ def test_purchase_names_the_bought_ship_with_its_name() -> None:
         _ev("Loadout", 11, Ship="python_nx", ShipID=2, ShipName="NIGHTSHADE"),
     )
 
-    moments = ship_change_moments(events)
-
-    assert [moment.kind for moment in moments] == [MomentKind.SHIP_PURCHASE]
-    assert moments[0].label == "Bought Python Mk II (NIGHTSHADE)."
+    assert ship_change_moments(events) == ()
 
 
-def test_purchase_without_a_name_shows_the_type_only() -> None:
+def test_a_swap_still_names_a_ship_first_seen_on_a_purchase() -> None:
+    """The ShipyardNew that follows a purchase remains part of the name index."""
     events = (
         _ev(
             "ShipyardNew",
@@ -79,11 +85,13 @@ def test_purchase_without_a_name_shows_the_type_only() -> None:
             ShipType_Localised="Python Mk II",
             NewShipID=2,
         ),
+        _ev("ShipyardSwap", 12, ShipType="sidewinder", ShipID=1, StoreShipID=2),
     )
 
     moments = ship_change_moments(events)
 
-    assert moments[0].label == "Bought Python Mk II."
+    assert [moment.kind for moment in moments] == [MomentKind.SHIP_SWAP]
+    assert moments[0].label.startswith("Swapped from Python Mk II")
 
 
 def test_swap_falls_back_to_internal_symbols_when_not_localised() -> None:

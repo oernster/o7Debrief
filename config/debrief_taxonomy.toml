@@ -124,9 +124,15 @@ default_mode = "foot"
 
 [[domain]]
 key = "shipyard"
-title = "Shipyard"
+title = "Outfitting and Shipyard"
 icon = "shipyard"
 default_mode = "ship"
+# Two things the journal does not let this section count, stated rather than
+# left for the reader to discover. A Vessel Hangar bay uses the same outfitting
+# events and is counted on the Ship-Launched Vessel card instead. A ship taken
+# in part-exchange is priced inside the purchase event and is never stated as a
+# sale of its own.
+note = "Vessel Hangar bays are counted under Ship-Launched Vessel. A ship taken in part-exchange is not counted as a sale, because the journal states no sale for it."
 
 # ---------------------------------------------------------------------------
 # Modes: the physical control context. label and icon drive the report; tag is
@@ -296,6 +302,23 @@ credits_field = "Reward"
 # of stating a reward of zero. That notice is the evidence this needs.
 coins_field = "MercCoins"
 text = "Completed {{ LocalisedName }} for {{ Faction }} ({{ Reward }} Cr, {{ MercCoins }} Merc Coins)."
+
+# An experimental effect applied to a module. The journal reports this as an
+# EngineerCraft exactly like a grade roll, carrying the blueprint and grade of
+# the modification already on the module, so counted with the rolls it inflated
+# the modification total with work that modified nothing. The two are told
+# apart by a field rather than by a value: ONLY the event that applies the
+# effect carries ApplyExperimentalEffect. ExperimentalEffect is no use for
+# this, because once an effect is attached every later roll on that module
+# restates it. This rule is declared BEFORE the plain roll below, since the
+# first rule whose filter matches wins.
+[[moment]]
+event = "EngineerCraft"
+domain = "engineering"
+mode = "ship"
+kind = "engineer_experimental"
+where_present = "ApplyExperimentalEffect"
+text = "Applied the {{ ExperimentalEffect_Localised }} experimental effect to a {{ Module | module }} at {{ Engineer }}."
 
 # A single engineering roll. The wording names the engineer as well as the
 # blueprint, grade and module, because a session's rolls are otherwise
@@ -474,6 +497,65 @@ mode = "ship"
 kind = "promotion"
 text = "Earned a rank promotion."
 
+# Outfitting and the shipyard: what was bought and what was sold. These are
+# among the largest sums a session moves (one journal session sold fifty-six
+# stored modules for tens of millions) and none of it was recorded, so the
+# report showed a balance change with nothing to account for it.
+#
+# Declared AFTER the Vessel Hangar rules above, because the first matching rule
+# wins and a hangar bay is bought and sold through these same three events. A
+# hangar keeps its own moment and is counted on the Ship-Launched Vessel card
+# rather than here; the note on this section says so.
+#
+# Item names come from the journal's internal token, decoded by the humanise
+# vocabulary, so an unrecognised module still reads as itself.
+[[moment]]
+event = "ModuleBuy"
+domain = "shipyard"
+mode = "ship"
+kind = "module_buy"
+credits_field = "BuyPrice"
+text = "Bought a {{ BuyItem | module }} for {{ BuyPrice | credits }}."
+
+[[moment]]
+event = "ModuleSell"
+domain = "shipyard"
+mode = "ship"
+kind = "module_sell"
+credits_field = "SellPrice"
+text = "Sold a {{ SellItem | module }} for {{ SellPrice | credits }}."
+
+# A stored module sold from the shipyard's storage rather than off the ship.
+# It is a sale like any other and is counted with them.
+[[moment]]
+event = "ModuleSellRemote"
+domain = "shipyard"
+mode = "ship"
+kind = "module_sell"
+credits_field = "SellPrice"
+text = "Sold a stored {{ SellItem | module }} for {{ SellPrice | credits }}."
+
+# A ship bought. This is the priced half of a purchase: the ShipyardNew that
+# follows names the ship but states no price, so the purchase is recorded here
+# instead and ShipyardNew is left to identify the ship for the swap index.
+# A part-exchange puts the old ship's price in the same event under SellPrice;
+# that trade-in is not counted as a sale, so the section note says so.
+[[moment]]
+event = "ShipyardBuy"
+domain = "shipyard"
+mode = "ship"
+kind = "ship_purchase"
+credits_field = "ShipPrice"
+text = "Bought {{ ShipType_Localised | default(ShipType, true) }} for {{ ShipPrice | credits }}."
+
+[[moment]]
+event = "ShipyardSell"
+domain = "shipyard"
+mode = "ship"
+kind = "ship_sale"
+credits_field = "ShipPrice"
+text = "Sold {{ ShipType_Localised | default(ShipType, true) }} for {{ ShipPrice | credits }}."
+
 # ---------------------------------------------------------------------------
 # Humanise: the vocabulary that turns the journal's internal tokens into the
 # English a report shows. The journal names a module "int_sensors_size5_class2"
@@ -492,6 +574,14 @@ text = "Earned a rank promotion."
 # where a module is fitted, which the report does not report, so they are
 # dropped. Only a LEADING part is ever dropped.
 drop_prefixes = ["int", "hpt"]
+# The outfitting events state an item as a localisation key, "$<token>_name;",
+# where the engineering events state the same token bare. These strip the
+# wrapper and the trailing marker so both forms decode identically; without
+# them a bought module read as "$Int Fuel Scoop Name;". Only a TRAILING part is
+# ever dropped, so a module whose own name ends in one of these keeps it.
+token_open = "$"
+token_close = ";"
+drop_suffixes = ["name"]
 # Blueprint categories that name how Frontier filed the blueprint rather than
 # anything a Commander applied it to. "Light Weight Misc" says less than
 # "Light Weight" does, so the category is left off.
@@ -573,6 +663,26 @@ mkiiagileboost = "Mk II Agile Boost"
 reactive = "Reactive Surface"
 mkii = "Mk II"
 nx = "NX"
+# Modules first seen in the report once outfitting purchases and sales were
+# recorded. Each was reading as its own token title-cased, which is what the
+# decode does with a word it has no entry for: the gap shows rather than
+# hiding. Closing it is this one line.
+modulereinforcement = "Module Reinforcement"
+guardianshieldreinforcement = "Guardian Shield Reinforcement"
+guardianhullreinforcement = "Guardian Hull Reinforcement"
+guardianmodulereinforcement = "Guardian Module Reinforcement"
+buggybay = "Planetary Vehicle Hangar"
+corrosionproofcargorack = "Corrosion Resistant Cargo Rack"
+repairer = "Auto Field-Maintenance Unit"
+refinery = "Refinery"
+fighterbay = "Vessel Hangar"
+fighterbaymk2 = "Vessel Hangar Mk II"
+dockingcomputer = "Docking Computer"
+supercruiseassist = "Supercruise Assist"
+sensors = "Sensors"
+fueltank = "Fuel Tank"
+passengercabin = "Passenger Cabin"
+buggybaymk2 = "Planetary Vehicle Hangar Mk II"
 
 # ---------------------------------------------------------------------------
 # Thresholds: named numeric values the domain compares against. Keeping them

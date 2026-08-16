@@ -21,6 +21,7 @@ from o7debrief.domain.model.rollups import (
     MiningRollup,
     MissionRollup,
     OnFootRollup,
+    ShipyardRollup,
     SlfRollup,
     SlvRollup,
     SrvRollup,
@@ -34,6 +35,7 @@ from o7debrief.domain.value_objects.enums import (
     MomentKind,
     RankLadder,
 )
+from o7debrief.domain.value_objects.event_time import EventTime
 from o7debrief.domain.value_objects.session_window import SessionWindow
 from o7debrief.domain.value_objects.system_name import SystemName
 from tests.application.fakes import at, commander
@@ -74,7 +76,7 @@ def moment(
 
 
 def full_activity() -> ActivityRollup:
-    """Return an ActivityRollup with every one of the thirteen domains present."""
+    """Return an ActivityRollup with every one of the fourteen domains present."""
     return ActivityRollup(
         flight=FlightRollup(jumps=3, distance_ly=120),
         exploration=ExplorationRollup(
@@ -87,7 +89,7 @@ def full_activity() -> ActivityRollup:
         trade=TradeRollup(buys=2, sells=2, spent=Credits(800), earned=Credits(3200)),
         mining=MiningRollup(refined=7),
         missions=MissionRollup(completed=3, rewards=Credits(9000)),
-        engineering=EngineeringRollup(crafted=2),
+        engineering=EngineeringRollup(crafted=2, experimentals=1),
         # Two jumps but only one measurable leg, which is the ordinary case: a
         # carrier jump states its destination and not its origin, so the first
         # jump of a session can never be measured.
@@ -99,6 +101,16 @@ def full_activity() -> ActivityRollup:
         slv=SlvRollup(deployments=1, hangars_bought=1, hangars_sold=1),
         slf=SlfRollup(deployments=2),
         on_foot=OnFootRollup(disembarks=3, settlements=1),
+        shipyard=ShipyardRollup(
+            modules_bought=2,
+            modules_sold=3,
+            module_spend=Credits(6000),
+            module_earned=Credits(11000),
+            ships_bought=1,
+            ships_sold=1,
+            ship_spend=Credits(60000000),
+            ship_earned=Credits(23000000),
+        ),
         modes_used=(ActivityMode.SHIP, ActivityMode.SRV, ActivityMode.ON_FOOT),
     )
 
@@ -146,6 +158,7 @@ def debrief(
     ship: str = "",
     ship_name: str = "",
     credits_balance: int | None = None,
+    credits_balance_at: str | None = None,
     systems_visited: int | None = None,
 ) -> SessionDebrief:
     """Assemble a SessionDebrief from prepared parts for presenter tests."""
@@ -164,5 +177,8 @@ def debrief(
         ship=ship,
         ship_name=ship_name,
         credits_balance=(None if credits_balance is None else Credits(credits_balance)),
+        credits_balance_at=(
+            None if credits_balance_at is None else EventTime.parse(credits_balance_at)
+        ),
         systems_visited=systems_visited,
     )

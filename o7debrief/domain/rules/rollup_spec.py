@@ -51,6 +51,14 @@ class MomentRule:
     satisfies the filter. When ``where_field`` is unset or ``where_contains`` is
     empty the rule matches every occurrence.
 
+    ``where_present`` names a payload key that must simply BE there, whatever
+    its value. Some events are told apart by the presence of a field rather
+    than by its content: an ``EngineerCraft`` that applies an experimental
+    effect carries ``ApplyExperimentalEffect`` and an ordinary grade roll does
+    not, while both carry the blueprint and grade. Without it the two were one
+    kind and a module's experimental was counted as a modification. It composes
+    with the token filter: a rule declaring both must satisfy both.
+
     ``text_template`` is the taxonomy's row wording for this moment: a template
     rendered against the raw event payload so a row can state what actually
     happened rather than merely naming its kind. It rides the rule (data) rather
@@ -73,6 +81,7 @@ class MomentRule:
     coins_field: str | None = None
     where_field: str | None = None
     where_contains: tuple[str, ...] = ()
+    where_present: str | None = None
     text_template: str | None = None
 
 

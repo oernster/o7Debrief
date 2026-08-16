@@ -60,6 +60,7 @@ def test_moment_kind_members() -> None:
         "REFINE",
         "MISSION_COMPLETE",
         "ENGINEER_CRAFT",
+        "ENGINEER_EXPERIMENTAL",
         "CARRIER_JUMP",
         "EXOBIO_SAMPLE",
         "EXOBIO_SELL",
@@ -77,6 +78,9 @@ def test_moment_kind_members() -> None:
         "PROMOTION",
         "SHIP_SWAP",
         "SHIP_PURCHASE",
+        "SHIP_SALE",
+        "MODULE_BUY",
+        "MODULE_SELL",
         "MILESTONE",
     }
     assert {b.name for b in MomentKind} == expected

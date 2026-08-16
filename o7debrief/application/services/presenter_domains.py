@@ -42,14 +42,27 @@ _REFINED = ("mining.refined", "Refined")
 _COMPLETED = ("missions.completed", "Completed")
 _REWARDS = ("missions.rewards", "Rewards")
 _MERC_COINS = ("missions.merc_coins", "Merc Coins")
-_CRAFTED = ("engineering.crafted", "Modifications")
+_CRAFTED = ("engineering.crafted", "Modification rolls")
+_EXPERIMENTALS = ("engineering.experimentals", "Experimental effects")
+_MODULES_BOUGHT = ("shipyard.modules_bought", "Modules bought")
+_MODULE_SPEND = ("shipyard.module_spend", "Spent on modules")
+_MODULES_SOLD = ("shipyard.modules_sold", "Modules sold")
+_MODULE_EARNED = ("shipyard.module_earned", "Earned from modules")
+_SHIPS_BOUGHT = ("shipyard.ships_bought", "Ships bought")
+_SHIP_SPEND = ("shipyard.ship_spend", "Spent on ships")
+_SHIPS_SOLD = ("shipyard.ships_sold", "Ships sold")
+_SHIP_EARNED = ("shipyard.ship_earned", "Earned from ships")
 _CARRIER_JUMPS = ("carrier.jumps", "Carrier jumps")
 _CARRIER_DISTANCE = ("carrier.distance", "Distance")
-# Template used when the carrier distance covers only some of the jumps made,
-# because the first jump of a session has no stated origin to measure from.
+# Qualifier shown beside the carrier distance when it covers only some of the
+# jumps made, because the first jump of a session has no stated origin to
+# measure from. It is held apart from the distance rather than formatted into
+# it: the distance is a quantity that must not break across lines and this is
+# prose that may. Joined into one unbreakable string the row overflowed its
+# card and ran over the panel beside it.
 _CARRIER_PARTIAL = (
     "carrier.distance_partial",
-    "{distance} (over {measured} of {total} jumps)",
+    "over {measured} of {total} jumps",
 )
 _SAMPLES = ("exobiology.samples", "Samples")
 _SOLD = ("exobiology.sold", "Organic data sold")
@@ -70,10 +83,19 @@ _PROMOTION_KIND = "PROMOTION"
 _JUMP_KIND = "JUMP"
 
 
-def _stat(resolver, label_key: tuple[str, str], value: str) -> DomainStat:
+def _stat(
+    resolver,
+    label_key: tuple[str, str],
+    value: str,
+    qualifier: str | None = None,
+) -> DomainStat:
     """Build one DomainStat with a resolved label and formatted value."""
     key, default = label_key
-    return DomainStat(label=resolver.generic(key, default), value_display=value)
+    return DomainStat(
+        label=resolver.generic(key, default),
+        value_display=value,
+        qualifier=qualifier,
+    )
 
 
 def _section(resolver, key: str, stats: tuple[DomainStat, ...]) -> DomainSection:
@@ -134,33 +156,59 @@ def _missions_stats(rollup, fmt, resolver) -> tuple[DomainStat, ...]:
 
 
 def _engineering_stats(rollup, fmt, resolver) -> tuple[DomainStat, ...]:
-    return (_stat(resolver, _CRAFTED, fmt.integer(rollup.crafted)),)
+    """Grade rolls and experimental effects, counted apart.
+
+    Together they read as one figure and a session spent choosing effects
+    looked like a session of heavy modification. The journal reports both as an
+    EngineerCraft, which is why they were one count to begin with.
+    """
+    return (
+        _stat(resolver, _CRAFTED, fmt.integer(rollup.crafted)),
+        _stat(resolver, _EXPERIMENTALS, fmt.integer(rollup.experimentals)),
+    )
 
 
-def _carrier_distance(rollup, fmt, resolver) -> str:
-    """Return the carrier distance, qualified when some legs were unmeasurable.
+def _shipyard_stats(rollup, fmt, resolver) -> tuple[DomainStat, ...]:
+    """Outfitting and shipyard trade: each side counted and priced separately."""
+    return (
+        _stat(resolver, _MODULES_BOUGHT, fmt.integer(rollup.modules_bought)),
+        _stat(resolver, _MODULE_SPEND, fmt.credits(rollup.module_spend.value)),
+        _stat(resolver, _MODULES_SOLD, fmt.integer(rollup.modules_sold)),
+        _stat(resolver, _MODULE_EARNED, fmt.credits(rollup.module_earned.value)),
+        _stat(resolver, _SHIPS_BOUGHT, fmt.integer(rollup.ships_bought)),
+        _stat(resolver, _SHIP_SPEND, fmt.credits(rollup.ship_spend.value)),
+        _stat(resolver, _SHIPS_SOLD, fmt.integer(rollup.ships_sold)),
+        _stat(resolver, _SHIP_EARNED, fmt.credits(rollup.ship_earned.value)),
+    )
+
+
+def _carrier_distance(rollup, fmt, resolver) -> tuple[str, str | None]:
+    """Return the carrier distance and its qualifier, if the total is short.
 
     A carrier jump states its destination but not how far it came, so a leg is
     only measurable between two stated positions and the first jump of a
     session has no stated origin. Where that leaves the total short, the display
     says which legs it covers rather than passing an incomplete figure off as
-    the whole distance.
+    the whole distance. The qualifier is returned separately from the distance
+    so the renderer can wrap the prose without breaking the quantity.
     """
     distance = fmt.distance(rollup.distance_ly)
     if rollup.legs_measured >= rollup.legs_total:
-        return distance
+        return distance, None
     template = resolver.generic(*_CARRIER_PARTIAL)
-    return template.format(
+    qualifier = template.format(
         distance=distance,
         measured=fmt.integer(rollup.legs_measured),
         total=fmt.integer(rollup.legs_total),
     )
+    return distance, qualifier
 
 
 def _carrier_stats(rollup, fmt, resolver) -> tuple[DomainStat, ...]:
+    distance, qualifier = _carrier_distance(rollup, fmt, resolver)
     return (
         _stat(resolver, _CARRIER_JUMPS, fmt.integer(rollup.jumps)),
-        _stat(resolver, _CARRIER_DISTANCE, _carrier_distance(rollup, fmt, resolver)),
+        _stat(resolver, _CARRIER_DISTANCE, distance, qualifier),
     )
 
 
@@ -211,14 +259,14 @@ _BUILDERS: tuple[tuple[str, str, object], ...] = (
     ("slv", "slv", _slv_stats),
     ("slf", "slf", _slf_stats),
     ("on_foot", "on_foot", _on_foot_stats),
+    ("shipyard", "shipyard", _shipyard_stats),
 )
 
-# Display order of the activity-domain keys for the timeline categories. Stat
-# sections come from _BUILDERS; Shipyard is a timeline-only domain (ship swaps
-# and purchases are logged as records with no rollup stat section), so it is
-# appended here without a _BUILDERS entry.
-_SHIPYARD_KEY = "shipyard"
-DOMAIN_ORDER: tuple[str, ...] = tuple(key for _, key, _ in _BUILDERS) + (_SHIPYARD_KEY,)
+# Display order of the activity-domain keys for the timeline categories, which
+# is the section order. Every domain now carries a stat section: Shipyard used
+# to be timeline-only and had to be appended by hand, which is why a session
+# could sell fifty-six modules and report none of it.
+DOMAIN_ORDER: tuple[str, ...] = tuple(key for _, key, _ in _BUILDERS)
 
 
 def build_domain_sections(activity, fmt, resolver) -> tuple[DomainSection, ...]:

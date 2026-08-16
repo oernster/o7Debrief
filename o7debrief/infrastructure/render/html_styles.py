@@ -54,6 +54,10 @@ h2 { color: var(--accent-soft); font-size: 1.05rem; text-transform: uppercase;
 .metric .label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; }
 .metric .value { font-size: 1.5rem; color: var(--accent); margin-top: 0.2rem; }
 .metric .delta { font-size: 0.85rem; margin-top: 0.2rem; }
+/* States how the value above should be read: for the balance, when it was
+   taken. The journal names a balance only at a login, so a figure hours old
+   would otherwise be read as the balance now. */
+.metric .hint { color: var(--muted); font-size: 0.78rem; margin-top: 0.2rem; }
 .positive { color: var(--pos); } .negative { color: var(--neg); }
 .neutral { color: var(--neutral); }
 .card .title { color: var(--accent-soft); font-size: 1rem; margin-bottom: 0.5rem; }
@@ -67,7 +71,13 @@ h2 { color: var(--accent-soft); font-size: 1.05rem; text-transform: uppercase;
   gap: 0.9rem; border-bottom: 1px dotted var(--edge); padding: 0.25rem 0; }
 .stats li span:first-child { color: var(--muted); min-width: 0; }
 .stats li span:last-child { white-space: nowrap; text-align: right;
-  flex: 0 0 auto; font-variant-numeric: tabular-nums; }
+  flex: 0 1 auto; font-variant-numeric: tabular-nums; }
+/* A qualification of the figure above it ("over 0 of 1 jumps"), on its own
+   line. It is prose, so it wraps where the figure may not; carried inside the
+   figure's own string it made the whole cell unbreakable and a long one ran
+   out of the card and over the panel beside it. */
+.stats .qual { display: block; white-space: normal; color: var(--muted);
+  font-size: 0.85rem; }
 .note { color: var(--muted); font-style: italic; margin-top: 0.5rem; }
 .timeline { list-style: none; margin: 0; padding: 0; }
 .timeline li { display: grid; grid-template-columns: 5.5rem 2rem 1fr; gap: 0.5rem;

@@ -66,6 +66,12 @@ class HeadlineItem:
     value_display: str
     delta_display: str | None
     delta_class: str
+    # An optional line stating how the value slot should be read: when the
+    # figure was taken or what it does not cover. A level the journal states
+    # only at intervals is not the same fact as a level read continuously, so
+    # the report says which one it is holding rather than leaving the reader to
+    # assume the figure is current.
+    note_display: str | None = None
 
     def as_dict(self) -> dict:
         """Return the headline item as a plain dict."""
@@ -74,6 +80,7 @@ class HeadlineItem:
             "value_display": self.value_display,
             "delta_display": self.delta_display,
             "delta_class": self.delta_class,
+            "note_display": self.note_display,
         }
 
 
@@ -83,10 +90,20 @@ class DomainStat:
 
     label: str
     value_display: str
+    # Prose qualifying the figure, held apart from it rather than pushed into
+    # the same string. The two behave differently on a narrow card: a quantity
+    # must never break across lines and a qualification survives wrapping, so
+    # only a separated qualifier can be allowed to wrap. Joined into one value
+    # the row could not wrap at all and overflowed its card.
+    qualifier: str | None = None
 
     def as_dict(self) -> dict:
         """Return the stat as a plain dict."""
-        return {"label": self.label, "value_display": self.value_display}
+        return {
+            "label": self.label,
+            "value_display": self.value_display,
+            "qualifier": self.qualifier,
+        }
 
 
 @dataclass(frozen=True, slots=True)

@@ -17,6 +17,7 @@ from o7debrief.domain.model.rank_delta import RankDelta
 from o7debrief.domain.model.rollups import ActivityRollup
 from o7debrief.domain.value_objects.commander_id import CommanderId
 from o7debrief.domain.value_objects.credits import Credits
+from o7debrief.domain.value_objects.event_time import EventTime
 from o7debrief.domain.value_objects.session_window import SessionWindow
 from o7debrief.domain.value_objects.system_name import SystemName
 
@@ -49,6 +50,12 @@ class SessionDebrief:
     # is deliberately not zero, because a report that cannot tell an absent
     # reading from a balance of nothing is the defect this field exists to fix.
     credits_balance: Credits | None = None
+    # When ``credits_balance`` was read, else None when there was no reading.
+    # The journal states the balance only at a login, never again, so on a long
+    # session the level above is the level the commander had when they sat
+    # down, not when they got up. The report has to be able to say when it was
+    # taken; otherwise a figure hours old reads as the balance now.
+    credits_balance_at: EventTime | None = None
     # How many distinct systems the session named, else None when it named
     # none at all and no history stated one either. None is deliberately not
     # zero: a commander is always somewhere, so a count of no systems is never

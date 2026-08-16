@@ -49,7 +49,6 @@ _OLD_SYMBOL_FIELDS = ("StoreOldShip",)
 # Label templates. The wording defaults live here; {0} is the origin ship and
 # {1} the destination, each formatted as "Type (Name)" when a name is known.
 _SWAP_LABEL = "Swapped from {0} to {1}."
-_PURCHASE_LABEL = "Bought {0}."
 _TYPE_WITH_NAME = "{0} ({1})"
 _UNKNOWN_SHIP = "an unknown ship"
 
@@ -138,11 +137,18 @@ def _moment(kind: MomentKind, label: str, event: RawEvent) -> ConceptualMoment:
 def ship_change_moments(
     events: tuple[RawEvent, ...],
 ) -> tuple[ConceptualMoment, ...]:
-    """Return a moment per ship swap or purchase, in event order.
+    """Return a moment per ship swap, in event order.
 
-    A ``ShipyardSwap`` becomes a "Swapped from A to B" moment and a
-    ``ShipyardNew`` a "Bought B" moment, each ship resolved to its type and
-    custom name from the session. Events that are not ship changes are ignored.
+    A ``ShipyardSwap`` becomes a "Swapped from A to B" moment, each ship
+    resolved to its type and custom name from the session. Events that are not
+    swaps are ignored.
+
+    A purchase used to be recorded here from the ``ShipyardNew`` that follows
+    one, which names the ship but states no price. It is recorded from the
+    priced ``ShipyardBuy`` instead, through the taxonomy like every other
+    purchase, so the row states what the ship cost and the sum reaches the
+    outfitting rollup. ``ShipyardNew`` is still read below, for the ship names
+    a swap needs.
     """
     types, symbols, names = _index_ships(events)
     moments: list[ConceptualMoment] = []
@@ -166,21 +172,6 @@ def ship_change_moments(
                 _moment(
                     MomentKind.SHIP_SWAP,
                     _SWAP_LABEL.format(origin, destination),
-                    event,
-                )
-            )
-        elif event.event_type == _NEW:
-            destination = _display(
-                _first_int(event, _ID_FIELDS),
-                _first_str(event, _SYMBOL_TYPE_FIELDS),
-                types,
-                symbols,
-                names,
-            )
-            moments.append(
-                _moment(
-                    MomentKind.SHIP_PURCHASE,
-                    _PURCHASE_LABEL.format(destination),
                     event,
                 )
             )

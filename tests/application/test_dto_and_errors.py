@@ -34,9 +34,15 @@ _HEADER_KEYS = {
     "end_system",
     "systems_visited",
 }
-_HEADLINE_KEYS = {"label", "value_display", "delta_display", "delta_class"}
+_HEADLINE_KEYS = {
+    "label",
+    "value_display",
+    "delta_display",
+    "delta_class",
+    "note_display",
+}
 _DOMAIN_KEYS = {"key", "title", "icon", "stats", "note"}
-_STAT_KEYS = {"label", "value_display"}
+_STAT_KEYS = {"label", "value_display", "qualifier"}
 _TIMELINE_KEYS = {
     "time_display",
     "mode",

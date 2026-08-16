@@ -101,7 +101,7 @@ def test_present_full_debrief_yields_contract_shape() -> None:
     assert context["header"]["systems_visited"] == "2"
     assert context["header"]["duration"] == "0h 0m"
     # All thirteen domains are present, in canonical order starting with travel.
-    assert len(context["domains"]) == 13
+    assert len(context["domains"]) == 14
     assert context["domains"][0]["key"] == "travel"
     # Timeline has one entry per moment, most recent first, with resolved modes.
     modes = [entry["mode"] for entry in context["timeline"]]
@@ -359,10 +359,12 @@ def test_ship_changes_form_a_shipyard_timeline_category() -> None:
     by_key = {category["key"]: category for category in context["timeline_categories"]}
     assert "shipyard" in by_key
     assert by_key["shipyard"]["count"] == 2
-    # ...but Shipyard is timeline-only, so it has no stat section.
+    # ...and Shipyard now carries a stat section of its own. It used to be
+    # timeline-only, which is how a session could sell eighty modules and
+    # report none of it.
     section_keys = [section["key"] for section in context["domains"]]
-    assert "shipyard" not in section_keys
-    assert len(section_keys) == 13
+    assert "shipyard" in section_keys
+    assert len(section_keys) == 14
 
 
 def test_timeline_categories_empty_when_no_moments() -> None:

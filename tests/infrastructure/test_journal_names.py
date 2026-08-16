@@ -34,11 +34,48 @@ _VOCABULARY = HumaniseVocabulary(
     },
     mounts={"gimbal": "Gimballed", "turret": "Turreted"},
     sizes={"small": "Small", "medium": "Medium", "large": "Large"},
+    drop_suffixes=("name",),
+    token_open="$",
+    token_close=";",
+)
+
+# A vocabulary that names no wrapper and no trailing marker, used to hold the
+# unwrapping to the taxonomy rather than to code.
+_BARE_VOCABULARY = HumaniseVocabulary(
+    drop_prefixes=("int",),
+    ratings=("E", "D", "C", "B", "A"),
+    words={"powerplant": "Power Plant"},
 )
 
 
 def _humaniser() -> NameHumaniser:
     return NameHumaniser(_VOCABULARY)
+
+
+def test_a_localisation_key_decodes_the_same_as_the_bare_token() -> None:
+    """The outfitting events wrap a token the engineering events state bare.
+
+    Handling only the bare form printed "$Int Fuel Scoop Name;" at the reader,
+    so a bought module read as its own localisation key.
+    """
+    assert (
+        _humaniser().module("$int_powerplant_size7_class5_name;")
+        == _humaniser().module("int_powerplant_size7_class5")
+        == "7A Power Plant"
+    )
+
+
+def test_the_wrapper_and_the_marker_come_from_the_taxonomy() -> None:
+    """A vocabulary naming neither strips neither: this is data, not code."""
+    assert (
+        NameHumaniser(_BARE_VOCABULARY).module("$int_powerplant_size7_class5_name;")
+        == "7A $Int Power Plant Name;"
+    )
+
+
+def test_a_module_whose_own_last_word_is_the_marker_keeps_it() -> None:
+    """Only a trailing part the taxonomy names is dropped, never the only one."""
+    assert _humaniser().module("name") == "Name"
 
 
 def test_size_and_class_become_the_games_own_rating() -> None:

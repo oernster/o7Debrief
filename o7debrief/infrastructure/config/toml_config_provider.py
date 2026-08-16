@@ -46,6 +46,9 @@ _RANK = "rank"
 _KEY = "key"
 _TITLE = "title"
 _ICON = "icon"
+# Optional prose a domain section shows beneath its stats, stating what the
+# figures do not cover.
+_NOTE = "note"
 _LABEL = "label"
 _TAG = "tag"
 _TIERS = "tiers"
@@ -60,6 +63,10 @@ _CREDITS_ITEM_FIELDS = "credits_item_fields"
 _COINS_FIELD = "coins_field"
 _WHERE_FIELD = "where_field"
 _WHERE_CONTAINS = "where_contains"
+# A payload key that must merely be present for the rule to apply. It tells
+# apart events that differ by which fields they carry rather than by what those
+# fields say.
+_WHERE_PRESENT = "where_present"
 # The moment's row wording. Every [[moment]] has declared one since the taxonomy
 # was written; nothing read the key, so it parsed and was discarded and every
 # row in every report fell back to its kind label instead.
@@ -73,6 +80,9 @@ _LICENSE = "license"
 # defaults, so a taxonomy without the table still loads and simply title-cases.
 _HUMANISE = "humanise"
 _DROP_PREFIXES = "drop_prefixes"
+_DROP_SUFFIXES = "drop_suffixes"
+_TOKEN_OPEN = "token_open"
+_TOKEN_CLOSE = "token_close"
 _DROP_CATEGORIES = "drop_categories"
 _RATINGS = "ratings"
 _WORDS = "words"
@@ -94,6 +104,7 @@ _HIGH_VALUE_EXOBIO_CREDITS = "high_value_exobio_credits"
 # exactly so what we write here is what the resolver reads back.
 _DOMAIN_TITLE_KEY = "domain.{key}.title"
 _DOMAIN_ICON_KEY = "domain.{key}.icon"
+_DOMAIN_NOTE_KEY = "domain.{key}.note"
 _MODE_LABEL_KEY = "mode.{mode}.label"
 _MODE_ICON_KEY = "mode.{mode}.icon"
 _MODE_TAG_KEY = "mode.{mode}.tag"
@@ -176,6 +187,9 @@ class TomlConfigProvider:
         defaults = HumaniseVocabulary()
         return HumaniseVocabulary(
             drop_prefixes=tuple(table.get(_DROP_PREFIXES, ())),
+            drop_suffixes=tuple(table.get(_DROP_SUFFIXES, ())),
+            token_open=table.get(_TOKEN_OPEN, defaults.token_open),
+            token_close=table.get(_TOKEN_CLOSE, defaults.token_close),
             drop_categories=tuple(table.get(_DROP_CATEGORIES, ())),
             ratings=tuple(table.get(_RATINGS, ())),
             words=dict(table.get(_WORDS, {})),
@@ -231,6 +245,7 @@ def _build_rules(data: dict[str, Any]) -> tuple[MomentRule, ...]:
                 coins_field=moment.get(_COINS_FIELD),
                 where_field=moment.get(_WHERE_FIELD),
                 where_contains=_where_tokens(moment.get(_WHERE_CONTAINS)),
+                where_present=moment.get(_WHERE_PRESENT),
                 text_template=moment.get(_TEXT),
             )
         )
@@ -248,12 +263,21 @@ def _build_thresholds(data: dict[str, Any]) -> ThresholdSet:
 
 
 def _domain_labels(data: dict[str, Any]) -> list[tuple[str, str]]:
-    """Return title and icon label pairs for every ``[[domain]]`` entry."""
+    """Return title, icon and note label pairs for every ``[[domain]]`` entry.
+
+    The note is optional and was not read here at all, so a section could not
+    state what its figures leave out however plainly the taxonomy said it. Only
+    a declared note is emitted, since an empty one is how the resolver spells
+    "no note".
+    """
     pairs: list[tuple[str, str]] = []
     for domain in data.get(_DOMAIN, []):
         key = domain[_KEY]
         pairs.append((_DOMAIN_TITLE_KEY.format(key=key), domain[_TITLE]))
         pairs.append((_DOMAIN_ICON_KEY.format(key=key), domain[_ICON]))
+        note = domain.get(_NOTE)
+        if note:
+            pairs.append((_DOMAIN_NOTE_KEY.format(key=key), note))
     return pairs
 
 

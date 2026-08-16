@@ -23,6 +23,7 @@ __all__ = [
     "MiningRollup",
     "MissionRollup",
     "OnFootRollup",
+    "ShipyardRollup",
     "SlfRollup",
     "SlvRollup",
     "SrvRollup",
@@ -103,9 +104,17 @@ class MissionRollup:
 
 @dataclass(frozen=True, slots=True)
 class EngineeringRollup:
-    """Engineering summary: crafting/modification events applied."""
+    """Engineering summary: grade rolls made and experimental effects applied.
+
+    The two are counted apart because they are different work. A grade is
+    rolled over and over, often dozens of times for one module; an experimental
+    effect is chosen once and applied once. The journal reports both as an
+    ``EngineerCraft``, so counting them together made a session of picking
+    effects read as a session of heavy modification.
+    """
 
     crafted: int = 0
+    experimentals: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -174,6 +183,32 @@ class OnFootRollup:
     settlements: int = 0
 
 
+@dataclass(frozen=True, slots=True)
+class ShipyardRollup:
+    """Outfitting and shipyard summary: what was bought and what was sold.
+
+    Counts and sums are kept apart per side, because a session that spent
+    fifty million on modules and took forty million back for the ones it
+    replaced is not the same session as one that did neither; a single net
+    figure would report them identically.
+
+    A Vessel Hangar bay is bought and sold through these same journal events
+    but is counted on the Ship-Launched Vessel card instead, so it is absent
+    here. A ship taken in part-exchange is priced inside the purchase event
+    rather than stated as a sale, so it counts as neither sold nor earned. Both
+    gaps are declared in the section note rather than papered over.
+    """
+
+    modules_bought: int = 0
+    modules_sold: int = 0
+    module_spend: Credits = field(default_factory=Credits.zero)
+    module_earned: Credits = field(default_factory=Credits.zero)
+    ships_bought: int = 0
+    ships_sold: int = 0
+    ship_spend: Credits = field(default_factory=Credits.zero)
+    ship_earned: Credits = field(default_factory=Credits.zero)
+
+
 # Ordered pairing of each optional rollup attribute to its activity domain.
 # Used to derive ``active_domains`` in a single, declarative pass so the
 # mapping stays in one place rather than scattered through conditionals.
@@ -191,12 +226,13 @@ _DOMAIN_BY_ATTR: tuple[tuple[str, ActivityDomain], ...] = (
     ("slv", ActivityDomain.SLV),
     ("slf", ActivityDomain.SLF),
     ("on_foot", ActivityDomain.ON_FOOT),
+    ("shipyard", ActivityDomain.SHIPYARD),
 )
 
 
 @dataclass(frozen=True, slots=True)
 class ActivityRollup:
-    """All thirteen domain rollups plus the set of control modes used."""
+    """All fourteen domain rollups plus the set of control modes used."""
 
     flight: FlightRollup | None = None
     exploration: ExplorationRollup | None = None
@@ -211,6 +247,7 @@ class ActivityRollup:
     slv: SlvRollup | None = None
     slf: SlfRollup | None = None
     on_foot: OnFootRollup | None = None
+    shipyard: ShipyardRollup | None = None
     modes_used: tuple[ActivityMode, ...] = ()
 
     @property

@@ -62,6 +62,12 @@ class MomentKind(Enum):
     REFINE = auto()
     MISSION_COMPLETE = auto()
     ENGINEER_CRAFT = auto()
+    # An experimental effect applied to a module. The journal reports it as an
+    # EngineerCraft like any roll, so counted together with the rolls it
+    # inflated the modification total with work that modified nothing: an
+    # experimental is chosen once and applied once, where a grade is rolled
+    # repeatedly. They are separate kinds so the report can count them apart.
+    ENGINEER_EXPERIMENTAL = auto()
     CARRIER_JUMP = auto()
     EXOBIO_SAMPLE = auto()
     EXOBIO_SELL = auto()
@@ -79,6 +85,9 @@ class MomentKind(Enum):
     PROMOTION = auto()
     SHIP_SWAP = auto()
     SHIP_PURCHASE = auto()
+    SHIP_SALE = auto()
+    MODULE_BUY = auto()
+    MODULE_SELL = auto()
     MILESTONE = auto()
 
 

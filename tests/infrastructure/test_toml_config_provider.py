@@ -41,15 +41,18 @@ _READ_MOMENT_KEYS = frozenset(
         "coins_field",
         "where_field",
         "where_contains",
+        "where_present",
     }
 )
 
 # Number of [[moment]] rules defined in the shipped taxonomy.
-_EXPECTED_RULES = 30
+_EXPECTED_RULES = 36
 # Threshold magnitudes declared in the taxonomy [thresholds] table.
 _LONG_JUMP_LY = 50.0
 _BIG_PAYOUT = 1000000
 _HIGH_VALUE_EXOBIO = 5000000
+# Sentinel proving an absent note stays absent rather than becoming a blank.
+_NO_NOTE = "<none>"
 # Highest tier index on the combat ladder (nine tiers, zero-indexed).
 _COMBAT_ELITE_INDEX = 8
 
@@ -102,9 +105,27 @@ def test_every_moment_declares_row_wording() -> None:
     assert not missing, f"moments with no row wording: {missing}"
 
 
+def test_an_experimental_effect_is_a_rule_of_its_own() -> None:
+    """The two EngineerCraft rules are told apart by a field, not a value.
+
+    Only the event that applies the effect carries ApplyExperimentalEffect;
+    every later roll on that module restates ExperimentalEffect, so the latter
+    cannot distinguish them. The experimental rule is declared first, since the
+    first rule whose filter matches wins.
+    """
+    rules = _provider().load().rules_for("EngineerCraft")
+
+    assert [rule.kind for rule in rules] == [
+        MomentKind.ENGINEER_EXPERIMENTAL,
+        MomentKind.ENGINEER_CRAFT,
+    ]
+    assert rules[0].where_present == "ApplyExperimentalEffect"
+    assert rules[1].where_present is None
+
+
 def test_engineer_craft_wording_names_the_work_and_the_engineer() -> None:
     """The engineering row states blueprint, grade, module and engineer."""
-    craft = _provider().load().rule_for("EngineerCraft")
+    craft = _provider().load().rules_for("EngineerCraft")[1]
     assert craft is not None
     # The blueprint and module ride the humanising filters, because the journal
     # states each as an internal token and never as English.
@@ -302,3 +323,55 @@ def test_meta_without_an_app_name_or_licence_contributes_no_footer_labels(
 
     assert spec.label_for("label.footer.app_name", "MISS") == "MISS"
     assert spec.label_for("label.footer.license", "MISS") == "MISS"
+
+
+def test_a_declared_domain_note_reaches_the_label_map() -> None:
+    """The taxonomy could declare a note and nothing read it back.
+
+    The outfitting section needs one, because a Vessel Hangar and a ship taken
+    in part-exchange are both absent from its totals.
+    """
+    spec = _provider().load()
+
+    note = spec.label_for("domain.shipyard.note", "")
+    assert "Vessel Hangar" in note
+    assert "part-exchange" in note
+
+
+def test_a_domain_with_no_note_declares_none() -> None:
+    """An absent note stays absent rather than becoming an empty line."""
+    spec = _provider().load()
+
+    assert spec.label_for("domain.travel.note", _NO_NOTE) == _NO_NOTE
+
+
+def test_outfitting_and_shipyard_trade_is_mapped_and_priced() -> None:
+    """Each purchase and sale names the payload key holding its price.
+
+    None of these events was mapped at all, so a session that sold eighty
+    modules for nearly two billion credits recorded none of it.
+    """
+    spec = _provider().load()
+    priced = {
+        "ModuleBuy": ("BuyPrice", MomentKind.MODULE_BUY),
+        "ModuleSell": ("SellPrice", MomentKind.MODULE_SELL),
+        "ModuleSellRemote": ("SellPrice", MomentKind.MODULE_SELL),
+        "ShipyardBuy": ("ShipPrice", MomentKind.SHIP_PURCHASE),
+        "ShipyardSell": ("ShipPrice", MomentKind.SHIP_SALE),
+    }
+
+    for event, (field, kind) in priced.items():
+        rule = next(r for r in spec.rules_for(event) if r.kind is kind)
+        assert rule.credits_field == field, event
+        assert rule.domain is ActivityDomain.SHIPYARD, event
+
+
+def test_a_vessel_hangar_still_wins_over_the_general_outfitting_rule() -> None:
+    """A hangar bay is bought through the same events and keeps its own moment.
+
+    The general rules are declared after it, so the first matching rule is
+    still the hangar one.
+    """
+    kinds = [rule.kind for rule in _provider().load().rules_for("ModuleBuy")]
+
+    assert kinds == [MomentKind.VESSEL_HANGAR_BUY, MomentKind.MODULE_BUY]

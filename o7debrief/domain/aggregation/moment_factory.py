@@ -146,9 +146,12 @@ def matches_filter(event: RawEvent, rule: MomentRule) -> bool:
 
     When the rule names a ``where_field`` and one or more ``where_contains``
     tokens, the event matches only if that field is a string containing at
-    least one token (case-insensitive). A rule without a complete filter
-    matches every event.
+    least one token (case-insensitive). When it names a ``where_present``, that
+    key must simply be there, whatever it holds. A rule declaring both must
+    satisfy both. A rule declaring neither matches every event.
     """
+    if rule.where_present is not None and event.get(rule.where_present) is None:
+        return False
     if rule.where_field is None or not rule.where_contains:
         return True
     raw = event.get(rule.where_field)

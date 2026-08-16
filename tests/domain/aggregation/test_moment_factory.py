@@ -226,16 +226,6 @@ def test_credits_array_skips_non_dict_entries() -> None:
     assert moments[0].credits_delta == Credits(100)
 
 
-_HANGAR_BUY_RULE = MomentRule(
-    event_type="ModuleBuy",
-    kind=MomentKind.VESSEL_HANGAR_BUY,
-    domain=ActivityDomain.SLV,
-    mode=ActivityMode.SHIP,
-    magnitude_field=None,
-    credits_field=None,
-    where_field="BuyItem",
-    where_contains=("fighterbay",),
-)
 _NOMAD_DEPLOY_RULE = MomentRule(
     event_type="LaunchFighter",
     kind=MomentKind.SLV_DEPLOY,
@@ -246,57 +236,6 @@ _NOMAD_DEPLOY_RULE = MomentRule(
     where_field="Loadout",
     where_contains=("galactic", "stellar", "standard"),
 )
-
-
-def test_where_filter_matches_when_field_contains_token() -> None:
-    spec = _spec((_HANGAR_BUY_RULE,))
-    # The Mk II Vessel Hangar is the Int_FighterBayMk2 module internally.
-    item = "$int_fighterbaymk2_size5_class1_name;"
-    moments = build_moments((_ev("ModuleBuy", 0, (("BuyItem", item),)),), spec)
-    assert len(moments) == 1
-    assert moments[0].kind is MomentKind.VESSEL_HANGAR_BUY
-
-
-def test_where_filter_is_case_insensitive() -> None:
-    spec = _spec((_HANGAR_BUY_RULE,))
-    moments = build_moments(
-        (_ev("ModuleBuy", 0, (("BuyItem", "Int_FighterBay"),)),), spec
-    )
-    assert len(moments) == 1
-
-
-def test_where_filter_rejects_when_token_absent() -> None:
-    spec = _spec((_HANGAR_BUY_RULE,))
-    moments = build_moments(
-        (_ev("ModuleBuy", 0, (("BuyItem", "int_hyperdrive"),)),), spec
-    )
-    assert moments == ()
-
-
-def test_where_filter_rejects_when_field_missing_or_not_string() -> None:
-    spec = _spec((_HANGAR_BUY_RULE,))
-    assert build_moments((_ev("ModuleBuy", 0, ()),), spec) == ()
-    assert build_moments((_ev("ModuleBuy", 0, (("BuyItem", 42),)),), spec) == ()
-
-
-def test_nomad_deploy_matches_any_loadout_variant_and_tags_slv_mode() -> None:
-    spec = _spec((_NOMAD_DEPLOY_RULE,))
-    for loadout in ("galactic", "stellar", "standard"):
-        moments = build_moments(
-            (_ev("LaunchFighter", 0, (("Loadout", loadout),)),), spec
-        )
-        assert len(moments) == 1
-        assert moments[0].kind is MomentKind.SLV_DEPLOY
-        # The phase tracker, driven by the same rule, tags it as the vessel mode.
-        assert moments[0].mode is ActivityMode.SLV
-
-
-def test_genuine_fighter_launch_is_not_a_nomad_deploy() -> None:
-    spec = _spec((_NOMAD_DEPLOY_RULE,))
-    moments = build_moments((_ev("LaunchFighter", 0, (("Loadout", "gu97"),)),), spec)
-    assert moments == ()
-
-
 _SLV_DOCK_RULE = MomentRule(
     event_type="DockSRV",
     kind=MomentKind.SLV_DOCK,

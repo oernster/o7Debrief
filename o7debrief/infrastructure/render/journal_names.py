@@ -59,6 +59,15 @@ class HumaniseVocabulary:
     """
 
     drop_prefixes: tuple[str, ...] = ()
+    # Trailing token parts that name the token rather than the thing. The
+    # outfitting events state a module as "$int_fuelscoop_size4_class5_name;"
+    # where engineering states the same module bare, so a decode that handled
+    # only the bare form printed "$Int Fuel Scoop Name;" at the reader.
+    drop_suffixes: tuple[str, ...] = ()
+    # The characters that wrap a localisation key, stripped before the token is
+    # split. Data, not code, for the same reason every other word here is.
+    token_open: str = ""
+    token_close: str = ""
     drop_categories: tuple[str, ...] = ()
     ratings: tuple[str, ...] = ()
     words: dict[str, str] = field(default_factory=dict)
@@ -120,6 +129,30 @@ class NameHumaniser:
             return parts[1:]
         return parts
 
+    def _strip_suffix(self, parts: list[str]) -> list[str]:
+        """Drop a trailing localisation-key marker, keeping everything else.
+
+        Only a trailing part is dropped and only one the taxonomy names, so a
+        module whose own name ends in such a word cannot lose it.
+        """
+        if len(parts) > 1 and parts[-1] in self._vocabulary.drop_suffixes:
+            return parts[:-1]
+        return parts
+
+    def _unwrap(self, text: str) -> str:
+        """Return a localisation key with its wrapping characters removed.
+
+        The outfitting events state an item as "$<token>_name;" while the
+        engineering events state the same token bare. Unwrapping here means the
+        decode below sees one form, whichever event the value came from.
+        """
+        vocabulary = self._vocabulary
+        if vocabulary.token_open and text.startswith(vocabulary.token_open):
+            text = text[len(vocabulary.token_open) :]
+        if vocabulary.token_close and text.endswith(vocabulary.token_close):
+            text = text[: -len(vocabulary.token_close)]
+        return text
+
     def module(self, token: object) -> str:
         """Return a fitted module's English name, for example "5D Sensors".
 
@@ -128,10 +161,12 @@ class NameHumaniser:
         order English wants ("Medium Gimballed Multi-Cannon"). Anything left is
         kept in the order the token stated it.
         """
-        text = _as_text(token)
+        text = self._unwrap(_as_text(token))
         if not text or _PART_SEPARATOR not in text:
             return self._word(text) if text else _EMPTY
-        parts = self._strip_prefix(text.lower().split(_PART_SEPARATOR))
+        parts = self._strip_suffix(
+            self._strip_prefix(text.lower().split(_PART_SEPARATOR))
+        )
         size: int | None = None
         class_number: int | None = None
         grade: int | None = None

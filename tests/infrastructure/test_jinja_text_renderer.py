@@ -159,3 +159,22 @@ def test_without_a_humaniser_those_filters_do_not_exist() -> None:
     assert (
         _renderer().render("{{ Module | module }}", {"Module": "int_sensors"}) is None
     )
+
+
+def test_a_credits_filter_writes_a_price_the_way_the_report_does() -> None:
+    """A row stating a price must group it as the section totals group theirs.
+
+    Without the filter a template printed the payload's raw digits, so one
+    document wrote "5374463 Cr" in a row and "5,374,463 Cr" in the total above
+    it for the same money.
+    """
+    renderer = JinjaTextTemplateRenderer(credits_filter=lambda v: f"{v:,} Cr")
+
+    rendered = renderer.render("Paid {{ Price | credits }}.", {"Price": 5374463})
+
+    assert rendered == "Paid 5,374,463 Cr."
+
+
+def test_without_a_credits_filter_that_filter_does_not_exist() -> None:
+    """The row falls back to its label rather than printing unbroken digits."""
+    assert _renderer().render("{{ Price | credits }}", {"Price": 1}) is None

@@ -28,6 +28,7 @@ from o7debrief.domain.model.rollups import (
     MiningRollup,
     MissionRollup,
     OnFootRollup,
+    ShipyardRollup,
     SlfRollup,
     SlvRollup,
     SrvRollup,
@@ -42,6 +43,7 @@ from o7debrief.domain.value_objects.enums import (
     ActivityMode,
     MomentKind,
 )
+from o7debrief.domain.value_objects.event_time import EventTime
 from o7debrief.domain.value_objects.session_window import SessionWindow
 from o7debrief.domain.value_objects.system_name import SystemName
 
@@ -224,7 +226,29 @@ def _missions(moments: tuple[ConceptualMoment, ...]) -> MissionRollup:
 
 
 def _engineering(moments: tuple[ConceptualMoment, ...]) -> EngineeringRollup:
-    return EngineeringRollup(crafted=_count(moments, MomentKind.ENGINEER_CRAFT))
+    return EngineeringRollup(
+        crafted=_count(moments, MomentKind.ENGINEER_CRAFT),
+        experimentals=_count(moments, MomentKind.ENGINEER_EXPERIMENTAL),
+    )
+
+
+def _shipyard(moments: tuple[ConceptualMoment, ...]) -> ShipyardRollup:
+    """Fold the outfitting and shipyard purchases and sales.
+
+    Each side keeps its own count and its own sum: a session that replaced its
+    outfitting spent on the new modules and took money back for the old, which
+    a single net figure would report as though nothing had happened.
+    """
+    return ShipyardRollup(
+        modules_bought=_count(moments, MomentKind.MODULE_BUY),
+        modules_sold=_count(moments, MomentKind.MODULE_SELL),
+        module_spend=_sum_credits(moments, MomentKind.MODULE_BUY),
+        module_earned=_sum_credits(moments, MomentKind.MODULE_SELL),
+        ships_bought=_count(moments, MomentKind.SHIP_PURCHASE),
+        ships_sold=_count(moments, MomentKind.SHIP_SALE),
+        ship_spend=_sum_credits(moments, MomentKind.SHIP_PURCHASE),
+        ship_earned=_sum_credits(moments, MomentKind.SHIP_SALE),
+    )
 
 
 def _carrier(moments: tuple[ConceptualMoment, ...]) -> CarrierRollup:
@@ -299,6 +323,7 @@ def _activity(moments: tuple[ConceptualMoment, ...]) -> ActivityRollup:
         slv=rollup(ActivityDomain.SLV, _slv),
         slf=rollup(ActivityDomain.SLF, _slf),
         on_foot=rollup(ActivityDomain.ON_FOOT, _on_foot),
+        shipyard=rollup(ActivityDomain.SHIPYARD, _shipyard),
         modes_used=_modes_used(moments),
     )
 
@@ -312,6 +337,7 @@ def assemble(
     ship: str = "",
     ship_name: str = "",
     credits_balance: Credits | None = None,
+    credits_balance_at: EventTime | None = None,
     start_system: SystemName | None = None,
     end_system: SystemName | None = None,
     systems_visited: int | None = None,
@@ -346,5 +372,6 @@ def assemble(
         ship=ship,
         ship_name=ship_name,
         credits_balance=credits_balance,
+        credits_balance_at=credits_balance_at,
         systems_visited=systems_visited,
     )

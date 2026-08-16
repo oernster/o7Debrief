@@ -24,7 +24,7 @@ ampersand in a station or commander name.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 
 from jinja2 import Environment, StrictUndefined, Template, TemplateError
 
@@ -38,6 +38,11 @@ __all__ = ["JinjaTextTemplateRenderer"]
 _MODULE_FILTER = "module"
 _BLUEPRINT_FILTER = "blueprint"
 _MATERIAL_FILTER = "material"
+# Turns a raw journal amount into the report's own credit wording, grouped and
+# suffixed. A row stating a price without it printed the digits unbroken
+# ("5374463 Cr") beside section totals that were grouped, so the same amount
+# was written two ways in one document.
+_CREDITS_FILTER = "credits"
 
 
 class JinjaTextTemplateRenderer:
@@ -56,13 +61,19 @@ class JinjaTextTemplateRenderer:
     says less rather than printing ``int_sensors_size5_class2`` at a reader.
     """
 
-    def __init__(self, humaniser: NameHumaniser | None = None) -> None:
+    def __init__(
+        self,
+        humaniser: NameHumaniser | None = None,
+        credits_filter: Callable[[int], str] | None = None,
+    ) -> None:
         self._environment = Environment(undefined=StrictUndefined, autoescape=False)
         self._compiled: dict[str, Template | None] = {}
         if humaniser is not None:
             self._environment.filters[_MODULE_FILTER] = humaniser.module
             self._environment.filters[_BLUEPRINT_FILTER] = humaniser.blueprint
             self._environment.filters[_MATERIAL_FILTER] = humaniser.material
+        if credits_filter is not None:
+            self._environment.filters[_CREDITS_FILTER] = credits_filter
 
     def _template_for(self, template: str) -> Template | None:
         """Return the compiled template; ``None`` if it will not compile.

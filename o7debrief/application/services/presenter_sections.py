@@ -55,6 +55,11 @@ _BALANCE_UNKNOWN = ("credits.balance_unknown", "No reading")
 # Shown in the delta slot when the journal stated too few balances for the
 # session change to be measured. Never a zero, which would read as break-even.
 _CHANGE_UNKNOWN = ("credits.change_unknown", "Change unread")
+# Shown under the balance, naming when it was read. The journal states the
+# balance at a login and never again, so on a long session the figure above is
+# what the commander had when they sat down. Without this the reader takes a
+# reading hours old for the balance now, which is the defect this removes.
+_BALANCE_READ_AT = ("credits.balance_read_at", "Read at login, {time}")
 _JUMPS_HEADLINE = ("jumps", "Jumps")
 _BODIES_HEADLINE = ("bodies_scanned", "Bodies scanned")
 _KILLS_HEADLINE = ("kills", "Kills")
@@ -120,6 +125,20 @@ def _delta_class(value: int) -> str:
     return _NEUTRAL_CLASS
 
 
+def _balance_read_note(debrief, fmt, resolver) -> str | None:
+    """Return the line stating when the balance was read, else None.
+
+    None when the journal stated no balance at all: the value slot already says
+    there was no reading and a time for a reading that never happened would be
+    a contradiction.
+    """
+    read_at = debrief.credits_balance_at
+    if read_at is None:
+        return None
+    template = resolver.generic(*_BALANCE_READ_AT)
+    return template.format(time=fmt.datetime(read_at.iso_utc))
+
+
 def _net_credits_item(debrief, fmt, resolver) -> HeadlineItem:
     """Build the credits headline: the balance, with the session change beside it.
 
@@ -148,6 +167,7 @@ def _net_credits_item(debrief, fmt, resolver) -> HeadlineItem:
         value_display=value_display,
         delta_display=delta_display,
         delta_class=_NEUTRAL_CLASS if net is None else _delta_class(net),
+        note_display=_balance_read_note(debrief, fmt, resolver),
     )
 
 

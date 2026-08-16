@@ -74,6 +74,25 @@ def test_render_has_headings_and_fenced_headline() -> None:
     assert "2,000,000" in md
 
 
+def test_the_headline_carries_the_balance_reading_time() -> None:
+    """Markdown says when the balance was read, as the HTML report does.
+
+    A journal states the balance only at a login, so the figure can be hours
+    old. An export that drops that fact hands the reader the same trap the
+    report was fixed to remove.
+    """
+    debrief = build.debrief(
+        moments=(),
+        activity=ActivityRollup(modes_used=()),
+        credits_balance=33_455_794_489,
+        credits_balance_at="2026-08-15T18:49:38Z",
+    )
+
+    md = MarkdownDebriefExporter().render(_present(debrief)).decode("utf-8")
+
+    assert "[Read at login, 2026-08-15 18:49:38]" in md
+
+
 def test_render_includes_the_ship_type_and_name() -> None:
     debrief = build.debrief(
         moments=(),
