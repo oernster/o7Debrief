@@ -52,6 +52,8 @@ _SHIPS_BOUGHT = ("shipyard.ships_bought", "Ships bought")
 _SHIP_SPEND = ("shipyard.ship_spend", "Spent on ships")
 _SHIPS_SOLD = ("shipyard.ships_sold", "Ships sold")
 _SHIP_EARNED = ("shipyard.ship_earned", "Earned from ships")
+_TRANSFERS = ("shipyard.transfers", "Ship transfers")
+_TRANSFER_FEES = ("shipyard.transfer_fees", "Transfer fees")
 _CARRIER_JUMPS = ("carrier.jumps", "Carrier jumps")
 _CARRIER_DISTANCE = ("carrier.distance", "Distance")
 # Qualifier shown beside the carrier distance when it covers only some of the
@@ -179,6 +181,8 @@ def _shipyard_stats(rollup, fmt, resolver) -> tuple[DomainStat, ...]:
         _stat(resolver, _SHIP_SPEND, fmt.credits(rollup.ship_spend.value)),
         _stat(resolver, _SHIPS_SOLD, fmt.integer(rollup.ships_sold)),
         _stat(resolver, _SHIP_EARNED, fmt.credits(rollup.ship_earned.value)),
+        _stat(resolver, _TRANSFERS, fmt.integer(rollup.transfers)),
+        _stat(resolver, _TRANSFER_FEES, fmt.credits(rollup.transfer_fees.value)),
     )
 
 

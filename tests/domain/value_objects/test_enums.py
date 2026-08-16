@@ -79,6 +79,7 @@ def test_moment_kind_members() -> None:
         "SHIP_SWAP",
         "SHIP_PURCHASE",
         "SHIP_SALE",
+        "SHIP_TRANSFER",
         "MODULE_BUY",
         "MODULE_SELL",
         "MILESTONE",

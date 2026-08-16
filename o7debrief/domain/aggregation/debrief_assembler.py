@@ -88,6 +88,17 @@ def _sum_magnitude(moments: tuple[ConceptualMoment, ...], kind: MomentKind) -> f
     )
 
 
+def _spend(moments: tuple[ConceptualMoment, ...], kind: MomentKind) -> Credits:
+    """Sum a kind's priced outgoings, which ride the magnitude channel.
+
+    Spending is deliberately kept off the credits channel, which is income:
+    routing a purchase through credits counts it as money banked. It arrives
+    here as a float and Credits holds whole credits, so it is rounded exactly
+    as the trade rollup rounds its own spend.
+    """
+    return Credits(round(_sum_magnitude(moments, kind)))
+
+
 def _is_coordinate(axis: object) -> bool:
     """Return whether one element of a star position is a usable number.
 
@@ -238,16 +249,23 @@ def _shipyard(moments: tuple[ConceptualMoment, ...]) -> ShipyardRollup:
     Each side keeps its own count and its own sum: a session that replaced its
     outfitting spent on the new modules and took money back for the old, which
     a single net figure would report as though nothing had happened.
+
+    Spending rides the magnitude channel and income the credits channel, which
+    is why the two sides read different fields here. Credits is the income
+    channel: a purchase routed through it counts as money banked. One big
+    enough raised the major-payout milestone for buying a drive.
     """
     return ShipyardRollup(
         modules_bought=_count(moments, MomentKind.MODULE_BUY),
         modules_sold=_count(moments, MomentKind.MODULE_SELL),
-        module_spend=_sum_credits(moments, MomentKind.MODULE_BUY),
+        module_spend=_spend(moments, MomentKind.MODULE_BUY),
         module_earned=_sum_credits(moments, MomentKind.MODULE_SELL),
         ships_bought=_count(moments, MomentKind.SHIP_PURCHASE),
         ships_sold=_count(moments, MomentKind.SHIP_SALE),
-        ship_spend=_sum_credits(moments, MomentKind.SHIP_PURCHASE),
+        ship_spend=_spend(moments, MomentKind.SHIP_PURCHASE),
         ship_earned=_sum_credits(moments, MomentKind.SHIP_SALE),
+        transfers=_count(moments, MomentKind.SHIP_TRANSFER),
+        transfer_fees=_spend(moments, MomentKind.SHIP_TRANSFER),
     )
 
 

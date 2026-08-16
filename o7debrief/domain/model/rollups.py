@@ -207,6 +207,12 @@ class ShipyardRollup:
     ships_sold: int = 0
     ship_spend: Credits = field(default_factory=Credits.zero)
     ship_earned: Credits = field(default_factory=Credits.zero)
+    # Moving a stored ship to the station the commander is at. Neither a
+    # purchase nor a sale, so it gets its own line rather than distorting
+    # either: it is real money all the same, one transfer in a live journal
+    # costing 1,626,451 Cr.
+    transfers: int = 0
+    transfer_fees: Credits = field(default_factory=Credits.zero)
 
 
 # Ordered pairing of each optional rollup attribute to its activity domain.

@@ -110,6 +110,8 @@ def full_activity() -> ActivityRollup:
             ships_sold=1,
             ship_spend=Credits(60000000),
             ship_earned=Credits(23000000),
+            transfers=1,
+            transfer_fees=Credits(1626451),
         ),
         modes_used=(ActivityMode.SHIP, ActivityMode.SRV, ActivityMode.ON_FOOT),
     )

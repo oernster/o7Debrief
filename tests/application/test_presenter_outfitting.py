@@ -27,6 +27,8 @@ _MODULE_EARNED = 1_966_278_800
 _MODULE_SPEND = 6_172_743
 _SHIPS_SOLD = 4
 _SHIP_EARNED = 58_688_282
+_TRANSFERS = 2
+_TRANSFER_FEES = 1_636_815
 
 
 def _section(activity: ActivityRollup, key: str, labels=()) -> dict:
@@ -56,6 +58,8 @@ def test_each_side_of_the_trade_is_counted_and_priced_apart() -> None:
             module_earned=Credits(_MODULE_EARNED),
             ships_sold=_SHIPS_SOLD,
             ship_earned=Credits(_SHIP_EARNED),
+            transfers=_TRANSFERS,
+            transfer_fees=Credits(_TRANSFER_FEES),
         )
     )
 
@@ -67,6 +71,20 @@ def test_each_side_of_the_trade_is_counted_and_priced_apart() -> None:
     assert stats["Spent on ships"] == "0 Cr"
     assert stats["Ships sold"] == "4"
     assert stats["Earned from ships"] == "58,688,282 Cr"
+
+
+def test_a_transfer_fee_is_neither_a_purchase_nor_a_sale() -> None:
+    """Moving a stored ship costs real money and buys nothing.
+
+    Folded into either side it would distort it, so it gets its own pair of
+    lines. One transfer in a live journal cost 1,626,451 Cr.
+    """
+    stats = _outfitting(
+        ShipyardRollup(transfers=_TRANSFERS, transfer_fees=Credits(_TRANSFER_FEES))
+    )
+
+    assert stats["Ship transfers"] == "2"
+    assert stats["Transfer fees"] == "1,636,815 Cr"
 
 
 def test_a_section_shows_the_note_its_taxonomy_declares() -> None:

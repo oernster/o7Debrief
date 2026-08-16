@@ -514,7 +514,10 @@ event = "ModuleBuy"
 domain = "shipyard"
 mode = "ship"
 kind = "module_buy"
-credits_field = "BuyPrice"
+# The price rides the magnitude channel, never credits. Credits is the income
+# channel: a purchase routed through it reads as money banked. One big enough
+# tripped the major-payout milestone for buying a drive.
+magnitude_field = "BuyPrice"
 text = "Bought a {{ BuyItem | module }} for {{ BuyPrice | credits }}."
 
 [[moment]]
@@ -545,8 +548,21 @@ event = "ShipyardBuy"
 domain = "shipyard"
 mode = "ship"
 kind = "ship_purchase"
-credits_field = "ShipPrice"
+# Spending, so the magnitude channel rather than credits. See module_buy.
+magnitude_field = "ShipPrice"
 text = "Bought {{ ShipType_Localised | default(ShipType, true) }} for {{ ShipPrice | credits }}."
+
+# A stored ship moved to the station the commander is at. It is neither a
+# purchase nor a sale, so it is counted on its own line: the fee is real money
+# and one transfer in a live journal cost 1,626,451 Cr. Spending, so the price
+# rides the magnitude channel. See module_buy.
+[[moment]]
+event = "ShipyardTransfer"
+domain = "shipyard"
+mode = "ship"
+kind = "ship_transfer"
+magnitude_field = "TransferPrice"
+text = "Had {{ ShipType_Localised | default(ShipType, true) }} transferred from {{ System }} for {{ TransferPrice | credits }}."
 
 [[moment]]
 event = "ShipyardSell"

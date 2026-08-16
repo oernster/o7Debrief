@@ -46,7 +46,7 @@ _READ_MOMENT_KEYS = frozenset(
 )
 
 # Number of [[moment]] rules defined in the shipped taxonomy.
-_EXPECTED_RULES = 36
+_EXPECTED_RULES = 37
 # Threshold magnitudes declared in the taxonomy [thresholds] table.
 _LONG_JUMP_LY = 50.0
 _BIG_PAYOUT = 1000000
@@ -352,17 +352,29 @@ def test_outfitting_and_shipyard_trade_is_mapped_and_priced() -> None:
     modules for nearly two billion credits recorded none of it.
     """
     spec = _provider().load()
-    priced = {
-        "ModuleBuy": ("BuyPrice", MomentKind.MODULE_BUY),
+    # Income rides the credits channel; spending rides magnitude, because
+    # credits is the income channel and a purchase routed through it counts as
+    # money banked. One big enough raised the major-payout milestone.
+    income = {
         "ModuleSell": ("SellPrice", MomentKind.MODULE_SELL),
         "ModuleSellRemote": ("SellPrice", MomentKind.MODULE_SELL),
-        "ShipyardBuy": ("ShipPrice", MomentKind.SHIP_PURCHASE),
         "ShipyardSell": ("ShipPrice", MomentKind.SHIP_SALE),
     }
+    spending = {
+        "ModuleBuy": ("BuyPrice", MomentKind.MODULE_BUY),
+        "ShipyardBuy": ("ShipPrice", MomentKind.SHIP_PURCHASE),
+        "ShipyardTransfer": ("TransferPrice", MomentKind.SHIP_TRANSFER),
+    }
 
-    for event, (field, kind) in priced.items():
+    for event, (field, kind) in income.items():
         rule = next(r for r in spec.rules_for(event) if r.kind is kind)
         assert rule.credits_field == field, event
+        assert rule.magnitude_field is None, event
+        assert rule.domain is ActivityDomain.SHIPYARD, event
+    for event, (field, kind) in spending.items():
+        rule = next(r for r in spec.rules_for(event) if r.kind is kind)
+        assert rule.magnitude_field == field, event
+        assert rule.credits_field is None, event
         assert rule.domain is ActivityDomain.SHIPYARD, event
 
 

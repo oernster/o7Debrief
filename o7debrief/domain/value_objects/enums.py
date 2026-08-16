@@ -86,6 +86,7 @@ class MomentKind(Enum):
     SHIP_SWAP = auto()
     SHIP_PURCHASE = auto()
     SHIP_SALE = auto()
+    SHIP_TRANSFER = auto()
     MODULE_BUY = auto()
     MODULE_SELL = auto()
     MILESTONE = auto()
