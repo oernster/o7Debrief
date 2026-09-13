@@ -126,6 +126,12 @@ Build prerequisites and the development workflow are described in [DEVELOPMENT-R
 
 o7 Debrief follows a clean architecture with a strict dependency direction and a deterministic core. The two capture paths (live background watcher and cold one-shot) share one reducer, so a debrief is reproducible from the same journal bytes regardless of how it was triggered. The setup program is a second, self-contained program built to the same shape, with its side effects and its state model separated from its Qt client so the privileged work is measurable. The full set of invariants, the layer breakdown, the execution flow and the design-decision rationale are in [ARCHITECTURE.md](ARCHITECTURE.md).
 
+## Supporting the project
+
+o7 Debrief is free and stays free. There is no paid tier, no licence key and no feature held back behind a donation. If it has saved you time or simply been useful, a donation supports its maintenance and continued development.
+
+<a href="https://www.paypal.com/ncp/payment/5YTZFYSJG5Q42"><img src="docs/donate.png" alt="Donate to o7 Debrief" width="120"></a>
+
 ## Licence
 
 o7 Debrief is released under the GNU Lesser General Public License v3.0 (LGPL-3.0). See [LICENSE](LICENSE) for the full text.
