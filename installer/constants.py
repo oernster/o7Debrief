@@ -15,7 +15,7 @@ APP_NAME = "o7Debrief"
 APP_DISPLAY_NAME = "o7 Debrief"
 APP_TAGLINE = "Commander Mission Debrief"
 APP_PUBLISHER = "Oliver Ernster"
-APP_URL = "https://oernster.github.io/o7Debrief/"
+APP_URL = "https://ernster.dev/o7Debrief/"
 
 EXE_NAME = "o7Debrief.exe"
 EXE_SUFFIX = ".exe"
