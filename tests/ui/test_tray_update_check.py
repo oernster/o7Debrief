@@ -7,9 +7,11 @@ each test turns the event loop until the observable outcome lands.
 
 from __future__ import annotations
 
+import threading
 import time
 
 import pytest
+import shiboken6
 from PySide6.QtWidgets import QApplication, QMenu
 
 from o7debrief.application.dto.update_status import UpdateStatus
@@ -29,6 +31,9 @@ _SPIN_SLEEP_S = 0.01
 
 # The caption of the tray menu's manual update action.
 _CHECK_UPDATES_TEXT = "Check for updates"
+
+# Far longer than a check against a stand-in takes, so only a hang reaches it.
+_WAIT_SECONDS = 5
 
 
 @pytest.fixture
@@ -221,3 +226,52 @@ def test_automatic_check_passes_the_skipped_version_in(
 
     assert _spin_until(qapp, lambda: service.calls)
     assert service.skipped_versions == ["9.9.9"]
+
+
+class _HeldUpdateService:
+    """An update service that answers only once the test lets it."""
+
+    def __init__(self) -> None:
+        self.asked = threading.Event()
+        self.answer = threading.Event()
+        self.worker: threading.Thread | None = None
+
+    def check(self, skipped_version: str | None = None) -> UpdateStatus:
+        """Say it has been asked, then wait to be allowed to answer."""
+        self.worker = threading.current_thread()
+        self.asked.set()
+        self.answer.wait(_WAIT_SECONDS)
+        return UpdateStatus(current="1.1.0", latest="1.1.0", update_available=False)
+
+
+def test_an_answer_with_nowhere_to_go_is_dropped_not_raised(
+    qapp: QApplication, view_model, monkeypatch
+) -> None:
+    """A check still out when the tray goes must not raise on its thread.
+
+    Quitting returns from the event loop and drops the tray controller,
+    which takes its update controller with it while a check may still be
+    out. Nobody is left to tell, so the answer is dropped; what must not
+    happen is an exception escaping a thread this application started.
+    """
+    escaped: list[BaseException | None] = []
+    monkeypatch.setattr(
+        threading, "excepthook", lambda raised: escaped.append(raised.exc_value)
+    )
+    service = _HeldUpdateService()
+    controller = TrayController(
+        one_shot=FakeOneShot(),
+        session=view_model,
+        opener=RecordingOpener(),
+        update_service=service,
+        update_prompt=_RecordingPrompt("later"),
+    )
+
+    _action_named(_menu_of(controller), _CHECK_UPDATES_TEXT).trigger()
+    assert service.asked.wait(_WAIT_SECONDS), "the check never started"
+    shiboken6.delete(controller)
+    service.answer.set()
+    service.worker.join(_WAIT_SECONDS)
+
+    assert not service.worker.is_alive(), "the check never finished"
+    assert escaped == []

@@ -24,6 +24,7 @@ import threading
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
+import shiboken6
 from PySide6.QtCore import QObject, QTimer, Signal
 from PySide6.QtWidgets import QMessageBox
 
@@ -130,9 +131,25 @@ class UpdateCheckController(QObject):
                 status = self._service.check(skipped)
             except Exception:  # noqa: BLE001 (any error reads as unreachable)
                 status = None
-            self._result_ready.emit(status, manual)
+            self._hand_back(status, manual)
 
         threading.Thread(target=run, daemon=True).start()
+
+    def _hand_back(self, status: UpdateStatus | None, manual: bool) -> None:
+        """Send the answer to the ui thread, from the worker thread.
+
+        Quitting drops the tray controller and this one with it, possibly
+        while the question is out; the emit then raises on a thread nothing
+        would catch it on. Nobody is left to tell, so that answer is dropped.
+        Asking first whether this controller still exists would not do: it
+        can go between the asking and the emit. Anything else the emit
+        raises is still raised.
+        """
+        try:
+            self._result_ready.emit(status, manual)
+        except RuntimeError:
+            if shiboken6.isValid(self):
+                raise
 
     def _present_result(self, status: UpdateStatus | None, manual: bool) -> None:
         unreachable = status is None or status.latest is None
