@@ -124,7 +124,7 @@ Build prerequisites and the development workflow are described in [DEVELOPMENT-R
 
 ## Architecture
 
-o7 Debrief follows a clean architecture with a strict dependency direction and a deterministic core. The two capture paths (live background watcher and cold one-shot) share one reducer, so a debrief is reproducible from the same journal bytes regardless of how it was triggered. The setup program is a second, self-contained program built to the same shape, with its side effects and its state model separated from its Qt client so the privileged work is measurable. The full set of invariants, the layer breakdown, the execution flow and the design-decision rationale are in [ARCHITECTURE.md](ARCHITECTURE.md).
+o7 Debrief follows a clean architecture with a strict dependency direction and a deterministic core. The two capture paths (live background watcher and cold one-shot) share one reducer, so a debrief is reproducible from the same journal bytes regardless of how it was triggered. The setup program is a second, self-contained program built to the same shape, with its side effects and its state model separated from its Qt client so the privileged work is measurable. The full set of invariants, the layer breakdown, the execution flow and the design-decision rationale are in [ARCHITECTURE.md](ARCHITECTURE.md). [`DECISIONS-TRADEOFFS.md`](DECISIONS-TRADEOFFS.md) sets out the decisions o7 Debrief rests on, with what each one gains and what it costs.
 
 ## Supporting the project
 
