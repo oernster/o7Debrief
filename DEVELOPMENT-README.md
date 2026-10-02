@@ -191,7 +191,7 @@ python stamp_version.py
 python refresh_example_report.py
 ```
 
-`VERSION` at the repository root is the single source of truth. The runtime and `pyproject.toml` read it directly; the GitHub Pages site under `docs/` cannot, so each page carries a delimited `<!--VERSION-->` token that `stamp_version.py` overwrites from `VERSION`. It is idempotent and prints the files it touched.
+`VERSION` at the repository root is the single source of truth. The runtime and `pyproject.toml` read it directly; the GitHub Pages site under `docs/` cannot, so the download page carries a delimited `<!--VERSION-->` token that `stamp_version.py` overwrites from `VERSION`. Any page that states the version carries the same token; the script finds every one of them under `docs/`. It is idempotent and prints the files it touched.
 
 `docs/example-report.html` is not stamped, because it is not a hand-written page: it is a real report rendered by the real exporter from a fixed sample session, so it states the version that was current when it was last generated. `refresh_example_report.py` regenerates it. The render is deterministic, so a second run rewrites nothing and says so.
 

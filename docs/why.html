@@ -154,7 +154,7 @@
           "name": "What is o7 Debrief?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "o7 Debrief is a free, local-first Windows app that turns your Elite Dangerous Player Journal into a self-contained Commander Mission Debrief you can read in any browser or share as text."
+            "text": "o7 Debrief is a free, local-first app for Windows and Linux that turns your Elite Dangerous Player Journal into a self-contained Commander Mission Debrief you can read in any browser or share as text."
           }
         },
         {
@@ -178,7 +178,7 @@
           "name": "What does an Elite Dangerous debrief track?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Credits, jumps, distance travelled by your ship and your fleet carrier, scans across exploration, mining, trading, bounty hunting and exobiology, plus missions and Operations (naming each mission and the Merc Coins an Operation pays, kept separate from your credits) and Commander rank progress, with every figure traced to a real journal entry."
+            "text": "Credits, jumps, distance travelled by your ship and your fleet carrier, scans across exploration, mining, trading, bounty hunting and exobiology, outfitting and shipyard trade (modules and ships bought, sold and transferred, each side priced separately), engineering split between grade rolls and experimental effects, plus missions and Operations (naming each mission and the Merc Coins an Operation pays, kept separate from your credits), deaths (who died, in what, at whose hands and what the rebuy cost) and Commander rank progress, with every figure traced to a real journal entry. Where the journal states nothing, the report says so rather than printing a zero you would read as a real figure."
           }
         },
         {
@@ -194,7 +194,7 @@
           "name": "Does o7 Debrief record ship changes?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes. Swapping ship or buying a new one is logged as a session event naming the ship you moved from and the one you boarded; the header also names your current ship and its type."
+            "text": "Yes. Swapping ship is logged as a session event naming the ship you moved from and the one you boarded; buying, selling or transferring a ship is logged naming the ship and its price. The header also names your current ship and its type."
           }
         },
         {
@@ -211,6 +211,14 @@
           "acceptedAnswer": {
             "@type": "Answer",
             "text": "Windows 10 and Windows 11. It runs quietly from the system tray and reads the Player Journal that Elite Dangerous writes on your PC."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does o7 Debrief run on Linux?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Every release publishes a Flatpak. On Ubuntu with Elite Dangerous under Proton it has been left watching through a real session: it read the journal from inside the prefix, produced the debrief when the game closed and opened that report in a browser on the host. Starting it at sign-in has been confirmed on a real reboot; a Flatpak install can never arrive with that setting already on, so switching it on is one trip into Settings after installing. What has not been exercised is narrower: launching it again to summon the window inside the sandbox and the case where Steam itself is installed as a Flatpak. Windows is the platform every release is built and tested on."
           }
         },
         {
@@ -246,7 +254,7 @@
       <p>Elite Dangerous keeps the most honest record a game could keep and then says nothing
         about it. The Player Journal logs every jump, scan, bounty and sale as it happens; the
         game presents none of it back. A three-hour exploration run ends and the only evidence it
-        happened is ten thousand lines of JSON in a folder you never open. The work is real,
+        happened is a long run of JSON lines in a folder you never open. The work is real,
         complete and unreadable.</p>
       <p>o7 Debrief reads that log and hands the session back as one self-contained debrief: the
         credits, jumps and scans across exploration, combat, trade, mining, missions and
@@ -278,7 +286,7 @@
       <div class="faq">
         <div class="card">
           <h3>What is o7 Debrief?</h3>
-          <p>o7 Debrief is a free, local-first Windows app that turns your Elite Dangerous Player Journal into a self-contained Commander Mission Debrief you can read in any browser or share as text.</p>
+          <p>o7 Debrief is a free, local-first app for Windows and Linux that turns your Elite Dangerous Player Journal into a self-contained Commander Mission Debrief you can read in any browser or share as text.</p>
         </div>
         <div class="card">
           <h3>Is o7 Debrief free and open source?</h3>
@@ -298,7 +306,7 @@
         </div>
         <div class="card">
           <h3>Does o7 Debrief record ship changes?</h3>
-          <p>Yes. Swapping ship or buying a new one is logged as a session event naming the ship you moved from and the one you boarded; the header also names your current ship and its type.</p>
+          <p>Yes. Swapping ship is logged as a session event naming the ship you moved from and the one you boarded; buying, selling or transferring a ship is logged naming the ship and its price. The header also names your current ship and its type.</p>
         </div>
         <div class="card">
           <h3>Does o7 Debrief check for updates?</h3>
@@ -310,7 +318,7 @@
         </div>
         <div class="card">
           <h3>Does o7 Debrief run on Linux?</h3>
-          <p>Yes, with one honest caveat. Every release publishes a Flatpak. On Ubuntu with Elite Dangerous under Proton it has been left watching through a real session: it read the journal from inside the prefix, produced the debrief when the game closed and opened that report in a browser on the host. The parts that matter most are therefore proven rather than intended. Starting it at sign-in did not work in the Flatpak before this release, because the entry was written inside the sandbox's own configuration rather than the session's; that is fixed and confirmed on a real reboot, so tick the setting off and on again after upgrading. Note that a Flatpak install can never arrive with that setting already on, so switching it on is one trip into Settings after installing. What has not been exercised is narrower still: launching it again to summon the window inside the sandbox and the case where Steam itself is installed as a Flatpak. The repository records exactly what has and has not been verified. Windows is the platform every release is built and tested on.</p>
+          <p>Yes. Every release publishes a Flatpak. On Ubuntu with Elite Dangerous under Proton it has been left watching through a real session: it read the journal from inside the prefix, produced the debrief when the game closed and opened that report in a browser on the host. The parts that matter most are therefore proven rather than intended. Starting it at sign-in has been confirmed on a real reboot. The earliest Flatpak releases wrote that entry inside the sandbox where no session reads it, so if you switched it on under one of those, tick it off and on again. A Flatpak install can never arrive with that setting already on, so switching it on is one trip into Settings after installing. What has not been exercised is narrower: launching it again to summon the window inside the sandbox and the case where Steam itself is installed as a Flatpak. The repository records exactly what has and has not been verified. Windows is the platform every release is built and tested on.</p>
         </div>
         <div class="card">
           <h3>How do I install or upgrade o7 Debrief?</h3>

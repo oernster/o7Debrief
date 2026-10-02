@@ -318,7 +318,7 @@
         <div class="card">
           <div class="icon">&#128225;</div>
           <h3>Live background watcher</h3>
-          <p>Follows the active journal in the background and generates a debrief automatically when you shut the game down.</p>
+          <p>Follows the active journal in the background and generates a debrief automatically when you shut the game down. A session that ends in a crash is not debriefed by itself; Debrief my last session still covers it.</p>
         </div>
         <div class="card">
           <div class="icon">&#128338;</div>
@@ -378,7 +378,27 @@
         <div class="card">
           <div class="icon">&#128640;</div>
           <h3>Your ship, tracked</h3>
-          <p>The header names your current ship and its type. Every swap or purchase is also logged as a session event, from the ship you left to the one you boarded.</p>
+          <p>The header names your current ship and its type. A swap is logged as a session event naming the ship you left and the one you boarded; a purchase is logged naming the ship and what it cost.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#128760;</div>
+          <h3>Ship-launched vessels and fighters</h3>
+          <p>Deploying, docking and losing the Nomad vessel or a fighter each appear as their own rows, naming the type from the journal loadout. Flying a fighter yourself is its own control mode; an NPC-crewed fighter leaves you in the ship.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#128203;</div>
+          <h3>Missions and Operations</h3>
+          <p>A completed mission names itself and the faction that issued it. An Operation also shows the Merc Coins it paid, totalled apart from your credits because they are a different currency.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#127919;</div>
+          <h3>Kills that name the ship</h3>
+          <p>A bounty row names the ship you destroyed, whatever an NPC happened to be flying, so what you killed and what killed you both read as ship types.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#9888;</div>
+          <h3>Notices, not silent zeros</h3>
+          <p>If the journal never carried a field a figure depends on, a Notices block names the event and the field rather than letting the figure read as zero.</p>
         </div>
         <div class="card">
           <div class="icon">&#9760;</div>

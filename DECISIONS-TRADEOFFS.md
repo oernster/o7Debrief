@@ -45,12 +45,12 @@ printed only when the journal stated it.
 
 ### Pure Python on Qt for Python
 
-The application is Python with PySide6 for the tray and windows and Jinja2
-for the report. Everything else is the standard library.
+The application is Python with PySide6 for the tray and windows and a
+template engine for the report. Everything else is the standard library.
 
 - **Rather than:** a native rewrite per platform.
-- **Gains:** the Linux port cost a packaging script and one autostart adapter,
-  with no change to the domain, the application layer or the reducer.
+- **Gains:** the Linux port was a packaging exercise plus one platform
+  adapter; the rules about sessions and figures did not change at all.
 - **Costs:** a larger runtime than a native binary; packaging needs a
   compiler on Windows and a Flatpak on Linux.
 
@@ -67,22 +67,22 @@ and the website carry a donation button.
 
 ### One outbound call and nothing inbound
 
-The update check is the only network request the program makes. It is a
-single short request to GitHub's latest-release address, with a five second
-timeout, built on the standard library. Nothing listens for a connection.
+The update check is the only network request the program makes: one short,
+anonymous request to GitHub for the latest published release, made without
+any third-party networking library. Nothing listens for a connection.
 
-- **Rather than:** a third-party HTTP library; any other route out.
+- **Rather than:** a networking dependency; any other route out.
 - **Gains:** "local first" is a property of the code rather than a promise;
   no dependency is added for one request.
 - **Costs:** the Flatpak still needs the network grant for that one call.
 
 ### Update checks: shortly after launch, then daily, quiet unless there is news
 
-An automatic check runs three seconds after launch and once a day. It says
-nothing unless a newer release exists and ignores a version the player chose
-to skip. The check on the home screen and in the tray menu ignores the skip
-and reports every outcome. GitHub's endpoint returns only published releases,
-so a tag pushed during development never prompts.
+An automatic check runs shortly after launch and once a day. It says nothing
+unless a newer release exists and ignores a version the player chose to
+skip. A check the player asks for ignores the skip and reports every outcome.
+Only published releases count, so a tag pushed during development never
+prompts.
 
 - **Rather than:** a check only on request; one that reports every outcome.
 - **Gains:** updates are found without nagging; a failed automatic check is
@@ -92,9 +92,9 @@ so a tag pushed during development never prompts.
 
 ### Downloads go through the browser
 
-Choosing Download in the update prompt opens the platform's installer address
-(or the releases page) in the default browser. The program never fetches or
-runs an installer itself.
+Choosing Download opens the platform's installer address (or the releases
+page) in the default browser. The program never fetches or runs an installer
+itself.
 
 - **Rather than:** downloading and running the update in the program.
 - **Gains:** nothing is downloaded or run without the player choosing it; no
@@ -104,9 +104,9 @@ runs an installer itself.
 ### A second launch summons the first through a file
 
 Launching o7 Debrief while it is running leaves a marker file beside the
-single-instance lock and exits. The running copy looks for the marker four
-times a second and opens its home window. The marker carries no instruction;
-its presence is the whole message.
+single-instance lock and exits. The running copy watches for the marker and
+opens its home window. The marker carries no instruction; its presence is the
+whole message.
 
 - **Rather than:** a local socket the running copy listens on.
 - **Gains:** no inbound surface and no port to own; a second process can ask
@@ -117,12 +117,12 @@ its presence is the whole message.
 ### The Flatpak asks for the narrowest grants that work
 
 The sandbox may talk to the desktop's tray watcher by name and to the
-notification service. It reads a Steam installed as a Flatpak read-only and
-may create the autostart entry. Owning the tray item's own bus name was tried
-on Ubuntu and proved unnecessary.
+notification service, read a Steam installed as a Flatpak without writing to
+it and create the autostart entry. Owning the tray item's own bus name was
+tried on a real desktop and proved unnecessary.
 
 - **Rather than:** the whole session bus, which owning that bus name would
-  have forced since Flatpak cannot express its pattern.
+  have forced.
 - **Gains:** the tray icon appears with one named grant.
 - **Costs:** each new desktop integration needs its own grant and a run on a
   real machine to prove it.
@@ -131,8 +131,8 @@ on Ubuntu and proved unnecessary.
 
 ### The journal is read, never written
 
-Every reader opens the journal for reading only. Inside the Flatpak the Steam
-Flatpak's folder is granted read-only.
+Every reader opens the journal for reading only; inside the Flatpak a Steam
+installed as a Flatpak is granted read-only.
 
 - **Rather than:** any write path near the game's files.
 - **Gains:** o7 Debrief cannot damage what the game records.
@@ -154,7 +154,7 @@ runs to the end of the log. Every LoadGame inside the run stays in it.
 ### Two ways in, one reducer
 
 The live watcher and the on-demand debriefs (the last session and the whole
-history) feed the same domain reducer.
+history) feed the same reducer.
 
 - **Rather than:** a debrief only if the program was running during play; a
   manual tool only.
@@ -165,9 +165,9 @@ history) feed the same domain reducer.
 
 ### Reads bounded to the session
 
-A last-session debrief reads journal files newest first and stops at the
-second Shutdown. The history report streams the journal one file at a time.
-The live recorder keeps only the session in progress.
+A last-session debrief reads the newest journal files backwards and stops as
+soon as the session is bracketed. The history report streams the journal one
+file at a time. The live watcher keeps only the session in progress.
 
 - **Rather than:** loading the whole journal history for every debrief.
 - **Gains:** memory and time stay bounded however many years of logs the
@@ -176,24 +176,23 @@ The live recorder keeps only the session in progress.
 
 ### A timer reads what was appended
 
-The watcher reads the newest journal file from the last byte offset every
-five seconds, carrying a half-written line over to the next read.
+Every few seconds the watcher reads the newest journal file from where it
+last stopped, carrying a half-written line over to the next read.
 
 - **Rather than:** filesystem notifications through a third-party library.
-- **Gains:** no extra dependency; a single code path on every platform; the
+- **Gains:** no extra dependency; one code path on every platform; the
   program stays close to idle.
-- **Costs:** up to five seconds between the game writing an event and the
-  program seeing it.
+- **Costs:** a few seconds between the game writing an event and the program
+  seeing it.
 
 ### Automatic debriefs fire once per Shutdown, never on start-up
 
 The first look at the journal only records the session already there. After
-that, each new Shutdown triggers one debrief, identified by its own
-timestamp.
+that, each new Shutdown triggers one debrief.
 
 - **Rather than:** debriefing whatever finished session the program finds
   when it starts.
-- **Gains:** starting with Windows never reopens an old debrief; a session is
+- **Gains:** starting at sign-in never reopens an old debrief; a session is
   debriefed exactly once.
 - **Costs:** a session that ends in a crash, with no Shutdown, gets no
   automatic debrief; "Debrief my last session" still covers it.
@@ -216,11 +215,11 @@ snapshot and settle at the next launch. Only ranks that changed are shown.
 A level is a state the journal states outright: a balance, a rank
 percentage, the current system. It carries forward from the last reading and
 has an age as well as a value. An event belongs to its session alone. Every
-level may be unread; the domain derives none of them.
+level may be unread; the core never derives one.
 
 - **Rather than:** folding everything from the session's moments.
 - **Gains:** a session that read no balance no longer looks identical to one
-  that earned nothing; a visited count is never zero, since a commander is
+  that earned nothing; the systems figure is never zero, since a commander is
   always somewhere.
 - **Costs:** every level has an unread case the report must word.
 
@@ -231,7 +230,7 @@ the report says there was no reading. Elsewhere an unmeasured figure is
 omitted.
 
 - **Rather than:** printing zero; announcing every quantity that went
-  unmeasured, as the card's "Change unread" once did.
+  unmeasured.
 - **Gains:** no false zero; no page filling up with what was not measured.
 - **Costs:** an absent figure is not always explained.
 
@@ -241,9 +240,9 @@ The session's change is the difference between the first and last balance
 the journal states. With fewer than two balances there is no change to
 report.
 
-- **Rather than:** totalling the credit deltas on moments, which price only
-  income; a session that ended twenty million credits down reported a gain.
-  Adding a spending rule per event would always be a game update behind.
+- **Rather than:** totalling the credits on each event, which prices only
+  income, so a session that ended heavily down reported a gain; a spending
+  rule per event, which would always be a game update behind.
 - **Gains:** a rebuy, a refit or a hold of tritium counts against the player
   exactly as it did in the game.
 - **Costs:** a session that states one balance has no change at all.
@@ -253,10 +252,10 @@ report.
 The journal states the balance only at login, so the report prints when the
 reading was taken beneath it.
 
-- **Rather than:** applying every priced event to the login balance. Measured
-  against the next login's stated balance, that matched on two of fifty-four
-  active sessions and was out by a median of about eight million credits;
-  four sessions moved the balance with no priced event at all.
+- **Rather than:** applying every priced event to the login balance. Checked
+  against the balance the journal states at the next login, that derivation
+  was wrong on nearly every session, often by millions; some sessions moved
+  the balance with no priced event at all.
 - **Gains:** no figure confidently wrong by millions.
 - **Costs:** on a long session the headline is hours old; the report says so.
 
@@ -264,34 +263,22 @@ reading was taken beneath it.
 
 Beside the balance, a separate card totals every event the journal does
 price, income less outgoings, with a note that it is not the balance change.
+Spending is carried apart from income and from distances all the way
+through, which is what makes that total possible.
 
 - **Rather than:** putting that total in the change slot; leaving the player
-  with nothing when the change is unread.
-- **Gains:** a session that sold eighty stored modules shows what they came
-  to, even when the journal never restates the balance.
+  with nothing when the change is unread; counting a purchase as income,
+  which let a large purchase read as a major payout.
+- **Gains:** a session that sold a hangar of stored modules shows what they
+  came to, even when the journal never restates the balance.
 - **Costs:** two credit figures that routinely differ, which the labels have
-  to keep apart.
-
-### Spending has a channel of its own
-
-A purchase cost is read from the field that states it (the total cost, the
-buy price, the ship price, the transfer price) into a spend channel separate
-from income and from distances.
-
-- **Rather than:** the income channel, which counted spending as banked money
-  and let a large purchase raise the major-payout milestone; borrowing the
-  magnitude channel, which also carries jump distances in light years.
-- **Gains:** spending can be totalled honestly; the priced total became
-  possible. Giving a Vessel Hangar bay its price closed a 697,076 Cr gap on a
-  real journal.
-- **Costs:** a third channel through the taxonomy, the domain and the
-  presenter.
+  to keep apart; a third channel through every layer.
 
 ### Merc Coins are a currency of their own
 
 An Operation's Merc Coins ride their own channel and never join a credit
-figure. The journal field they are read from is named in the taxonomy. A
-missing field reads as zero in the domain and raises a notice in the report.
+figure. The journal field they are read from is named in configuration. A
+missing field reads as nothing earned and raises a notice in the report.
 
 - **Rather than:** folding coins into credits; naming the field in code.
 - **Gains:** a game-side rename is a one-line edit; a wrong field name is
@@ -301,14 +288,12 @@ missing field reads as zero in the domain and raises a notice in the report.
 
 ### A rule that reads nothing says so
 
-When a taxonomy rule names a currency or magnitude field the matching event
-never carried (or carried in a form that could not be read), the report
-shows a notice naming the event and the field.
+When a rule names a currency or distance field the matching event never
+carried (or carried in a form that could not be read), the report shows a
+notice naming the event and the field.
 
 - **Rather than:** quietly printing zero.
-- **Gains:** a silent zero becomes visible the first time it happens. Watching
-  magnitude too came from a jump-distance defect: the field was present and
-  correctly named but went unread.
+- **Gains:** a silent zero becomes visible the first time it happens.
 - **Costs:** a notices block a reader may see on an otherwise clean report.
 
 ### A carrier's distance is measured from positions
@@ -324,14 +309,13 @@ covers.
 
 ### Material trades carry no credit figure
 
-An exchange at a material trader is a trade moment, counted beside the market
-figures in the Trade section. The journal states no price, so it joins
-neither credit column.
+An exchange at a material trader is counted beside the market figures in the
+Trade section. The journal states no price, so it joins neither credit
+column.
 
-- **Rather than:** pricing it with an invented figure; leaving it out, as
-  happened while the event had no rule.
-- **Gains:** a session that traded thirty-one times at the traders and bought
-  nothing on a market reports both truthfully.
+- **Rather than:** pricing it with an invented figure; leaving it out.
+- **Gains:** a session that traded only at the material traders reports that
+  truthfully beside an empty market.
 - **Costs:** none recorded.
 
 ### An experimental effect is told apart by a field's presence
@@ -342,8 +326,8 @@ rule matches on that field being present.
 
 - **Rather than:** matching on the effect's name, which every later roll on
   that module restates; one engineering count for both kinds of work.
-- **Gains:** four effects and thirty rolls no longer read as thirty-four
-  modifications.
+- **Gains:** a handful of effects and a run of rolls no longer read as one
+  larger pile of modifications.
 - **Costs:** none recorded.
 
 ### Outfitting and the shipyard are counted per side
@@ -382,27 +366,27 @@ the rebuy charged.
 
 ## Words in the report
 
-### The event taxonomy is data in TOML
+### The event taxonomy is data
 
 The mapping from journal events to moments, the labels, icons, thresholds,
-formats and history limits all live in one TOML file read with the standard
-library. A test fails if a key a moment rule declares is never read.
+formats and history limits all live in one configuration file read with the
+standard library. Every key a rule declares is read; one that parsed and was
+then ignored is treated as a defect.
 
 - **Rather than:** event mappings and tuning values in code.
 - **Gains:** a new journal event or a game-side rename is a config edit; the
-  taxonomy can be reviewed on its own. The read-every-key test exists because
-  the wording templates once parsed and were then ignored.
+  taxonomy can be reviewed on its own.
 - **Costs:** a large configuration file that has to be kept in step with the
   rules that read it.
 
 ### Shared events are told apart in the taxonomy
 
-Where one event covers several things, a rule names the field and the tokens
+Where one event covers several things, a rule names the field and the words
 that pick it out; a rule may instead name a field whose presence does. The
 first rule that matches wins, so the taxonomy's order sets precedence.
 
-- **Rather than:** a branch per event name in the reducer; loadout or item
-  names hardcoded in the domain.
+- **Rather than:** a branch per event name in the code; loadout or item
+  names hardcoded in the core.
 - **Gains:** a new fighter variant is one line of configuration.
 - **Costs:** rule order matters and has to be read with care.
 
@@ -410,7 +394,6 @@ first rule that matches wins, so the taxonomy's order sets precedence.
 
 Each rule carries a template rendered against the raw journal entry. If the
 entry lacks a name the template needs, the row falls back to its plain label.
-The template engine sits in infrastructure behind a port.
 
 - **Rather than:** wording hardcoded per event; a lenient render that prints
   a sentence with holes in it.
@@ -420,17 +403,16 @@ The template engine sits in infrastructure behind a port.
 
 ### Module names decoded from the token
 
-The journal states no readable module name: across 182 fitted modules in a
-real journal not one carried one. The English is decoded from the token's
-parts, with the vocabulary in the taxonomy. A part with no entry is
-title-cased and kept.
+The journal states no readable module name, so the English is decoded from
+the token's parts, with the vocabulary in configuration. A part with no entry
+is title-cased and kept.
 
 - **Rather than:** printing the token; a product dictionary in code; dropping
   parts the vocabulary does not know.
 - **Gains:** a module reads as a 5D Sensors rather than a code; a vocabulary
   gap shows as an odd word rather than a missing one.
 - **Costs:** one entry per part, so a part that means different things on
-  different modules is left unmapped: "fast" reads as "Fast" on both.
+  different modules is left unmapped and reads plainly on both.
 
 ### Journal time, labelled UTC, dated only when needed
 
@@ -467,65 +449,42 @@ browser.
   knows how to keep, open and share.
 - **Costs:** the program cannot tell whether the report was read.
 
-### The history report is a bundle of pages
+### The history report is a bundle that leaves old pages alone
 
 The whole-history report is an index carrying the report and the newest
-month, a page per calendar month and one shared stylesheet. A session report
+month, a page per calendar month and one shared stylesheet. A page is keyed
+on the month it covers, so a finished month never changes; the writer
+leaves any file whose bytes have not changed untouched. A session report
 stays one file.
 
 - **Rather than:** one document that grows for ever and is rewritten whole
-  on every quit.
-- **Gains:** each page stays small; the bundle still opens from disk with no
+  on every quit; pages numbered by position, which renumber every page when
+  a new one is added.
+- **Gains:** each page stays small; a short session rewrites the index and
+  the stylesheet and nothing else; the bundle still opens from disk with no
   server and no script.
-- **Costs:** the history report is a folder rather than a file.
+- **Costs:** the history report is a folder rather than a file; a very busy
+  month can still fill a long page.
 
-### Pages keyed on the month they cover
+### Navigation and counts that do not rewrite old pages
 
-A page is named for its calendar month and filled from the month's oldest
-row. Rows per page are capped at a thousand and at a size budget of 512,000
-bytes, whichever is stricter.
+The list of every month lives on the index alone and each page links back to
+it. Each tab states its figure for the whole history; those counts are
+generated into the stylesheet, which is rewritten on every run anyway.
 
-- **Rather than:** numbering pages by position, which renumbers every page
-  when a new one is added.
-- **Gains:** a finished month never changes, so its page is never rewritten.
-- **Costs:** a very busy month can still fill a long page.
-
-### Only what changed is written
-
-The bundle writer compares the bytes it is about to write with what is on
-disk and leaves an unchanged file alone. It removes pages the bundle no
-longer holds, within its own pages folder only.
-
-- **Rather than:** rewriting the whole bundle on every quit.
-- **Gains:** a short session rewrites the index and the stylesheet and leaves
-  every older page untouched, which a scale test checks.
-- **Costs:** none recorded.
-
-### The month list lives on the index alone
-
-The index lists every month with its entry count. Each page links back to
-that list by anchor and carries newer and older links.
-
-- **Rather than:** the list on every page, which would rewrite every page each
-  new month; stepping one page at a time.
-- **Gains:** any month is two clicks from anywhere.
-- **Costs:** reaching another month from a page goes through the index.
-
-### Whole-history tab counts held in the stylesheet
-
-A tab states its figure for the whole history. Those counts are generated
-into the stylesheet, which is rewritten on every run anyway.
-
-- **Rather than:** counts for the page alone, which mislead; counts in each
-  page, which rewrite every page every session; a script to fill them in.
-- **Gains:** honest counts without undoing the paging; still no JavaScript.
-- **Costs:** figures carried in CSS, an unusual place for them.
+- **Rather than:** the month list or the counts on every page, which would
+  rewrite every page each session; counts for the page alone, which mislead;
+  a script to fill them in.
+- **Gains:** any month is two clicks from anywhere; honest counts without
+  undoing the paging; still no JavaScript.
+- **Costs:** reaching another month goes through the index; figures carried
+  in CSS, an unusual place for them.
 
 ### A rollup that bounds the report, offered but off
 
-Rows older than ninety days can be folded into one row per day per category.
-It is off by default because it discards detail. The age is measured back
-from the newest row, never from the clock.
+Older rows can be folded into one row per day per category. It is off by
+default because it discards detail. The age is measured back from the newest
+row, never from the clock.
 
 - **Rather than:** an unbounded report with no option; a rollup imposed on
   everyone; a threshold anchored to now.
@@ -535,8 +494,8 @@ from the newest row, never from the clock.
 
 ### One-document history, capped and saying so
 
-A taxonomy setting writes the history as one document instead, keeping the
-newest 2,000 entries; the footer states how many were left out. Markdown
+A configuration setting writes the history as one document instead, keeping
+only the newest entries; the footer states how many were left out. Markdown
 history is capped the same way.
 
 - **Rather than:** an uncapped single file.
@@ -557,8 +516,8 @@ a right click opens the full menu.
 
 ### The desktop is asked whether it draws a tray
 
-o7 Debrief asks Qt whether this desktop draws a tray, every half second for
-up to fifteen seconds. With a tray the icon is shown; without one the home
+o7 Debrief asks the running desktop whether it draws a tray, repeatedly over
+a short grace period. With a tray the icon is shown; without one the home
 window opens.
 
 - **Rather than:** assuming a tray from the operating system; asking once.
@@ -576,13 +535,13 @@ marker sit in the folder the sandbox shares between instances.
 
 - **Rather than:** a lock file whose existence alone means "running".
 - **Gains:** a crash or a reboot never leaves a stale lock.
-- **Costs:** the shared Flatpak folder is written from the documented layout
-  and not yet proven across two launches in the sandbox.
+- **Costs:** the shared Flatpak folder follows the documented layout and is
+  not yet proven across two launches in the sandbox.
 
 ### Starting at sign-in is the player's choice
 
-The setting writes a Run value on Windows and an XDG autostart entry on
-Linux, through one shared shape. Under a Flatpak the entry is written to the
+The setting writes the platform's own sign-in entry on Windows and on Linux,
+through one shared shape. Under a Flatpak the entry is written to the
 session's real autostart folder, ignoring the sandbox's redirected
 configuration.
 
@@ -594,14 +553,27 @@ configuration.
 
 ### No journal, said out loud
 
-When no journal folder can be found, o7 Debrief writes the reason to stderr,
-shows a dialog with the places it looked in the details and exits with code
-one.
+When no journal folder can be found, o7 Debrief says why on the error stream
+and in a dialog listing the places it looked, then exits with a failure
+code.
 
 - **Rather than:** an uncaught error, which gave a traceback in a terminal
   and nothing at all from a launcher or the console-less Windows build.
 - **Gains:** a machine without the game gets a sentence explaining why.
 - **Costs:** none recorded.
+
+### Background work never touches the window
+
+Work that waits, such as the update check or a setup step, runs off the
+interface thread and hands its answer back to it; only the interface thread
+touches a window. An answer whose asker has gone in the meantime is dropped
+rather than raised where nothing would see it.
+
+- **Rather than:** letting a worker call back into the window directly,
+  which once left the setup program waiting on the thread it was running in.
+- **Gains:** no window is touched from the wrong thread; the interface stays
+  responsive while the work runs.
+- **Costs:** more ceremony around background work.
 
 ## Building and installing
 
@@ -616,85 +588,57 @@ console disabled.
 
 ### A Flatpak for Linux, with no standalone binary
 
-Linux ships as a Flatpak built by a script that writes its own manifest,
-desktop entry and metadata and fetches the wheels on the host so the
-sandboxed build is offline. Running from source is the other supported way.
+Linux ships as a Flatpak built by a script that writes its own packaging
+files and fetches the wheels on the host so the sandboxed build is offline.
+Running from source is the other supported way.
 
-- **Rather than:** a Linux standalone binary, which the Nuitka build cannot
-  produce because it carries Windows-only metadata.
+- **Rather than:** a Linux standalone binary, which the Windows build cannot
+  produce.
 - **Gains:** one artefact that runs on any distribution Flatpak serves.
 - **Costs:** two packaging routes to maintain; two Flatpak assumptions remain
-  untried (see TECH_DEBT.md item 2).
+  untried.
 
 ### A setup program of its own, per user
 
 Install, upgrade, repair and removal are one bespoke program. It installs
 under the user's own folders and registry, so it needs no administrator
-rights. It imports nothing from the application. Its operations and state are
-free of Qt; the Qt window drives them from a worker thread. Removing o7
-Debrief deletes the user's settings only when asked.
+rights. It imports nothing from the application and its privileged work is
+kept apart from its window. Removing o7 Debrief deletes the user's settings
+only when asked.
 
-- **Rather than:** a generic installer; the single module of over a thousand
-  lines it once was.
+- **Rather than:** a generic installer.
 - **Gains:** the privileged work sits inside the coverage gate; progress is
   real; a running copy can be closed for the player.
 - **Costs:** the setup program is o7 Debrief's own to maintain; each account
   on a machine installs separately.
 
-### The payload cannot write outside the install folder
+### The setup program assumes nothing and writes down what it did
 
-Every archive entry is resolved against the install folder before extraction
-and refused if it would land outside it.
+Every archive entry is checked before extraction and refused if it would
+land outside the install folder. A running copy is closed by name alone,
+never with everything Windows thinks descends from it. Each step is appended
+to a log and a launch after installing is reported rather than assumed.
 
-- **Rather than:** trusting the bundle because the project built it.
-- **Gains:** extraction running with the user's full rights cannot be steered
-  elsewhere.
-- **Costs:** none recorded.
-
-### Close the running copy by name only
-
-A running copy is ended with a forced terminate of the named program and
-nothing else. A test pins the argument list.
-
-- **Rather than:** a tree terminate, which twice took the setup program down
-  with the application while the application closed perfectly.
-- **Gains:** the setup program survives closing the application.
-- **Costs:** none recorded; the application starts no child processes.
-
-### The setup program writes down what it did
-
-Each step is appended to a log in the temporary folder, with native crashes
-and worker-thread failures captured there too. A launch after installing is
-reported; the window stays open to say so when it fails.
-
-- **Rather than:** a crash log alone; assuming the launch worked.
-- **Gains:** the quiet failures (an install that reports success and starts
-  nothing) leave evidence.
+- **Rather than:** trusting the bundle because the project built it; a tree
+  terminate, which twice took the setup program down with the application;
+  a crash log alone.
+- **Gains:** extraction cannot be steered elsewhere; the setup program
+  survives closing the application; the quiet failures (an install that
+  reports success and starts nothing) leave evidence.
 - **Costs:** a log file per run; logging is best effort and never fails an
   install.
 
-### The build stamps the site and the example report
+### The version has one home
 
-Both Windows build scripts stamp the website's version from the VERSION file
-and regenerate the published example report, failing the build if either
-fails.
+The version lives in one file. The program reads it and the report footer
+states it; the build stamps it into the website and regenerates the
+published example report, failing if either step fails.
 
-- **Rather than:** steps somebody has to remember, which left the example
-  report stating v0 for the life of the project.
-- **Gains:** a release cannot ship a site that disagrees with the binary.
+- **Rather than:** a version written in several places; steps somebody has
+  to remember, which left every report stating v0 for a long time.
+- **Gains:** no report or release can disagree with the binary about its
+  version.
 - **Costs:** a build touches files under the site folder.
-
-### The running version is injected
-
-The report footer states the version the composition root read from the
-VERSION file. The presenter requires it as a keyword argument and a test
-asserts the wiring.
-
-- **Rather than:** a lookup with a default, which made every report ever
-  written end with v0.
-- **Gains:** no caller can produce a report without saying which version
-  produced it.
-- **Costs:** none recorded.
 
 ## Engineering
 
@@ -702,18 +646,17 @@ asserts the wiring.
 
 The code is split into domain, application, infrastructure and interface,
 each depending only inward, with one composition root wiring them by
-constructor. Structural tests hold the boundaries.
+constructor.
 
 - **Rather than:** convention alone; a dependency injection framework.
 - **Gains:** the rules about sessions and figures are tested with no disk,
   clock or screen.
 - **Costs:** a port per outside concern and more explicit wiring.
 
-### The domain never reads the clock
+### The core never reads the clock
 
-The domain works only in time taken from journal entries. A structural test
-forbids I/O, logging and clock reads there. The one place that reads the
-clock is an adapter behind a port.
+The rules about sessions and figures work only in time taken from journal
+entries. The one place that reads the clock sits behind a port.
 
 - **Rather than:** reading the wall clock where convenient.
 - **Gains:** the same journal always produces the same debrief.
@@ -721,40 +664,30 @@ clock is an adapter behind a port.
 
 ### Total coverage where it means something
 
-Branch coverage must be total over the domain, the application layer, the
-whole infrastructure layer and the setup program's operations and state.
-Both Qt clients and the composition roots are tested but not held to a
-figure.
+Branch coverage must be total over the core, the whole infrastructure layer
+and the setup program's operations and state. Both windowed clients and the
+composition roots are tested but not held to a figure.
 
 - **Rather than:** one figure over everything, which would reward mocking the
-  real world exactly where it must not be mocked; listing infrastructure's
-  sub-packages one by one.
+  real world exactly where it must not be mocked.
 - **Gains:** a new adapter is gated the moment it is added; anything short of
   total in the gated code is a decision nobody made.
 - **Costs:** a run can fail with every test passing, so the exit code has to
   be read.
 
-### No magic numbers
+### House rules enforced by the suite, not by review
 
-A structural test forbids unexplained numeric literals in logic. Values come
-from the taxonomy or from named constants.
+The layer boundaries, the clock ban, unexplained numbers in logic, oversized
+modules, the Linux desktop identity and the house prose rules are each
+checked by a test that reads the source. One linter is the record and the
+other is configured to agree with it.
 
-- **Rather than:** literals written where they are used.
-- **Gains:** a figure in a report about credits and ranks always says where
-  it came from.
-- **Costs:** small constants need names.
-
-### Small modules
-
-No module may exceed four hundred lines, across the package, the setup
-program, the tests and the repository root. The composition root and three
-delivery scripts are exempt by name, each with a reason; a test fails if an
-exemption outlives its file.
-
-- **Rather than:** letting files grow, as the setup program and the
-  composition root once did unseen.
-- **Gains:** modules split at real seams.
-- **Costs:** many small files.
+- **Rather than:** rules held by review, which is how the setup program and
+  the composition root once grew unseen.
+- **Gains:** a drift fails the suite rather than surfacing in a release;
+  small constants and small modules stay the norm.
+- **Costs:** small constants need names; many small files; a few deliberate
+  exceptions to explain.
 
 ### Tests with real parts
 
@@ -765,38 +698,3 @@ journals and real temporary folders.
 - **Rather than:** mocks.
 - **Gains:** a passing test means the real thing works.
 - **Costs:** fakes are written and kept by hand.
-
-### Worker results arrive on the interface thread
-
-A result from a worker thread is delivered to a method of an object living on
-the interface thread, so Qt queues it there. A test asserts the thread each
-callback runs on.
-
-- **Rather than:** connecting signals to bare functions, which Qt runs on the
-  sending thread; the setup program once deadlocked waiting on the thread it
-  was running in.
-- **Gains:** no window is touched from the wrong thread.
-- **Costs:** more ceremony around background work.
-
-### Silent drift pinned by test
-
-The Linux desktop identity, stated in the Flatpak script and in the names the
-composition root gives Qt, is pinned by a test. So are the house prose rules
-across every file that carries prose.
-
-- **Rather than:** trusting two files to stay in step; a style rule held only
-  by review.
-- **Gains:** a one-character drift fails the suite rather than giving the
-  home window a stray launcher icon.
-- **Costs:** the prose test is the one file exempt from its own scan.
-
-### flake8 is the linter of record; ruff is told to agree
-
-black formats; flake8 is enforced. ruff is configured to enable the same
-deferred-import rule, with four files told not to call their deliberate
-markers unused.
-
-- **Rather than:** ruff left unconfigured, whose autofix would have stripped
-  those markers and broken the scripts they protect.
-- **Gains:** a clean run of either linter means the same thing.
-- **Costs:** four per-file exceptions to explain.
