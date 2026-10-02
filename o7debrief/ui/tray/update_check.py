@@ -138,12 +138,13 @@ class UpdateCheckController(QObject):
     def _hand_back(self, status: UpdateStatus | None, manual: bool) -> None:
         """Send the answer to the ui thread, from the worker thread.
 
-        Quitting drops the tray controller and this one with it, possibly
-        while the question is out; the emit then raises on a thread nothing
-        would catch it on. Nobody is left to tell, so that answer is dropped.
-        Asking first whether this controller still exists would not do: it
-        can go between the asking and the emit. Anything else the emit
-        raises is still raised.
+        Hardening rather than a cure for a seen failure: quitting was probed
+        and leaves this controller alive until the answer is in. Should it be
+        deleted while the question is out, though, the emit raises on a
+        thread nothing would catch it on. Nobody is left to tell, so that
+        answer is dropped. Asking first whether this controller still exists
+        would not do: it can go between the asking and the emit. Anything
+        else the emit raises is still raised.
         """
         try:
             self._result_ready.emit(status, manual)

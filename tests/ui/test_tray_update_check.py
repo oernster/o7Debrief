@@ -249,10 +249,11 @@ def test_an_answer_with_nowhere_to_go_is_dropped_not_raised(
 ) -> None:
     """A check still out when the tray goes must not raise on its thread.
 
-    Quitting returns from the event loop and drops the tray controller,
-    which takes its update controller with it while a check may still be
-    out. Nobody is left to tell, so the answer is dropped; what must not
-    happen is an exception escaping a thread this application started.
+    Quitting does not do this today (a probe of the real quit path found
+    the tray controller still alive when the answer came), so the tray is
+    deleted directly. Should it go, the update controller goes with it and
+    nobody is left to tell, so the answer is dropped; what must not happen
+    is an exception escaping a thread this application started.
     """
     escaped: list[BaseException | None] = []
     monkeypatch.setattr(
