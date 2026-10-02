@@ -70,6 +70,11 @@
     color: var(--accent);
     letter-spacing: 1px;
   }
+  /* The short way round the site: the role pages, at the far end of the header.
+     On a phone the links drop beneath the name rather than crowding it. */
+  header.mini .mini-nav { margin-left: auto; display: flex; gap: 20px;
+    font-family: var(--mono); font-size: 14px; }
+  @media (max-width: 640px) { header.mini { flex-wrap: wrap; } }
   section { padding: 40px 0; }
   h2 {
     font-family: var(--mono);
@@ -111,6 +116,21 @@
   .btn.primary:hover { background: var(--accent-soft); color: var(--bg); }
   .btn.ghost { background: var(--surface); color: var(--text); }
   .btn.ghost:hover { background: var(--edge); }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--edge);
+    border-radius: 12px;
+    padding: 22px;
+  }
+  .faq { display: grid; gap: 14px; }
+  .faq .card h3 {
+    font-family: var(--sans);
+    font-size: 16px;
+    margin: 0 0 8px;
+    color: var(--accent-soft);
+  }
+  .faq .card p { color: var(--text); }
+
   footer {
     border-top: 1px solid var(--edge);
     margin-top: 32px;
@@ -121,6 +141,91 @@
   }
   footer .mono { font-family: var(--mono); }
 </style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "FAQPage",
+      "@id": "https://ernster.dev/o7Debrief/why.html#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is o7 Debrief?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "o7 Debrief is a free, local-first Windows app that turns your Elite Dangerous Player Journal into a self-contained Commander Mission Debrief you can read in any browser or share as text."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is o7 Debrief free and open source?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. o7 Debrief is free and released under the GNU Lesser General Public Licence v3.0, with the full source on GitHub."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does o7 Debrief upload my journal or data anywhere?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. It is local-first with no cloud, no account and no telemetry. Your Player Journal never leaves your machine and the app needs no administrator rights to install."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What does an Elite Dangerous debrief track?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Credits, jumps, distance travelled by your ship and your fleet carrier, scans across exploration, mining, trading, bounty hunting and exobiology, plus missions and Operations (naming each mission and the Merc Coins an Operation pays, kept separate from your credits) and Commander rank progress, with every figure traced to a real journal entry."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do I need to keep o7 Debrief running while I play?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. The background watcher can generate a debrief automatically when you close the game; one-shot mode can also report your last session or your whole history to date after the fact."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does o7 Debrief record ship changes?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Swapping ship or buying a new one is logged as a session event naming the ship you moved from and the one you boarded; the header also names your current ship and its type."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does o7 Debrief check for updates?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Shortly after launch and once a day while running, the app asks GitHub anonymously whether a newer published release exists; the home screen and the tray menu both carry a Check for updates button that does the same on demand. If one is found you choose Download, Skip this version or Later; a skipped version never prompts again. This anonymous ask is the only network call the app makes and nothing is ever downloaded or installed without you choosing it."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Which Windows versions does o7 Debrief support?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Windows 10 and Windows 11. It runs quietly from the system tray and reads the Player Journal that Elite Dangerous writes on your PC."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I install or upgrade o7 Debrief?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Run the setup program. It installs for your user account only, so it never asks for administrator rights. It names the phase it is in and shows its progress as it works. Upgrading over a copy that is still running in the tray is handled for you: setup offers to close it and carry on. The same program repairs and uninstalls."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
 </head>
 <body>
   <div class="wrap">
@@ -128,6 +233,11 @@
     <header class="mini">
       <a href="./"><img src="assets/o7Debrief.png" alt="o7 Debrief icon"></a>
       <a href="./"><span class="name">o7 Debrief</span></a>
+      <nav class="mini-nav">
+        <a href="features.html">Features</a>
+        <a href="why.html">Why</a>
+        <a href="download.html">Download</a>
+      </nav>
     </header>
 
     <section class="prose" id="exists">
@@ -158,8 +268,54 @@
         anonymous ask to GitHub for the latest published version, carrying nothing about you.
         Nothing is downloaded or run unless you choose it.</p>
       <div class="cta">
-        <a class="btn primary" href="index.html#download">Download o7 Debrief</a>
+        <a class="btn primary" href="download.html">Download o7 Debrief</a>
         <a class="btn ghost" href="./">Back to overview</a>
+      </div>
+    </section>
+
+    <section id="faq">
+      <h2>Common questions</h2>
+      <div class="faq">
+        <div class="card">
+          <h3>What is o7 Debrief?</h3>
+          <p>o7 Debrief is a free, local-first Windows app that turns your Elite Dangerous Player Journal into a self-contained Commander Mission Debrief you can read in any browser or share as text.</p>
+        </div>
+        <div class="card">
+          <h3>Is o7 Debrief free and open source?</h3>
+          <p>Yes. o7 Debrief is free and released under the GNU Lesser General Public Licence v3.0, with the full source on GitHub.</p>
+        </div>
+        <div class="card">
+          <h3>Does o7 Debrief upload my journal or data anywhere?</h3>
+          <p>No. It is local-first with no cloud, no account and no telemetry. Your Player Journal never leaves your machine and the app needs no administrator rights to install.</p>
+        </div>
+        <div class="card">
+          <h3>What does an Elite Dangerous debrief track?</h3>
+          <p>Credits, jumps, distance travelled by your ship and your fleet carrier, scans across exploration, mining, trading, bounty hunting and exobiology, outfitting and shipyard trade (modules and ships bought, sold and transferred, each side priced separately), engineering split between grade rolls and experimental effects, plus missions and Operations (naming each mission and the Merc Coins an Operation pays, kept separate from your credits), deaths (who died, in what, at whose hands and what the rebuy cost) and Commander rank progress, with every figure traced to a real journal entry. Where the journal states nothing, the report says so rather than printing a zero you would read as a real figure.</p>
+        </div>
+        <div class="card">
+          <h3>Do I need to keep o7 Debrief running while I play?</h3>
+          <p>No. The background watcher can generate a debrief automatically when you close the game; one-shot mode can also report your last session or your whole history to date after the fact.</p>
+        </div>
+        <div class="card">
+          <h3>Does o7 Debrief record ship changes?</h3>
+          <p>Yes. Swapping ship or buying a new one is logged as a session event naming the ship you moved from and the one you boarded; the header also names your current ship and its type.</p>
+        </div>
+        <div class="card">
+          <h3>Does o7 Debrief check for updates?</h3>
+          <p>Yes. Shortly after launch and once a day while running, the app asks GitHub anonymously whether a newer published release exists; the home screen and the tray menu both carry a Check for updates button that does the same on demand. If one is found you choose Download, Skip this version or Later; a skipped version never prompts again. This anonymous ask is the only network call the app makes and nothing is ever downloaded or installed without you choosing it.</p>
+        </div>
+        <div class="card">
+          <h3>Which Windows versions does o7 Debrief support?</h3>
+          <p>Windows 10 and Windows 11. It runs quietly from the system tray and reads the Player Journal that Elite Dangerous writes on your PC.</p>
+        </div>
+        <div class="card">
+          <h3>Does o7 Debrief run on Linux?</h3>
+          <p>Yes, with one honest caveat. Every release publishes a Flatpak. On Ubuntu with Elite Dangerous under Proton it has been left watching through a real session: it read the journal from inside the prefix, produced the debrief when the game closed and opened that report in a browser on the host. The parts that matter most are therefore proven rather than intended. Starting it at sign-in did not work in the Flatpak before this release, because the entry was written inside the sandbox's own configuration rather than the session's; that is fixed and confirmed on a real reboot, so tick the setting off and on again after upgrading. Note that a Flatpak install can never arrive with that setting already on, so switching it on is one trip into Settings after installing. What has not been exercised is narrower still: launching it again to summon the window inside the sandbox and the case where Steam itself is installed as a Flatpak. The repository records exactly what has and has not been verified. Windows is the platform every release is built and tested on.</p>
+        </div>
+        <div class="card">
+          <h3>How do I install or upgrade o7 Debrief?</h3>
+          <p>Run the setup program. It installs for your user account only, so it never asks for administrator rights. It names the phase it is in and shows its progress as it works. Upgrading over a copy that is still running in the tray is handled for you: setup offers to close it and carry on. The same program repairs and uninstalls.</p>
+        </div>
       </div>
     </section>
 

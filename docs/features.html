@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What o7 Debrief does: the features of the Commander Mission Debrief</title>
+<meta name="description" content="What o7 Debrief does: a live watcher and debriefs on demand, real numbers only, the credits you actually made, every row in plain English, plus the finished report.">
+<link rel="icon" href="assets/o7Debrief.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="o7 Debrief">
+<meta property="og:title" content="What o7 Debrief does: the features of the Commander Mission Debrief">
+<meta property="og:description" content="What o7 Debrief does: a live watcher and debriefs on demand, real numbers only, the credits you actually made, every row in plain English, plus the finished report.">
+<meta property="og:url" content="https://ernster.dev/o7Debrief/features.html">
+<meta property="og:image" content="https://ernster.dev/o7Debrief/assets/social-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="What o7 Debrief does">
+<meta name="twitter:description" content="What o7 Debrief does: a live watcher and debriefs on demand, real numbers only, the credits you actually made, every row in plain English, plus the finished report.">
+<meta name="twitter:image" content="https://ernster.dev/o7Debrief/assets/social-card.png">
+<meta name="twitter:image:alt" content="o7 Debrief - Commander Mission Debrief for Elite Dangerous">
+<meta property="og:image:alt" content="o7 Debrief - Commander Mission Debrief for Elite Dangerous">
+<meta property="og:locale" content="en_GB">
+<link rel="canonical" href="https://ernster.dev/o7Debrief/features.html">
+<meta name="author" content="Oliver Ernster">
+<meta name="application-name" content="o7 Debrief">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0d0d10">
+<meta name="keywords" content="Elite Dangerous, o7 Debrief, Commander Mission Debrief, Elite Dangerous session report, Elite Dangerous journal parser, Player Journal reader, session summary, post-session report, commander progress, rank progress, exploration, mining, trading, bounty hunting, exobiology, combat, mission rewards, CMDR stats, Windows tray app, local-first, offline, no telemetry, free, open source, Elite Dangerous tools">
+<style>
+  :root {
+    --bg: #0d0d10;
+    --surface: #16161d;
+    --edge: #2a2a33;
+    --accent: #f07b05;
+    --accent-soft: #f8a24a;
+    --text: #d7d7da;
+    --muted: #8a8a93;
+    --mono: 'Consolas', 'Cascadia Code', ui-monospace, 'SF Mono', monospace;
+    --sans: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.6;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    z-index: 10;
+  }
+  a { color: var(--accent-soft); text-decoration: none; }
+  a:hover { color: var(--accent); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+  header.mini {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 28px 0 8px;
+  }
+  header.mini img { width: 44px; height: 44px; }
+  header.mini .name {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+  /* The short way round the site: the role pages, at the far end of the header.
+     On a phone the links drop beneath the name rather than crowding it. */
+  header.mini .mini-nav { margin-left: auto; display: flex; gap: 20px;
+    font-family: var(--mono); font-size: 14px; }
+  @media (max-width: 640px) { header.mini { flex-wrap: wrap; } }
+
+  header.hero {
+    text-align: center;
+    padding: 88px 0 64px;
+  }
+  .hero img.logo { width: 96px; height: 96px; image-rendering: auto; }
+  .hero h1 {
+    font-family: var(--mono);
+    font-size: clamp(40px, 8vw, 68px);
+    font-weight: 700;
+    color: var(--accent);
+    margin: 16px 0 4px;
+    letter-spacing: 1px;
+    text-shadow: 0 0 24px rgba(240, 123, 5, 0.35);
+  }
+  .hero .tagline {
+    font-family: var(--mono);
+    color: var(--muted);
+    font-size: 16px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin: 0 0 24px;
+  }
+  .hero p.pitch {
+    max-width: 660px;
+    margin: 0 auto 32px;
+    font-size: 19px;
+    color: var(--text);
+  }
+  .cta { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-block;
+    padding: 13px 28px;
+    border-radius: 24px;
+    font-weight: 700;
+    font-size: 15px;
+    border: 1px solid var(--edge);
+  }
+  .btn.primary {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+  }
+  .btn.primary:hover { background: var(--accent-soft); color: var(--bg); }
+  .btn.ghost { background: var(--surface); color: var(--text); }
+  .btn.ghost:hover { background: var(--edge); }
+  /* The donate button carries artwork before its label. The mark is sized in em
+     against the button's own type; at one line box the artwork could not be read,
+     so it takes 2.7em and the button is deliberately taller than a text-only one. */
+  .btn-donate { display: inline-flex; align-items: center; gap: 10px; }
+  .btn-donate img { display: block; height: 2.7em; width: auto; }
+  .platform-note {
+    margin-top: 18px;
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+  }
+
+  section { padding: 40px 0; }
+  h2 {
+    font-family: var(--mono);
+    color: var(--accent);
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--edge);
+    padding-bottom: 10px;
+    margin-bottom: 28px;
+  }
+
+  .features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 18px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--edge);
+    border-radius: 12px;
+    padding: 22px;
+  }
+  .card .icon { font-size: 24px; }
+  .card h3 {
+    margin: 10px 0 6px;
+    font-size: 17px;
+    color: var(--text);
+    font-family: var(--mono);
+  }
+  .card p { margin: 0; color: var(--muted); font-size: 15px; }
+
+  .faq { display: grid; gap: 14px; }
+  .faq .card h3 {
+    font-family: var(--sans);
+    font-size: 16px;
+    margin: 0 0 8px;
+    color: var(--accent-soft);
+  }
+  .faq .card p { color: var(--text); }
+
+  .shot { text-align: center; }
+  .shot a { display: inline-block; }
+  .shot img {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid var(--edge);
+    border-radius: 12px;
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.6);
+  }
+  .shot .caption { margin-top: 14px; font-size: 14px; color: var(--muted); }
+
+  .twoup { display: grid; grid-template-columns: 1.3fr 1fr; gap: 28px;
+    align-items: start; }
+  .twoup figure { margin: 0; text-align: center; }
+  .twoup img { max-width: 100%; height: auto; border: 1px solid var(--edge);
+    border-radius: 12px; box-shadow: 0 18px 60px rgba(0, 0, 0, 0.6); }
+  .twoup figcaption { margin-top: 14px; font-size: 14px; color: var(--muted); }
+  @media (max-width: 640px) { .twoup { grid-template-columns: 1fr; } }
+
+  .eyebrow {
+    font-family: var(--mono);
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--edge);
+    padding-bottom: 10px;
+    margin-bottom: 28px;
+  }
+  h2.section-title {
+    font-family: var(--mono);
+    color: var(--text);
+    font-size: clamp(28px, 4vw, 36px);
+    letter-spacing: -0.01em;
+    text-transform: none;
+    border-bottom: 0;
+    padding-bottom: 0;
+    margin: 0 0 14px;
+  }
+  .section-sub {
+    color: var(--muted);
+    margin: 0 0 42px;
+    max-width: 660px;
+    font-size: 17px;
+  }
+  .dl-version {
+    display: block;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 4px;
+    font-size: 14px;
+    font-family: var(--mono);
+    color: var(--accent-soft);
+    border: 1px solid var(--edge);
+    border-radius: 999px;
+    padding: 4px 14px;
+  }
+  .downloads {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin-top: 28px;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .dl-card {
+    background: var(--surface);
+    border: 1px solid var(--edge);
+    border-radius: 12px;
+    padding: 24px 20px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .dl-card .ico { font-size: 30px; }
+  .dl-card h3 {
+    margin: 4px 0 0;
+    font-size: 18px;
+    color: var(--text);
+    font-family: var(--mono);
+  }
+  .dl-card .req { color: var(--muted); font-size: 13px; margin: 0; }
+  .dl-card .btn { margin: 14px auto 4px; }
+  .dl-card .meta {
+    color: var(--muted);
+    font-size: 12.5px;
+    min-height: 1.2em;
+    margin: 0;
+  }
+  .dl-card .how { color: var(--muted); font-size: 13px; margin: 8px 0 0; }
+  .dl-card code {
+    background: var(--bg);
+    border: 1px solid var(--edge);
+    border-radius: 6px;
+    padding: 1px 6px;
+    font-size: 12px;
+    color: var(--text);
+  }
+  .dl-links {
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+    margin: 18px 0 0;
+  }
+
+  footer {
+    border-top: 1px solid var(--edge);
+    margin-top: 32px;
+    padding: 32px 0 56px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  footer .mono { font-family: var(--mono); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+
+    <header class="mini">
+      <a href="./"><img src="assets/o7Debrief.png" alt="o7 Debrief icon"></a>
+      <a href="./"><span class="name">o7 Debrief</span></a>
+      <nav class="mini-nav">
+        <a href="features.html">Features</a>
+        <a href="why.html">Why</a>
+        <a href="download.html">Download</a>
+      </nav>
+    </header>
+
+    <section id="features">
+      <h2>What it does</h2>
+      <p class="section-sub">Everything o7 Debrief does, card by card. Every figure traces back to a real journal entry; the example output below shows the finished debrief.</p>
+      <div class="features">
+        <div class="card">
+          <div class="icon">&#128225;</div>
+          <h3>Live background watcher</h3>
+          <p>Follows the active journal in the background and generates a debrief automatically when you shut the game down.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#128338;</div>
+          <h3>Debrief any time</h3>
+          <p>Cold one-shot mode reports your last session or your whole history to date, even if the app was not running while you played.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#128202;</div>
+          <h3>Real numbers only</h3>
+          <p>Every credit, jump and scan maps to a real entry in your journal, so the figures are verifiable and never guessed, inferred or padded. A figure the journal never stated is never printed as zero: where the slot must hold something it says there was no reading; where nothing has to occupy it the figure is simply left out.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#128181;</div>
+          <h3>What you actually made</h3>
+          <p>The credit change is the difference between your balance at each end of the session, so a rebuy, an outfitting bill or a hold full of tritium counts against you exactly as it did in game. A session that ended poorer says so.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#128202;</div>
+          <h3>What the priced events came to</h3>
+          <p>When the journal states only one balance it can state no change; saying so and stopping there tells you nothing. Beside the balance sits the total of every event the journal does price, income less outgoings, in a card of its own that says plainly it is not the balance change.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#128339;</div>
+          <h3>A balance that says its age</h3>
+          <p>The journal states your balance when you log in and never again, so on a long session that figure is what you had when you sat down. The report prints the moment it was read beneath it, rather than letting a reading hours old pass for a current one.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#128295;</div>
+          <h3>Outfitting and the shipyard</h3>
+          <p>Modules and ships bought and sold, counted and priced on each side rather than netted off, so a refit reads as the two things it was. Ship transfers get their own line, since a transfer buys nothing and still costs. Each one is a row in the log naming the item and the price.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#128506;</div>
+          <h3>Distance travelled</h3>
+          <p>The light years your ship covered, read from the distance each jump states. Your fleet carrier is measured too, worked out from where it arrived, since a carrier jump never records how far it came.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#128196;</div>
+          <h3>Self-contained report</h3>
+          <p>A session debrief is one self-contained file you can open in any browser or keep, plus a text version ready to paste onto Discord or Reddit.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#128197;</div>
+          <h3>Dated where it matters</h3>
+          <p>A log covering several days heads each day with its date, so a history report reading 15:15 above 11:48 is plainly two days rather than a broken sort. A single session shows no dates and keeps its narrow time column. Times are the journal's own UTC, shown unconverted and labelled.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#128218;</div>
+          <h3>A history that stays readable</h3>
+          <p>Years of play will not fit in one page, so the history debrief is a small set of pages: an index, a page per month and one shared stylesheet, opening from your own filesystem with no server and no scripts. It is rebuilt every time you quit and only the pages that actually changed are rewritten.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#127894;</div>
+          <h3>Honest rank reporting</h3>
+          <p>Tier-ups show at once and fractional rank percentages settle at the next launch, because the journal only snapshots progress at startup.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#128640;</div>
+          <h3>Your ship, tracked</h3>
+          <p>The header names your current ship and its type. Every swap or purchase is also logged as a session event, from the ship you left to the one you boarded.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#9760;</div>
+          <h3>Deaths that stand alone</h3>
+          <p>A death row names who died, the vehicle actually lost at that moment (an SRV, not the ship it launched from), the killer with their ship and squadron read from the targeting scan, then what the rebuy cost.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#128736;</div>
+          <h3>Every row says what you did</h3>
+          <p>An engineering roll names the blueprint, the grade, the module and the engineer who applied it, so an evening of two hundred rolls reads as the work it was rather than two hundred identical lines. Applying an experimental effect is its own row and its own figure, because the journal reports it as a roll and it is not one. It reads in English too: the journal calls a module int_sensors_size5_class2 and the report calls it a 5D Sensors. Where the journal did not record something a row needs, the row says less rather than guessing.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#128142;</div>
+          <h3>Material trading</h3>
+          <p>Exchanges at the raw, manufactured and encoded traders are logged with both sides named, then counted in the Trade section. No credit figure is shown against them, because they cost no credits: you pay in materials.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#128260;</div>
+          <h3>Check for updates</h3>
+          <p>Shortly after launch and once a day, the app asks GitHub anonymously whether a newer release exists; a Check for updates button on the home screen and a tray entry both do the same on demand. You choose Download, Skip this version or Later; it never downloads or runs anything without you choosing it.</p>
+        </div>
+        <div class="card">
+          <div class="icon">&#128274;</div>
+          <h3>Local-first</h3>
+          <p>No cloud, no account, no telemetry. Your journal never leaves your machine and the app needs no administrator rights to install. Nothing listens either: the app opens no port and accepts no connection, so the only network call it ever makes is the update check going out.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="screenshot">
+      <h2>Example output</h2>
+      <div class="shot">
+        <a href="example-report.html" title="Open the full example report">
+          <img src="assets/screenshot.png" loading="lazy" alt="An o7 Debrief history report showing the history header with its start, end, duration, route and systems visited; headline totals with the credit balance, the change beside it and the moment the balance was read; and the per-domain activity cards, among them Outfitting and Shipyard, an Engineering card split between modification rolls and experimental effects, plus a Fleet Carrier distance stating how many of its jumps the total covers">
+        </a>
+        <p class="caption">A debrief covering a commander's whole journal history. <a href="example-report.html">Open the full example report &rarr;</a></p>
+      </div>
+      <div class="shot">
+        <img src="assets/history-log-dated.png" loading="lazy" alt="A history report's session log, with each day of play introduced by its own heading above the rows belonging to it, so times running backwards within a day and then jumping up again read as separate days rather than as a broken sort">
+        <p class="caption">A log covering several days heads each day with its date. A single session shows none and keeps the narrow time column.</p>
+      </div>
+      <div class="shot">
+        <img src="assets/history-pages.png" loading="lazy" alt="The log section of a history report, showing a jump list linking every month in the history, newer and older links with the page position beside them and a row of category tabs each stating how many entries are on this page out of the whole history">
+        <p class="caption">Every month is one click away and every tab counts the whole history rather than the page.</p>
+      </div>
+    </section>
+
+    <footer>
+      <p class="mono">o7 Debrief</p>
+      <p>
+        Built by Oliver Ernster &middot; released under the GNU Lesser General Public Licence v3.0 (LGPL-3.0)
+        &middot; <a href="https://github.com/oernster/o7Debrief">github.com/oernster/o7Debrief</a>
+      </p>
+      <p>Elite Dangerous is a trademark of Frontier Developments plc. This is an unofficial, fan-made tool.</p>
+    </footer>
+
+  </div>
+</body>
+</html>

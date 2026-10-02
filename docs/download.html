@@ -3,26 +3,26 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>o7 Debrief - Commander Mission Debrief for Elite Dangerous</title>
-<meta name="description" content="Turn your Elite Dangerous Player Journal into a self-contained Commander Mission Debrief and session report. A free, local-first Windows app where every figure traces to a real journal entry.">
+<title>Download o7 Debrief for Windows and Linux</title>
+<meta name="description" content="Download o7 Debrief: a per-user setup program for Windows 10 and 11 or a Flatpak for Linux. Free and LGPL-3.0 with no cloud, no account and no telemetry.">
 <link rel="icon" href="assets/o7Debrief.png">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="o7 Debrief">
-<meta property="og:title" content="o7 Debrief - Commander Mission Debrief for Elite Dangerous">
-<meta property="og:description" content="Turn your Elite Dangerous journal into a shareable session debrief. Every figure is real, nothing is padded. Local-first, Windows, free and open source.">
-<meta property="og:url" content="https://ernster.dev/o7Debrief/">
+<meta property="og:title" content="Download o7 Debrief for Windows and Linux">
+<meta property="og:description" content="Download o7 Debrief: a per-user setup program for Windows 10 and 11 or a Flatpak for Linux. Free and LGPL-3.0 with no cloud, no account and no telemetry.">
+<meta property="og:url" content="https://ernster.dev/o7Debrief/download.html">
 <meta property="og:image" content="https://ernster.dev/o7Debrief/assets/social-card.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:type" content="image/png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="o7 Debrief - Commander Mission Debrief for Elite Dangerous">
-<meta name="twitter:description" content="Turn your Elite Dangerous journal into a shareable session debrief. Local-first, Windows, free and open source.">
+<meta name="twitter:title" content="Download o7 Debrief for Windows and Linux">
+<meta name="twitter:description" content="Download o7 Debrief: a per-user setup program for Windows 10 and 11 or a Flatpak for Linux. Free and LGPL-3.0 with no cloud, no account and no telemetry.">
 <meta name="twitter:image" content="https://ernster.dev/o7Debrief/assets/social-card.png">
 <meta name="twitter:image:alt" content="o7 Debrief - Commander Mission Debrief for Elite Dangerous">
 <meta property="og:image:alt" content="o7 Debrief - Commander Mission Debrief for Elite Dangerous">
 <meta property="og:locale" content="en_GB">
-<link rel="canonical" href="https://ernster.dev/o7Debrief/">
+<link rel="canonical" href="https://ernster.dev/o7Debrief/download.html">
 <meta name="author" content="Oliver Ernster">
 <meta name="application-name" content="o7 Debrief">
 <meta name="robots" content="index, follow">
@@ -60,6 +60,25 @@
   a { color: var(--accent-soft); text-decoration: none; }
   a:hover { color: var(--accent); }
   .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+  header.mini {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 28px 0 8px;
+  }
+  header.mini img { width: 44px; height: 44px; }
+  header.mini .name {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+  /* The short way round the site: the role pages, at the far end of the header.
+     On a phone the links drop beneath the name rather than crowding it. */
+  header.mini .mini-nav { margin-left: auto; display: flex; gap: 20px;
+    font-family: var(--mono); font-size: 14px; }
+  @media (max-width: 640px) { header.mini { flex-wrap: wrap; } }
 
   header.hero {
     text-align: center;
@@ -106,11 +125,6 @@
   .btn.primary:hover { background: var(--accent-soft); color: var(--bg); }
   .btn.ghost { background: var(--surface); color: var(--text); }
   .btn.ghost:hover { background: var(--edge); }
-  /* The donate button carries artwork before its label. The mark is sized in em
-     against the button's own type; at one line box the artwork could not be read,
-     so it takes 2.7em and the button is deliberately taller than a text-only one. */
-  .btn-donate { display: inline-flex; align-items: center; gap: 10px; }
-  .btn-donate img { display: block; height: 2.7em; width: auto; }
   .platform-note {
     margin-top: 18px;
     font-size: 13px;
@@ -278,122 +292,55 @@
   }
   footer .mono { font-family: var(--mono); }
 </style>
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "SoftwareApplication",
-      "@id": "https://ernster.dev/o7Debrief/#app",
-      "name": "o7 Debrief",
-      "alternateName": "Commander Mission Debrief",
-      "applicationCategory": "GameApplication",
-      "applicationSubCategory": "Elite Dangerous companion tool",
-      "operatingSystem": "Windows 10, Windows 11, Linux",
-      "url": "https://ernster.dev/o7Debrief/",
-      "downloadUrl": "https://github.com/oernster/o7Debrief/releases/latest",
-      "image": "https://ernster.dev/o7Debrief/assets/social-card.png",
-      "screenshot": "https://ernster.dev/o7Debrief/assets/screenshot.png",
-      "inLanguage": "en-GB",
-      "description": "A free, local-first Windows app that turns your Elite Dangerous Player Journal into a self-contained Commander Mission Debrief and session report. Every figure traces back to a real journal entry.",
-      "keywords": "Elite Dangerous, Commander Mission Debrief, session report, Player Journal, exploration, mining, trading, bounty hunting, exobiology, rank progress, Windows tray app, local-first, free, open source",
-      "featureList": [
-        "Live background watcher that follows the active Elite Dangerous Player Journal",
-        "One-shot debrief of your last session or your whole history to date",
-        "Every credit, jump and scan traced to a real journal entry",
-        "Self-contained HTML report plus a text version ready to paste onto Discord or Reddit",
-        "Honest Commander rank progress reporting",
-        "Ship swaps and purchases recorded as session events, naming the ship moved from and to",
-        "Completed missions and Operations named in the session log, with the Merc Coins an Operation pays tracked separately from credits",
-        "Clearer session log shown most recent first, with each row's icon showing the activity rather than the control mode",
-        "Every row states what the journal recorded, so an engineering roll names the blueprint, grade, module and engineer rather than repeating its category",
-        "Modules and blueprints reported in English rather than in the journal's internal tokens, decoded from a vocabulary held in configuration",
-        "Material trading at the raw, manufactured and encoded traders logged with both sides named and counted in the Trade section",
-        "Update check with download, skip and daily re-check that never installs anything without you choosing it",
-        "Per-user setup needing no administrator rights, which reports its progress and offers to close a running copy when you upgrade",
-        "Local-first with no cloud, no account and no telemetry"
-      ],
-      "author": {
-        "@type": "Person",
-        "name": "Oliver Ernster",
-        "url": "https://github.com/oernster"
-      },
-      "publisher": {
-        "@type": "Person",
-        "name": "Oliver Ernster",
-        "url": "https://github.com/oernster"
-      },
-      "license": "https://www.gnu.org/licenses/lgpl-3.0.html",
-      "isAccessibleForFree": true,
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "GBP"
-      }
-    },
-    {
-      "@type": "WebSite",
-      "@id": "https://ernster.dev/o7Debrief/#website",
-      "url": "https://ernster.dev/o7Debrief/",
-      "name": "o7 Debrief",
-      "description": "Turn your Elite Dangerous Player Journal into a self-contained Commander Mission Debrief and session report.",
-      "inLanguage": "en-GB",
-      "publisher": {
-        "@type": "Person",
-        "name": "Oliver Ernster",
-        "url": "https://github.com/oernster"
-      }
-    }
-  ]
-}
-</script>
 </head>
 <body>
   <div class="wrap">
 
-    <header class="hero">
-      <img class="logo" src="assets/o7Debrief.png" alt="o7 Debrief icon">
-      <h1>o7 Debrief</h1>
-      <p class="tagline">Commander Mission Debrief</p>
-      <p class="pitch">
-        A local-first app that turns your Elite Dangerous journal into a
-        self-contained mission debrief. Every figure traces back to a
-        real journal field. Nothing is estimated, inferred or padded.
-      </p>
-      <div class="cta">
-        <a class="btn primary" href="download.html">Download</a>
-        <a class="btn ghost" href="features.html">What it does</a>
-        <a class="btn ghost" href="example-report.html">View example report</a>
-        <a class="btn ghost" href="why.html">Why it exists</a>
-        <a class="btn ghost" href="https://github.com/oernster/o7Debrief">View on GitHub</a>
-      </div>
-      <p class="platform-note">Windows 10 and 11 and Linux as a Flatpak &middot; runs quietly from the system tray</p>
+    <header class="mini">
+      <a href="./"><img src="assets/o7Debrief.png" alt="o7 Debrief icon"></a>
+      <a href="./"><span class="name">o7 Debrief</span></a>
+      <nav class="mini-nav">
+        <a href="features.html">Features</a>
+        <a href="why.html">Why</a>
+        <a href="download.html">Download</a>
+      </nav>
     </header>
 
-    <section id="interface">
-      <h2>Three ways in</h2>
-      <div class="twoup">
-        <figure>
-          <img src="assets/home-screen.png" loading="lazy" alt="The o7 Debrief home screen showing the status line, the two debrief actions, recent reports and the Settings, About and Close buttons">
-          <figcaption>Left-click the tray icon for the home screen.</figcaption>
-        </figure>
-        <figure>
-          <img src="assets/tray-menu.png" loading="lazy" alt="The o7 Debrief tray menu: debrief the last session or the whole history to date, reopen recent reports, Settings, Help and Quit">
-          <figcaption>Right-click for the full menu.</figcaption>
-        </figure>
+    <section id="download">
+      <div class="eyebrow">Get o7Debrief</div>
+      <h2 class="section-title">Download o7Debrief</h2>
+      <p class="section-sub">Download the newest release with one click. Free and
+        LGPL-3.0, local-first software with no cloud, no account and no
+        telemetry.</p>
+      <span class="dl-version" id="dl-version">Version <!--VERSION-->2.6.0<!--/VERSION--></span>
+      <div class="downloads">
+        <div class="dl-card">
+          <div class="ico">🪟</div>
+          <h3>Windows</h3>
+          <p class="req">Windows 10 or 11, 64-bit</p>
+          <a class="btn primary" href="https://github.com/oernster/o7Debrief/releases/latest/download/o7DebriefSetup.exe">
+            Download for Windows</a>
+          <p class="meta" data-asset="o7DebriefSetup.exe">Setup program (.exe)</p>
+          <p class="meta">Windows may show a SmartScreen warning when you run this: <a href="/windows-smartscreen.html">here's why</a>.</p>
+          <p class="how">Run the setup: it installs per-user, so no administrator rights are needed. It shows its progress as it works and offers to close a running copy when you upgrade.</p>
+        </div>
+        <div class="dl-card">
+          <div class="ico">&#128039;</div>
+          <h3>Linux</h3>
+          <p class="req">Any distribution with Flatpak</p>
+          <a class="btn primary" href="https://github.com/oernster/o7Debrief/releases/latest/download/o7debrief.flatpak">
+            Download for Linux</a>
+          <p class="meta" data-asset="o7debrief.flatpak">Flatpak bundle (.flatpak)</p>
+          <p class="how">Install with <code>flatpak install o7debrief.flatpak</code>. On Ubuntu it has watched a real session with the game under Proton and opened the finished debrief in a browser on the host. Starting it at sign-in was broken in the Flatpak before this release and is fixed here; switch it on in Settings after installing, which a Flatpak cannot do for you.</p>
+        </div>
       </div>
-      <p class="caption">The third is simply launching o7 Debrief again. It does not start a second copy; the one already running opens its home screen, so the Start menu shortcut reaches the app rather than appearing to do nothing.</p>
-    </section>
-
-    <section id="support">
-      <div class="eyebrow">Support</div>
-      <h2 class="section-title">Supporting o7 Debrief</h2>
-      <p class="section-sub">o7 Debrief is free and stays free. There is no paid tier, no licence key
-        and no feature held back behind a donation. If it has saved you time or simply been useful, a
-        contribution supports its maintenance and continued development.</p>
-      <div class="cta">
-        <a class="btn ghost btn-donate" href="https://www.paypal.com/ncp/payment/5YTZFYSJG5Q42"><img src="donate.png" alt="">Donate</a>
-      </div>
+      <p class="dl-links">
+        <a id="dl-whats-new" href="https://github.com/oernster/o7Debrief/releases/latest">What's new in this release</a>
+        &nbsp;&middot;&nbsp;
+        <a href="https://github.com/oernster/o7Debrief/releases">All releases</a>
+        &nbsp;&middot;&nbsp;
+        <a href="https://github.com/oernster/o7Debrief">Source on GitHub</a>
+      </p>
     </section>
 
     <footer>
@@ -406,5 +353,36 @@
     </footer>
 
   </div>
+<script>
+    // The download buttons never go stale: each points at GitHub's releases/latest/download
+    // redirect, which always serves the newest release's asset (the asset names are version-free
+    // by design). This script only decorates the page with live details: the version chip and
+    // each installer's size, fetched from the GitHub API. If the call fails (offline,
+    // rate-limited), the static text above stands on its own: the version chip carries the
+    // version stamped into this page by stamp_version.py at the repository root, which reads
+    // the VERSION file that is the single source of truth.
+    (function () {
+        var api = 'https://api.github.com/repos/oernster/o7Debrief/releases/latest';
+        fetch(api).then(function (r) {
+            if (!r.ok) { throw new Error('release lookup failed'); }
+            return r.json();
+        }).then(function (rel) {
+            var version = (rel.tag_name || '').replace(/^v/, '');
+            if (version) {
+                document.getElementById('dl-version').textContent = 'Version ' + version;
+            }
+            if (rel.html_url) {
+                document.getElementById('dl-whats-new').href = rel.html_url;
+            }
+            (rel.assets || []).forEach(function (asset) {
+                var meta = document.querySelector('[data-asset="' + asset.name + '"]');
+                if (meta && asset.size) {
+                    var mb = (asset.size / (1024 * 1024)).toFixed(1);
+                    meta.textContent = meta.textContent + ' · ' + mb + ' MB';
+                }
+            });
+        }).catch(function () { /* The static page already says everything essential. */ });
+    })();
+</script>
 </body>
 </html>
