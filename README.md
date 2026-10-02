@@ -89,7 +89,7 @@ The setup program installs per-user, so it needs no administrator rights. It ins
 
 When o7 Debrief is already installed the window names the version you have, so an upgrade tells you what you are moving from as well as what you are moving to. If you asked it to start o7 Debrief when finished and that start does not happen, the window says so and stays open rather than closing on a launch that never occurred. Each step it takes is appended to `o7debrief-installer.log` in your temporary directory, so a setup run that goes wrong can be explained afterwards instead of guessed at.
 
-To run from source during development, see [DEVELOPMENT-README.md](DEVELOPMENT-README.md).
+To run from source during development, see [DEVELOPMENT.md](DEVELOPMENT.md).
 
 ## Test
 
@@ -119,7 +119,7 @@ On Linux, from a checkout with the virtual environment created:
 
 It writes its own manifest, launcher, desktop entry and metainfo, derives the icon set from the single master PNG, pre-downloads the wheels on the host so the sandboxed build is offline, then installs the app and produces `o7debrief.flatpak`. `./cleanup_flatpak.sh` removes only what that script produced, leaving the Windows build outputs alone.
 
-Build prerequisites and the development workflow are described in [DEVELOPMENT-README.md](DEVELOPMENT-README.md).
+Build prerequisites and the development workflow are described in [DEVELOPMENT.md](DEVELOPMENT.md).
 
 ## Architecture
 
