@@ -3,7 +3,7 @@
 
 This produces a self-contained GUI executable so that end users do NOT need a
 system-wide Python installation. It mirrors the Nuitka invocation style used by
-the author's other PySide6 desktop builds (see EDColonisationAsst/buildruntime.py)
+the author's other PySide6 desktop builds (see EDColonisationAsst/buildexe.py)
 and additionally embeds Windows PE version metadata (product name, versions,
 file description and copyright).
 
