@@ -83,7 +83,7 @@ ruff check .
 echo "EXIT=$LASTEXITCODE"
 ```
 
-The configuration exists because of those markers. ruff does not enable E402 by default, so out of the box it read all thirty-eight deliberate suppressions in the tree as unused directives and `ruff --fix` would have stripped them and re-sorted the imports they protect. The fix was to enable E402, which is the rule flake8 already enforces, so a clean run of either linter now means the same thing. Four files still carry a `RUF100` per-file ignore, because ruff's E402 tolerates a few statements before an import that flake8 does not (setting `QT_SCALE_FACTOR`, calling `pytest.importorskip`) and so calls those particular markers unnecessary. flake8 disagrees and flake8 is what the project enforces: remove them and it reports fifteen E402 errors. Take `ruff --fix` nowhere near those four files.
+The configuration exists because of those markers. ruff does not enable E402 by default, so out of the box it read all thirty-eight deliberate suppressions in the tree as unused directives and `ruff --fix` would have stripped them and re-sorted the imports they protect. The fix was to enable E402, which is the rule flake8 already enforces, so a clean run of either linter now means the same thing. Four files still carry a `RUF100` per-file ignore, because ruff's E402 tolerates a few statements before an import that flake8 does not (setting `QT_SCALE_FACTOR`, calling `pytest.importorskip`) and so calls seven of those markers unnecessary. flake8 disagrees and flake8 is what the project enforces: remove those seven markers and it reports an E402 error on each of the seven lines. Take `ruff --fix` nowhere near those four files.
 
 ## Build the executable
 
