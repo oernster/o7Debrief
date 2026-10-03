@@ -4,8 +4,8 @@ This adapter implements the application ``ReleaseSource`` port. It performs a
 single short, best-effort HTTPS GET against the GitHub releases API using only
 the standard library (``urllib``), so the otherwise offline-first app gains no
 third-party runtime dependency for one network call. Any failure (no network,
-a timeout, a non-2xx status or an unparseable body) yields None, so the
-update check is non-blocking and silent on failure.
+a timeout, a non-2xx status, a truncated body or an unparseable one) yields
+None, so the update check is non-blocking and silent on failure.
 
 The endpoint returns only a published, non-draft, non-prerelease release, so
 a tag pushed mid-development can never surface here. The release tag's
@@ -21,6 +21,7 @@ British spelling is used in comments. No em dashes appear anywhere.
 
 from __future__ import annotations
 
+import http.client
 import json
 import urllib.request
 from collections.abc import Callable
@@ -89,7 +90,9 @@ class GitHubReleaseSource:
             with self._opener(request, timeout=self._timeout_s) as response:
                 payload = response.read()
             data = json.loads(payload.decode(_ENCODING))
-        except (OSError, ValueError):
+        except (OSError, ValueError, http.client.HTTPException):
+            # HTTPException covers a body cut short (IncompleteRead), which is
+            # neither an OSError nor a ValueError.
             return None
         if not isinstance(data, dict):
             return None

@@ -12,7 +12,9 @@ British spelling is used in comments. No em dashes appear anywhere.
 from __future__ import annotations
 
 import os
+import re
 from collections.abc import Iterable
+from datetime import datetime
 from pathlib import Path
 
 __all__ = [
@@ -33,6 +35,17 @@ _STEAM_APP_ID_ELITE_DANGEROUS = "359320"
 
 # Glob and naming for journal files.
 _JOURNAL_GLOB = "Journal.*.log"
+# The names the game itself writes: the moment the run began, then the part
+# number of the file within that run. The stamp has two forms: the current
+# one ("2026-01-02T100000") and the one written before 2021 ("260102100000").
+_STAMP_GROUP = "stamp"
+_PART_GROUP = "part"
+_GAME_NAME = re.compile(
+    r"^Journal\.(?P<stamp>\d{4}-\d{2}-\d{2}T\d{6}|\d{12})\.(?P<part>\d+)\.log$"
+)
+_CURRENT_STAMP = "%Y-%m-%dT%H%M%S"
+_CURRENT_STAMP_MARK = "T"
+_LEGACY_STAMP = "%y%m%d%H%M%S"
 
 # Index of the most recent file once the list is sorted oldest to newest.
 _LATEST = -1
@@ -182,11 +195,42 @@ def get_journal_directory() -> Path:
     )
 
 
+def _game_order(path: Path) -> tuple[datetime, int] | None:
+    """Return the (run start, part) a game-written file name states, else None.
+
+    None means the game did not write this name: a copy beside the original,
+    a renamed file or a stamp that is not a real moment.
+    """
+    match = _GAME_NAME.match(path.name)
+    if match is None:
+        return None
+    stamp = match.group(_STAMP_GROUP)
+    stamp_format = _CURRENT_STAMP if _CURRENT_STAMP_MARK in stamp else _LEGACY_STAMP
+    try:
+        # Naive on purpose: the name states no zone and the moment is only
+        # compared with other names the same game wrote into the same folder.
+        started = datetime.strptime(stamp, stamp_format)  # noqa: DTZ007
+    except ValueError:
+        return None
+    return started, int(match.group(_PART_GROUP))
+
+
 def get_journal_files(journal_dir: Path) -> list[Path]:
-    """Return all ``Journal.*.log`` files sorted oldest to newest by mtime."""
+    """Return the journal files to read, oldest to newest.
+
+    The game names each file for the moment its run began, so where any file
+    carries such a name only those files are read, ordered by that moment and
+    the part number, with the modification time breaking a tie. A
+    modification time alone would make a restored or copied old journal the
+    newest; a copy read beside its original would count every event twice.
+    A folder holding no game-written name at all is still read, oldest first
+    by modification time, rather than reported as empty.
+    """
     files = list(journal_dir.glob(_JOURNAL_GLOB))
-    if not files:
-        return []
+    named = [(order, path) for path in files if (order := _game_order(path))]
+    if named:
+        named.sort(key=lambda item: (item[0], item[1].stat().st_mtime))
+        return [path for _, path in named]
     return sorted(files, key=lambda path: path.stat().st_mtime)
 
 

@@ -20,6 +20,7 @@ _LATEST_SESSION = [
     {"timestamp": "2026-06-15T20:05:00Z", "event": "FSDJump", "StarSystem": "Sol"},
     {"timestamp": "2026-06-15T20:30:00Z", "event": "Shutdown"},
 ]
+_CONTINUED = {"timestamp": "2026-06-15T20:06:00Z", "event": "Continued", "Part": 2}
 
 
 def test_read_latest_session_returns_only_the_most_recent(
@@ -91,6 +92,81 @@ def test_read_new_holds_a_partial_line_until_completed(
     assert [event.event_type for event in completed] == ["FSDJump"]
 
 
+_FIRST_RUN_FILE = "Journal.2026-06-15T200000.01.log"
+_NEXT_RUN_FILE = "Journal.2026-06-15T210000.01.log"
+_CONTINUATION_FILE = "Journal.2026-06-15T200000.02.log"
+
+
+def _line(event: dict) -> str:
+    return json.dumps(event) + "\n"
+
+
+def test_read_new_starts_a_new_latest_file_from_its_first_byte(
+    journal_dir_factory, write_journal_lines
+) -> None:
+    # A short menu-only run is tailed; the next run's file is already larger
+    # than the old offset at the next poll. Its opening lines must be read.
+    journal_dir = journal_dir_factory()
+    write_journal_lines(journal_dir, [_LATEST_SESSION[2]], name=_FIRST_RUN_FILE)
+    source = FileJournalSource(journal_dir)
+    _, offset = source.read_new(0)
+    write_journal_lines(journal_dir, _LATEST_SESSION * 2, name=_NEXT_RUN_FILE)
+
+    events, _ = source.read_new(offset)
+
+    assert [event.event_type for event in events] == [
+        "LoadGame",
+        "FSDJump",
+        "Shutdown",
+    ] * 2
+
+
+def test_read_new_finishes_the_old_file_before_its_continuation(
+    journal_dir_factory, write_journal_lines
+) -> None:
+    # The game rotates mid-run: lines land at the end of the old file, then a
+    # continuation file opens. Nothing written to either may be lost.
+    journal_dir = journal_dir_factory()
+    old = write_journal_lines(journal_dir, _LATEST_SESSION[:1], name=_FIRST_RUN_FILE)
+    source = FileJournalSource(journal_dir)
+    _, offset = source.read_new(0)
+    with open(old, "a", encoding="utf-8") as handle:
+        handle.write(_line(_LATEST_SESSION[1]))
+        # A last line with no newline is still the end of a finished file.
+        handle.write(json.dumps(_CONTINUED))
+    write_journal_lines(journal_dir, _LATEST_SESSION[2:], name=_CONTINUATION_FILE)
+
+    events, _ = source.read_new(offset)
+
+    assert [event.event_type for event in events] == [
+        "FSDJump",
+        "Continued",
+        "Shutdown",
+    ]
+
+
+def test_lines_that_cannot_be_read_are_counted_per_read(journal_dir_factory) -> None:
+    # A torn line and a line with no timestamp are each a line not read; a
+    # blank line held nothing. The count belongs to one read, so a second
+    # read starts again rather than adding to it.
+    journal_dir = journal_dir_factory()
+    torn = '{"timestamp": "2026-06-15T20:01:00Z", "event": "LoadG\n'
+    no_time = json.dumps({"event": "FSDJump"}) + "\n"
+    (journal_dir / _FIRST_RUN_FILE).write_text(
+        _line(_LATEST_SESSION[0]) + torn + "\n" + no_time + _line(_LATEST_SESSION[2]),
+        encoding="utf-8",
+    )
+    source = FileJournalSource(journal_dir)
+    assert source.unreadable_lines() == 0
+
+    events = source.read_latest_session()
+    assert [event.event_type for event in events] == ["LoadGame", "Shutdown"]
+    assert source.unreadable_lines() == 2
+
+    assert len(list(source.iter_event_batches())) == 1
+    assert source.unreadable_lines() == 2
+
+
 def test_read_new_without_a_journal_file_is_empty(journal_dir_factory) -> None:
     journal_dir = journal_dir_factory()
 
@@ -135,14 +211,14 @@ def test_read_latest_session_only_reads_back_to_the_session_boundary(
     os.utime(middle_path, (base + step, base + step))
     os.utime(latest_path, (base + step + step, base + step + step))
 
-    real_parse_file = fjs.parse_file
+    real_read_lines = fjs.read_lines
     parsed: list[Path] = []
 
     def spy(path):
         parsed.append(Path(path))
-        return real_parse_file(path)
+        return real_read_lines(path)
 
-    monkeypatch.setattr(fjs, "parse_file", spy)
+    monkeypatch.setattr(fjs, "read_lines", spy)
 
     events = FileJournalSource(journal_dir).read_latest_session()
 

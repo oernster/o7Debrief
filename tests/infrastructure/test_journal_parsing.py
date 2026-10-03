@@ -11,7 +11,11 @@ fixture.
 from __future__ import annotations
 
 from o7debrief.infrastructure.journal.event_mapper import map_record
-from o7debrief.infrastructure.journal.line_parser import parse_line, parse_lines
+from o7debrief.infrastructure.journal.line_parser import (
+    parse_line,
+    parse_lines,
+    read_lines,
+)
 from o7debrief.infrastructure.journal.tail_reader import (
     EMPTY_OFFSET,
     read_new_bytes,
@@ -22,6 +26,8 @@ _EVENT = "LoadGame"
 # A first line long enough that a truncated read leaves a clear remainder.
 _FIRST_LINE = b'{"timestamp": "2026-08-14T12:00:00Z", "event": "LoadGame"}\n'
 _SECOND_LINE = b'{"timestamp": "2026-08-14T12:01:00Z", "event": "Shutdown"}\n'
+# The UTF-8 byte-order mark an editor may write at the start of a file.
+_BOM = b"\xef\xbb\xbf"
 
 
 def test_a_blank_line_is_not_an_event() -> None:
@@ -42,6 +48,22 @@ def test_valid_json_that_is_not_an_object_is_skipped() -> None:
 
 def test_a_json_object_is_returned() -> None:
     assert parse_line('{"event": "LoadGame"}') == {"event": _EVENT}
+
+
+def test_a_byte_order_mark_does_not_cost_the_first_line(tmp_path) -> None:
+    """An editor that re-saves a journal may prefix a BOM; the line survives.
+
+    Both read paths are pinned: the cold read of a whole file and the live tail
+    from byte zero, since each decodes the file on its own.
+    """
+    journal = tmp_path / "Journal.log"
+    journal.write_bytes(_BOM + _FIRST_LINE + _SECOND_LINE)
+
+    cold = parse_lines(read_lines(journal))
+    tailed = parse_lines(read_new_bytes(journal, EMPTY_OFFSET, b"").complete_lines)
+
+    for records in (cold, tailed):
+        assert [record["event"] for record in records] == [_EVENT, "Shutdown"]
 
 
 def test_parsing_many_lines_drops_only_the_unusable_ones() -> None:

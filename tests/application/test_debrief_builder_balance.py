@@ -10,7 +10,10 @@ change that was never stated apart from a session that broke even.
 
 from __future__ import annotations
 
-from o7debrief.application.services.debrief_builder import DebriefBuilder
+from o7debrief.application.services.debrief_builder import (
+    DebriefBuilder,
+    unreadable_balance_fields,
+)
 from tests.application.fakes import commander, event, spec
 
 # Balances taken from a real session: the commander ended it twenty million
@@ -49,6 +52,34 @@ def test_a_single_balance_reading_leaves_the_change_unread() -> None:
 
     assert result.net_credits_delta is None
     assert result.credits_balance.value == _OPENING_BALANCE
+
+
+def test_a_balance_that_is_not_an_amount_is_no_reading() -> None:
+    """A negative balance is left out rather than ending the whole debrief.
+
+    Only the readings that are amounts remain, so the change is measured
+    between those and the odd one is named by ``unreadable_balance_fields``.
+    """
+    events = (
+        event("LoadGame", 0, Credits=_OPENING_BALANCE),
+        event("LoadGame", 10, Credits=-1),
+        event("LoadGame", 20, Credits=_CLOSING_BALANCE),
+        event("Shutdown", 30),
+    )
+
+    result = DebriefBuilder(spec()).build(commander(), events, ())
+
+    assert result.credits_balance.value == _CLOSING_BALANCE
+    assert result.net_credits_delta == _CLOSING_BALANCE - _OPENING_BALANCE
+    assert unreadable_balance_fields(events) == (("LoadGame", "Credits"),)
+
+
+def test_an_absent_balance_is_not_an_unreadable_one() -> None:
+    """Absence is an answer: no Credits field is no reading, not a fault."""
+    events = (event("LoadGame", 0), event("LoadGame", 1, Credits=True))
+
+    assert unreadable_balance_fields(events[:1]) == ()
+    assert unreadable_balance_fields(events) == (("LoadGame", "Credits"),)
 
 
 def test_no_balance_reading_leaves_both_the_level_and_the_change_unread() -> None:

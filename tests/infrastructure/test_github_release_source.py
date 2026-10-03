@@ -6,6 +6,7 @@ missing-field, wrong-shape and failure paths without touching the network.
 
 from __future__ import annotations
 
+import http.client
 import json
 import urllib.error
 from typing import Any, Self
@@ -13,6 +14,8 @@ from typing import Any, Self
 from o7debrief.infrastructure.update.github_release_source import GitHubReleaseSource
 
 _API_URL = "https://api.github.com/repos/o/o7Debrief/releases/latest"
+# The body length a truncating server announced before sending less.
+_DECLARED_LENGTH = 4096
 
 
 class _FakeResponse:
@@ -146,5 +149,23 @@ def test_returns_none_when_the_request_fails() -> None:
         raise urllib.error.URLError("no network")
 
     source = GitHubReleaseSource(_API_URL, opener=failing_opener)
+
+    assert source.latest_release() is None
+
+
+class _TruncatedResponse(_FakeResponse):
+    """A response whose server declared more bytes than it sent."""
+
+    def read(self) -> bytes:
+        raise http.client.IncompleteRead(self._payload, _DECLARED_LENGTH)
+
+
+def test_returns_none_when_the_body_is_cut_short() -> None:
+    """A truncated body raises neither OSError nor ValueError; still None."""
+
+    def truncating_opener(request: object, timeout: float) -> _FakeResponse:
+        return _TruncatedResponse(b'{"tag_')
+
+    source = GitHubReleaseSource(_API_URL, opener=truncating_opener)
 
     assert source.latest_release() is None

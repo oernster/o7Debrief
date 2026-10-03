@@ -36,7 +36,7 @@ from o7debrief.domain.value_objects.credits import Credits
 from o7debrief.domain.value_objects.event_time import EventTime
 from o7debrief.domain.value_objects.system_name import SystemName
 
-__all__ = ["DebriefBuilder", "HistoryCollection"]
+__all__ = ["DebriefBuilder", "HistoryCollection", "unreadable_balance_fields"]
 
 # A session that never left one system still visited it. Used only when the
 # session named no system of its own and a carried-forward reading supplies it.
@@ -113,8 +113,40 @@ def _balance_readings(
         for event in events
         if event.event_type in _BALANCE_EVENTS
         for value in (event.get(_BALANCE_FIELD),)
-        if isinstance(value, int) and not isinstance(value, bool)
+        if _is_amount(value)
     )
+
+
+def _is_amount(value: object) -> bool:
+    """Return whether a stated balance is an amount ``Credits`` can hold.
+
+    The floor is the domain's own, read from ``Credits.zero()`` rather than
+    restated, so the two cannot disagree about what a balance may be.
+    """
+    if isinstance(value, bool) or not isinstance(value, int):
+        return False
+    return value >= Credits.zero().value
+
+
+def unreadable_balance_fields(
+    events: tuple[RawEvent, ...],
+) -> tuple[tuple[str, str], ...]:
+    """Return the (event, field) pairs that stated a balance that is no amount.
+
+    Such a reading is left out of the balance and the change rather than
+    ending the whole debrief, which is what a negative figure once did; this
+    names it so the report can say a reading was set aside. An event with no
+    balance field at all is absent rather than unreadable and is not named.
+    Each pair appears once, however many events carried it.
+    """
+    found = {
+        (event.event_type, _BALANCE_FIELD)
+        for event in events
+        if event.event_type in _BALANCE_EVENTS
+        and _BALANCE_FIELD in dict(event.fields)
+        and not _is_amount(event.get(_BALANCE_FIELD))
+    }
+    return tuple(sorted(found))
 
 
 def _latest_balance(
@@ -279,20 +311,28 @@ class DebriefBuilder:
         commander: CommanderId,
         collection: HistoryCollection,
         rank_progression: tuple[RankDelta, ...],
+        level_events: tuple[RawEvent, ...] | None = None,
     ) -> SessionDebrief:
         """Assemble an all-history debrief from a folded HistoryCollection.
 
         Mirrors ``build`` but takes the pre-folded moments, state events and
         window endpoints, so it never needs the whole event history in hand.
+
+        ``level_events`` are the state events the closing ship and the balance
+        are read from, defaulting to all of them. A history holding several
+        commanders passes only the named commander's, so no level spans two.
+        The hull flown at each death still comes from every state event,
+        because a death is stamped with the ship of whoever died.
         """
+        levels = collection.state_events if level_events is None else level_events
         window = window_of(collection.window_events)
         history = ship_history(collection.state_events)
-        ship_type, ship_name = history.latest()
+        ship_type, ship_name = ship_history(levels).latest()
         endpoints = collection.location.endpoints()
         start_system = None if endpoints is None else SystemName(endpoints[0])
         end_system = None if endpoints is None else SystemName(endpoints[1])
         visited = None if endpoints is None else collection.location.distinct_count()
-        balance, balance_at = _latest_balance(collection.state_events)
+        balance, balance_at = _latest_balance(levels)
         return assemble(
             commander,
             window,
@@ -306,5 +346,5 @@ class DebriefBuilder:
             start_system=start_system,
             end_system=end_system,
             systems_visited=visited,
-            net_credits_delta=_net_change(collection.state_events),
+            net_credits_delta=_net_change(levels),
         )

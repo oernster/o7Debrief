@@ -24,13 +24,15 @@ from pathlib import Path
 from o7debrief.domain.aggregation.session_bracketer import SHUTDOWN, latest_session
 from o7debrief.domain.model.raw_event import RawEvent
 from o7debrief.infrastructure.journal.event_mapper import map_records
-from o7debrief.infrastructure.journal.line_parser import parse_file, parse_lines
+from o7debrief.infrastructure.journal.line_parser import parse_lines, read_lines
 from o7debrief.infrastructure.journal.paths import (
     get_journal_files,
     get_latest_journal_file,
 )
 from o7debrief.infrastructure.journal.tail_reader import (
+    EMPTY_OFFSET,
     NO_PARTIAL,
+    finished_lines,
     read_new_bytes,
 )
 
@@ -65,16 +67,31 @@ class FileJournalSource:
     def __init__(self, directory: Path | str) -> None:
         self._directory = Path(directory)
         self._partial: bytes = NO_PARTIAL
+        # The file the tail offset belongs to; None before the first read.
+        self._tail_path: Path | None = None
+        # Lines the latest read held that yielded no event (see the port).
+        self._unreadable = 0
 
     def _all_files(self) -> list[Path]:
         """Return every journal file in the directory, oldest to newest."""
         return get_journal_files(self._directory)
 
+    def _read_file(self, path: Path) -> tuple[RawEvent, ...]:
+        """Parse and map one file, counting the lines that yielded no event.
+
+        A blank line held nothing, so it is not counted; every other line
+        that did not become an event (torn, not an object, no usable
+        timestamp) is, because whatever it recorded is missing.
+        """
+        lines = read_lines(path)
+        events = map_records(parse_lines(lines))
+        held = sum(1 for line in lines if line.strip())
+        self._unreadable += held - len(events)
+        return events
+
     def _events_in_file(self, path: Path) -> tuple[RawEvent, ...]:
         """Parse and map one journal file's events, ordered by event-time."""
-        events = list(map_records(parse_file(path)))
-        events.sort(key=_by_time)
-        return tuple(events)
+        return tuple(sorted(self._read_file(path), key=_by_time))
 
     def read_all(self) -> tuple[RawEvent, ...]:
         """Return every event across all journal files, in time order.
@@ -83,6 +100,7 @@ class FileJournalSource:
         all-history debrief; everyday paths use ``read_latest_session`` or
         ``iter_event_batches`` to stay bounded.
         """
+        self._unreadable = 0
         events: list[RawEvent] = []
         for path in self._all_files():
             events.extend(self._events_in_file(path))
@@ -96,6 +114,7 @@ class FileJournalSource:
         event history is never resident in memory at once. Each batch is
         ordered by event-time; the caller orders across batches if it needs to.
         """
+        self._unreadable = 0
         for path in self._all_files():
             yield self._events_in_file(path)
 
@@ -109,6 +128,7 @@ class FileJournalSource:
         history, so a debrief stays bounded by the size of the current session
         rather than the size of the journal folder.
         """
+        self._unreadable = 0
         return latest_session(self._read_back_to_latest_session())
 
     def _read_back_to_latest_session(self) -> tuple[RawEvent, ...]:
@@ -122,12 +142,20 @@ class FileJournalSource:
         collected: list[RawEvent] = []
         shutdowns_seen = 0
         for path in reversed(self._all_files()):
-            events = map_records(parse_file(path))
+            events = self._read_file(path)
             collected.extend(events)
             shutdowns_seen += sum(1 for event in events if event.event_type == SHUTDOWN)
             if shutdowns_seen >= _SHUTDOWNS_TO_BOUND_LATEST:
                 break
         return tuple(collected)
+
+    def unreadable_lines(self) -> int:
+        """Return how many lines the latest read could not turn into events.
+
+        Covers every file that read opened, so for the latest session it can
+        include a line from the earlier run sharing a file with it.
+        """
+        return self._unreadable
 
     def read_new(self, since_offset: int) -> tuple[tuple[RawEvent, ...], int]:
         """Return events appended to the latest file since ``since_offset``.
@@ -136,13 +164,26 @@ class FileJournalSource:
         the instance so a line read mid-write is completed on the next call.
         Returns the new events and the byte offset to resume from. When there
         is no journal file yet, returns no events and the offset unchanged.
+
+        The offset belongs to one file, so the file is remembered with it.
+        When a newer file has appeared since the last call (a new game run or
+        a mid-run rotation), the rest of the old file is read first and the new
+        one from its first byte. A size check cannot tell this on its own: a
+        new file already larger than the old offset would be read from the
+        middle, losing its opening lines.
         """
         latest = get_latest_journal_file(self._directory)
         if latest is None:
             return (), since_offset
 
-        result = read_new_bytes(latest, since_offset, self._partial)
+        lines: tuple[str, ...] = ()
+        offset = since_offset
+        if self._tail_path is not None and self._tail_path != latest:
+            finished = read_new_bytes(self._tail_path, since_offset, self._partial)
+            lines = finished_lines(finished)
+            offset, self._partial = EMPTY_OFFSET, NO_PARTIAL
+        self._tail_path = latest
+        result = read_new_bytes(latest, offset, self._partial)
         self._partial = result.new_partial
-        records = parse_lines(result.complete_lines)
-        events = map_records(records)
+        events = map_records(parse_lines(lines + result.complete_lines))
         return events, result.new_offset

@@ -41,3 +41,13 @@ class JournalSource(Protocol):
         every event in memory at once.
         """
         ...
+
+    def unreadable_lines(self) -> int:
+        """Return how many lines the latest read could not turn into events.
+
+        Counts the lines of the files read by the most recent
+        ``read_latest_session`` or full pass of ``iter_event_batches`` that
+        held something yet yielded no event: a torn line or one without a
+        usable timestamp. Read it straight after the read it describes.
+        """
+        ...

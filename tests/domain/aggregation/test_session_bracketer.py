@@ -5,6 +5,8 @@ from __future__ import annotations
 import pytest
 
 from o7debrief.domain.aggregation.session_bracketer import (
+    CONTINUED,
+    FILEHEADER,
     LOAD_GAME,
     SHUTDOWN,
     latest_session,
@@ -15,8 +17,86 @@ from o7debrief.domain.model.raw_event import RawEvent
 from o7debrief.domain.value_objects.event_time import EventTime
 
 
-def _ev(event_type: str, sec: int) -> RawEvent:
-    return RawEvent(event_type, EventTime.parse(f"2024-01-01T10:00:{sec:02d}Z"), ())
+def _ev(event_type: str, sec: int, **fields: object) -> RawEvent:
+    return RawEvent(
+        event_type,
+        EventTime.parse(f"2024-01-01T10:00:{sec:02d}Z"),
+        tuple(sorted(fields.items())),
+    )
+
+
+def test_a_crashed_run_never_bleeds_into_the_next_one() -> None:
+    # Run A ends cleanly; run B crashes with no Shutdown; run C ends cleanly.
+    # Every game launch opens a new file with a Fileheader, so C starts there
+    # and B's mission must not be debriefed as C's.
+    events = (
+        _ev(FILEHEADER, 0, part=1),
+        _ev(LOAD_GAME, 1),
+        _ev(SHUTDOWN, 2),  # run A ends cleanly
+        _ev(FILEHEADER, 3, part=1),  # run B begins
+        _ev(LOAD_GAME, 4),
+        _ev("MissionCompleted", 5),  # then B crashes
+        _ev(FILEHEADER, 6, part=1),  # run C begins
+        _ev(LOAD_GAME, 7),
+        _ev("Bounty", 8),
+        _ev(SHUTDOWN, 9),
+    )
+    result = latest_session(events)
+    assert [e.event_type for e in result] == [
+        FILEHEADER,
+        LOAD_GAME,
+        "Bounty",
+        SHUTDOWN,
+    ]
+
+
+def test_a_crashed_run_never_bleeds_into_a_run_still_in_progress() -> None:
+    events = (
+        _ev(FILEHEADER, 0, part=1),
+        _ev(LOAD_GAME, 1),
+        _ev("MissionCompleted", 2),  # the first run crashes
+        _ev(FILEHEADER, 3, part=1),
+        _ev(LOAD_GAME, 4),
+        _ev("Bounty", 5),
+    )
+    result = latest_session(events)
+    assert [e.event_type for e in result] == [FILEHEADER, LOAD_GAME, "Bounty"]
+
+
+def test_a_header_stating_no_part_still_opens_a_run() -> None:
+    # A header that does not number its part is read as a launch: missing a
+    # crash boundary merges two runs, which is the worse of the two errors.
+    events = (
+        _ev(FILEHEADER, 0),
+        _ev("MissionCompleted", 1),
+        _ev(FILEHEADER, 2, part=True),
+        _ev("Bounty", 3),
+    )
+    assert [e.event_type for e in latest_session(events)] == [FILEHEADER, "Bounty"]
+
+
+def test_a_continuation_file_stays_inside_its_run() -> None:
+    # A long run rotates into a new part file: the old one ends in Continued
+    # and the new one opens with a Fileheader whose part is past the first.
+    # Neither signal alone may split the run, so each is tested on its own.
+    by_part = (
+        _ev(FILEHEADER, 0, part=1),
+        _ev(LOAD_GAME, 1),
+        _ev("FSDJump", 2),
+        _ev(FILEHEADER, 3, part=2),
+        _ev("Bounty", 4),
+        _ev(SHUTDOWN, 5),
+    )
+    by_continued = (
+        _ev(FILEHEADER, 0, part=1),
+        _ev(LOAD_GAME, 1),
+        _ev(CONTINUED, 2, Part=2),
+        _ev(FILEHEADER, 3),
+        _ev("Bounty", 4),
+        _ev(SHUTDOWN, 5),
+    )
+    for events in (by_part, by_continued):
+        assert latest_session(events) == events
 
 
 def test_empty_input_returns_empty() -> None:

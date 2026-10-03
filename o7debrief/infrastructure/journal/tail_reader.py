@@ -16,7 +16,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-__all__ = ["EMPTY_OFFSET", "NO_PARTIAL", "TailResult", "read_new_bytes"]
+__all__ = [
+    "EMPTY_OFFSET",
+    "NO_PARTIAL",
+    "TailResult",
+    "finished_lines",
+    "read_new_bytes",
+]
 
 # A fresh read starts at byte zero with no carried-over partial line.
 EMPTY_OFFSET = 0
@@ -87,6 +93,15 @@ def _decode_complete(parts: list[bytes]) -> tuple[str, ...]:
         if text:
             lines.append(text)
     return tuple(lines)
+
+
+def finished_lines(result: TailResult) -> tuple[str, ...]:
+    """Return every line of a read whose file will not grow again.
+
+    A file the game has moved on from is finished, so an unterminated last
+    line is the end of it rather than a line still being written.
+    """
+    return result.complete_lines + _decode_complete([result.new_partial])
 
 
 def read_new_bytes(

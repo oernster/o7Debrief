@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING
 from o7debrief.application.dto.rank_snapshot import RankSnapshot
 from o7debrief.application.dto.render_request import RenderRequest
 from o7debrief.application.errors import ApplicationError
+from o7debrief.application.services.debrief_builder import unreadable_balance_fields
 from o7debrief.application.services.field_diagnostics import missing_currency_fields
 from o7debrief.application.services.location_state import (
     LocationHistory,
@@ -78,6 +79,9 @@ class OneShotDebriefService:
         ``request`` overrides the default formats and output directory.
         """
         events = self._journal_source.read_latest_session()
+        # Taken before anything else reads the journal, since a later pass
+        # (the carried system) would replace it.
+        unreadable_lines = self._journal_source.unreadable_lines()
         commander = self._resolve_commander(events, commander_hint)
         snapshot = self._rank_store.load(commander)
         start_tiers, start_pcts = _snapshot_starts(snapshot)
@@ -86,7 +90,10 @@ class OneShotDebriefService:
             commander, events, deltas, self._carried_system(events)
         )
         view = self._presenter.present(
-            debrief, missing_currency_fields(events, self._spec)
+            debrief,
+            missing_currency_fields(events, self._spec),
+            unreadable_fields=unreadable_balance_fields(events),
+            unreadable_lines=unreadable_lines,
         )
         fresh = _fresh_snapshot(commander, deltas, end_pcts, self._clock.now_utc())
         self._rank_store.save(commander, fresh)
@@ -110,13 +117,22 @@ class OneShotDebriefService:
         collection = self._debrief_builder.collect_history(
             self._journal_source.iter_event_batches()
         )
-        events = collection.state_events
-        commander = self._resolve_commander(events, commander_hint)
+        unreadable_lines = self._journal_source.unreadable_lines()
+        commander = self._resolve_commander(collection.state_events, commander_hint)
+        # Ranks, ship and balance are levels of one commander, so a journal
+        # holding several is read for the named one only.
+        events = self._rank_analyzer.events_of(collection.state_events, commander)
         snapshot = self._rank_store.load(commander)
         start_tiers, start_pcts = _snapshot_starts(snapshot)
         deltas, _end_pcts = self._rank_analyzer.analyse(events, start_tiers, start_pcts)
-        debrief = self._debrief_builder.build_collected(commander, collection, deltas)
-        view = self._presenter.present(debrief)
+        debrief = self._debrief_builder.build_collected(
+            commander, collection, deltas, level_events=events
+        )
+        view = self._presenter.present(
+            debrief,
+            unreadable_fields=unreadable_balance_fields(events),
+            unreadable_lines=unreadable_lines,
+        )
         # The request says the view covers the whole journal, which is what
         # sends it down the paged path rather than the one-file one.
         chosen = replace(request or self._default_request(), history=True)

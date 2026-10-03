@@ -8,28 +8,17 @@ from o7debrief.application.dto.preferences import FORMAT_MARKDOWN, Preferences
 from o7debrief.application.dto.rank_snapshot import RankSnapshot
 from o7debrief.application.dto.render_request import RenderRequest
 from o7debrief.application.errors import ApplicationError
-from o7debrief.application.services.debrief_builder import DebriefBuilder
-from o7debrief.application.services.debrief_export_service import (
-    DebriefExportService,
-)
-from o7debrief.application.services.debrief_presenter import DebriefPresenter
-from o7debrief.application.services.one_shot_debrief_service import (
-    OneShotDebriefService,
-)
-from o7debrief.application.services.rank_analyzer import RankAnalyzer
 from tests.application.fakes import (
     FakeExporter,
-    FakeJournalSource,
     FakePreferencesStore,
     FakeRankStore,
-    FixedClock,
     commander,
     event,
-    number_format,
-    spec,
 )
-
-_CLOCK_ISO = "2026-06-15T12:00:00Z"
+from tests.application.service_builders import CLOCK_ISO
+from tests.application.service_builders import (
+    build_one_shot_service as _build_service,
+)
 
 
 def _session_events():
@@ -56,49 +45,6 @@ def _history_events():
     )
 
 
-class _RecordingSink:
-    """A minimal sink returning a deterministic path per write."""
-
-    def __init__(self) -> None:
-        self.writes: list[tuple[str, bytes, str, str]] = []
-
-    def write(
-        self, name: str, content: bytes, suffix: str, output_dir: str = ""
-    ) -> str:
-        self.writes.append((name, content, suffix, output_dir))
-        return f"{name}.{suffix}"
-
-
-def _build_service(
-    *,
-    latest=(),
-    all_events=(),
-    event_batches=None,
-    store: FakeRankStore,
-    exporters,
-    preferences_store=None,
-):
-    source = FakeJournalSource(
-        latest=latest, all_events=all_events, event_batches=event_batches
-    )
-    the_spec = spec()
-    return OneShotDebriefService(
-        journal_source=source,
-        debrief_builder=DebriefBuilder(the_spec),
-        presenter=DebriefPresenter(the_spec, number_format(), app_version="1.2.3"),
-        export_service=DebriefExportService(
-            exporters=exporters,
-            sink=_RecordingSink(),
-            clock=FixedClock(_CLOCK_ISO),
-        ),
-        preferences_store=preferences_store or FakePreferencesStore(),
-        rank_store=store,
-        rank_analyzer=RankAnalyzer(),
-        clock=FixedClock(_CLOCK_ISO),
-        spec=the_spec,
-    )
-
-
 def test_debrief_last_session_defaults_to_the_html_format() -> None:
     store = FakeRankStore()
     md = FakeExporter("md", b"# debrief")
@@ -120,7 +66,7 @@ def test_debrief_last_session_defaults_to_the_html_format() -> None:
     assert saved_fid == "F1234"
     assert snapshot.tiers == (("combat", 4),)
     assert snapshot.pcts == (("combat", 15),)
-    assert snapshot.captured_iso == _CLOCK_ISO
+    assert snapshot.captured_iso == CLOCK_ISO
 
 
 def test_debrief_last_session_honours_the_markdown_preference() -> None:

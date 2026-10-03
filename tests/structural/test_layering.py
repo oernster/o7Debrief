@@ -13,7 +13,9 @@ imports of one o7debrief layer from another:
     ui              may import none of {domain, infrastructure}
 
 Imports nested under ``if TYPE_CHECKING:`` are ignored, since they carry no
-runtime dependency. British spelling is used in comments. No em dashes appear.
+runtime dependency. A dynamic import (``importlib.import_module`` or
+``__import__``) would carry one past every rule here, so a layer module may not
+use either. British spelling is used in comments. No em dashes appear.
 """
 
 from __future__ import annotations
@@ -35,6 +37,10 @@ FORBIDDEN: dict[str, frozenset[str]] = {
 
 # The import root of the package under test.
 PACKAGE = "o7debrief"
+
+# The module and the callables that import a module named by a string.
+DYNAMIC_IMPORTER = "importlib"
+DYNAMIC_IMPORT_CALLS = frozenset({"import_module", "__import__"})
 
 
 def _package_root() -> Path:
@@ -138,6 +144,66 @@ def _is_type_checking_test(test: ast.expr) -> bool:
     if isinstance(test, ast.Name) and test.id == "TYPE_CHECKING":
         return True
     return isinstance(test, ast.Attribute) and test.attr == "TYPE_CHECKING"
+
+
+def _dynamic_imports_in(tree: ast.AST) -> set[str]:
+    """Return every way a module could import by name at run time.
+
+    An import resolved from a string is invisible to the rule above: the
+    dotted name is data, not an import statement. Rather than chase the string
+    (an alias of ``import_module`` or a computed name defeats that), a layer
+    module may not hold the means at all: no ``importlib`` itself, no
+    ``import_module`` taken from it and no ``__import__``. The resource and
+    metadata submodules of ``importlib`` import nothing and stay allowed.
+    """
+    found: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            found.update(
+                alias.name for alias in node.names if alias.name == DYNAMIC_IMPORTER
+            )
+        elif isinstance(node, ast.ImportFrom) and node.module == DYNAMIC_IMPORTER:
+            found.update(
+                f"{DYNAMIC_IMPORTER}.{alias.name}"
+                for alias in node.names
+                if alias.name in DYNAMIC_IMPORT_CALLS
+            )
+        elif isinstance(node, ast.Name) and node.id in DYNAMIC_IMPORT_CALLS:
+            found.add(node.id)
+    return found
+
+
+def test_no_layer_imports_by_name_at_run_time() -> None:
+    """No layer module can reach another layer through a dynamic import."""
+    root = _package_root()
+    violations: list[str] = []
+    for path in _iter_modules(root):
+        if _layer_of(path, root) is None:
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for found in sorted(_dynamic_imports_in(tree)):
+            violations.append(f"{path.relative_to(root)} uses {found}")
+
+    assert not violations, "Dynamic imports in a layer:\n" + "\n".join(violations)
+
+
+# The bypasses the static rule let through, planted as source and parsed. A
+# guard that has never been seen to fail is not yet a guard.
+_PLANTED_DYNAMIC_IMPORTS = (
+    'import importlib\nimportlib.import_module("o7debrief.infrastructure.x")',
+    'from importlib import import_module as load\nload("o7debrief.domain")',
+    '__import__("o7debrief.domain.errors")',
+)
+
+
+def test_a_planted_dynamic_import_is_caught() -> None:
+    for source in _PLANTED_DYNAMIC_IMPORTS:
+        assert _dynamic_imports_in(ast.parse(source)), source
+
+
+def test_importlib_submodules_that_import_nothing_pass() -> None:
+    source = "from importlib import resources\nimport importlib.metadata"
+    assert not _dynamic_imports_in(ast.parse(source))
 
 
 def test_layer_dependencies_are_respected() -> None:

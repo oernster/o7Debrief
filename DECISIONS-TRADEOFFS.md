@@ -140,16 +140,21 @@ installed as a Flatpak is granted read-only.
 
 ### A session is bracketed by Shutdown
 
-The latest session is the run ending at the last Shutdown, starting just
-after the one before. A run with no Shutdown at the end (the game crashed)
-runs to the end of the log. Every LoadGame inside the run stays in it.
+The latest session is the run ending at the last Shutdown. It starts at the
+later of two boundaries: just after the Shutdown before it and the Fileheader
+of the newest game launch. A run with no Shutdown at the end (the game
+crashed) runs to the end of the log. Every LoadGame inside the run stays in it.
 
 - **Rather than:** anchoring on LoadGame, which the game fires on every return
   to the main menu and so would shrink a run to its final leg; time-window
-  guesses.
-- **Gains:** a previous session can never bleed into the current one; a run
-  that touched the menu stays whole.
-- **Costs:** none recorded.
+  guesses; Shutdown alone, which merged a crashed run into the run after it.
+- **Gains:** a previous session never bleeds into the current one, crashed or
+  not; a run that touched the menu stays whole.
+- **Costs:** a file the game rotated to mid-run also opens with a Fileheader,
+  so the rule has to tell a continuation from a launch: the old file ends in
+  Continued and the new header numbers its part past the first. Either signal
+  keeps the run whole. A header stating neither is read as a launch, because
+  merging two runs is the worse of the two errors.
 
 ### Two ways in, one reducer
 

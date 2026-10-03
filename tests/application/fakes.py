@@ -94,7 +94,9 @@ class FakeJournalSource:
         latest: tuple[RawEvent, ...] = (),
         new_batches: tuple[tuple[tuple[RawEvent, ...], int], ...] = (),
         event_batches: tuple[tuple[RawEvent, ...], ...] | None = None,
+        unreadable_lines: int = 0,
     ) -> None:
+        self._unreadable_lines = unreadable_lines
         self._all = all_events
         self._latest = latest
         self._new_batches = list(new_batches)
@@ -123,6 +125,9 @@ class FakeJournalSource:
         if self._all:
             return iter((self._all,))
         return iter(())
+
+    def unreadable_lines(self) -> int:
+        return self._unreadable_lines
 
 
 class FakeReleaseSource:

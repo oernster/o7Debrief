@@ -16,10 +16,26 @@ from o7debrief.domain.model.raw_event import RawEvent
 from o7debrief.domain.value_objects.event_time import EventTime
 from o7debrief.domain.value_objects.session_window import SessionWindow
 
-__all__ = ["LOAD_GAME", "SHUTDOWN", "latest_session", "window_of"]
+__all__ = [
+    "CONTINUED",
+    "FILEHEADER",
+    "LOAD_GAME",
+    "SHUTDOWN",
+    "latest_session",
+    "window_of",
+]
 
 LOAD_GAME = "LoadGame"
 SHUTDOWN = "Shutdown"
+# The first line of every journal file. A game launch opens a new file, so a
+# Fileheader is where a run begins, unless the file merely continues a run.
+FILEHEADER = "Fileheader"
+# The last line of a file the game rotated mid-run; the next file continues it.
+CONTINUED = "Continued"
+# The Fileheader field numbering the file within its run; then the number the
+# first file of a run carries.
+_PART_FIELD = "part"
+_FIRST_PART = 1
 
 # Offset added to a found index to advance past it. Structural, not domain.
 _NEXT = 1
@@ -44,8 +60,10 @@ def latest_session(events: tuple[RawEvent, ...]) -> tuple[RawEvent, ...]:
 
     The most recent session ends at the last ``Shutdown`` when the log finishes
     there, otherwise it runs to the end of the log (the game crashed before a
-    clean shutdown or none was recorded). It starts just after the previous
-    ``Shutdown`` (or at the start of the log when there is no earlier one).
+    clean shutdown or none was recorded). It starts at the later of two
+    boundaries: just after the previous ``Shutdown`` and the ``Fileheader`` of
+    the newest game launch. A run that crashed wrote no ``Shutdown``, so
+    without the second boundary it would be merged into the run after it.
     Returns an empty tuple only when there are no events at all.
     """
     ordered = _sorted_by_time(events)
@@ -54,15 +72,31 @@ def latest_session(events: tuple[RawEvent, ...]) -> tuple[RawEvent, ...]:
     shutdowns = tuple(
         index for index, event in enumerate(ordered) if event.event_type == SHUTDOWN
     )
-    if not shutdowns:
-        return ordered
-    last_shutdown = shutdowns[-_NEXT]
-    after_last_shutdown = ordered[last_shutdown + _NEXT :]
-    if after_last_shutdown:
-        return after_last_shutdown
-    earlier_shutdowns = shutdowns[:-_NEXT]
-    start = earlier_shutdowns[-_NEXT] + _NEXT if earlier_shutdowns else _FIRST
-    return ordered[start : last_shutdown + _NEXT]
+    # A Shutdown that is the final event closes the latest run, so it is never
+    # a start; every earlier one marks where the run after it began.
+    end = len(ordered)
+    starts = [index + _NEXT for index in shutdowns if index + _NEXT < end]
+    starts.extend(index for index in range(end) if _opens_a_run(ordered, index))
+    return ordered[max(starts, default=_FIRST) :]
+
+
+def _opens_a_run(ordered: tuple[RawEvent, ...], index: int) -> bool:
+    """Return whether the event at ``index`` is the first line of a new launch.
+
+    A ``Fileheader`` opens every journal file. A file the game rotated to
+    mid-run continues that run, though: the old file ends in ``Continued`` and the new
+    header numbers its part past the first. Either signal keeps the run whole,
+    so a field the game renames cannot split a run on its own.
+    """
+    event = ordered[index]
+    if event.event_type != FILEHEADER:
+        return False
+    if index > _FIRST and ordered[index - _NEXT].event_type == CONTINUED:
+        return False
+    part = event.get(_PART_FIELD)
+    if isinstance(part, int) and not isinstance(part, bool):
+        return part <= _FIRST_PART
+    return True
 
 
 def window_of(session_events: tuple[RawEvent, ...]) -> SessionWindow:

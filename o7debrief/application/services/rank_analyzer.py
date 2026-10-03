@@ -28,6 +28,9 @@ _COMMANDER_FIELD = "Commander"
 _PROMOTION_EVENT = "Promotion"
 _PROGRESS_EVENT = "Progress"
 _RANK_EVENT = "Rank"
+# More distinct commanders than this in one history means its events must be
+# attributed before any level is read from them.
+_ONE_COMMANDER = 1
 
 # Mapping from a rank ladder to the journal field key that carries its value
 # on Promotion, Progress and Rank events.
@@ -49,6 +52,20 @@ def _string_field(event: RawEvent, key: str) -> str | None:
     if isinstance(value, str) and value.strip():
         return value
     return None
+
+
+def _identity(event: RawEvent) -> CommanderId | None:
+    """Return the commander an identity event names, else None.
+
+    Only Commander and LoadGame name one. The FID falls back to the name when
+    the event omits it.
+    """
+    if event.event_type not in (_COMMANDER_EVENT, _LOAD_GAME_EVENT):
+        return None
+    name = _string_field(event, _NAME_FIELD) or _string_field(event, _COMMANDER_FIELD)
+    if name is None:
+        return None
+    return CommanderId(fid=_string_field(event, _FID_FIELD) or name, name=name)
 
 
 def _int_fields(event: RawEvent) -> tuple[tuple[RankLadder, int], ...]:
@@ -93,16 +110,33 @@ class RankAnalyzer:
         FID falls back to the name when the event omits it.
         """
         for event in events:
-            if event.event_type not in (_COMMANDER_EVENT, _LOAD_GAME_EVENT):
-                continue
-            name = _string_field(event, _NAME_FIELD) or _string_field(
-                event, _COMMANDER_FIELD
-            )
-            if name is None:
-                continue
-            fid = _string_field(event, _FID_FIELD) or name
-            return CommanderId(fid=fid, name=name)
+            identity = _identity(event)
+            if identity is not None:
+                return identity
         return None
+
+    def events_of(
+        self, events: tuple[RawEvent, ...], commander: CommanderId
+    ) -> tuple[RawEvent, ...]:
+        """Return the events that belong to ``commander``, in their order.
+
+        Most events do not name a commander, so each belongs to the one the
+        journal identified most recently before it; events ahead of any
+        identity belong to the first one identified. A journal naming a single
+        commander is returned whole. Levels read from the result (ship,
+        balance, ranks) therefore never mix two commanders.
+        """
+        identities = [_identity(event) for event in events]
+        fids = {identity.fid for identity in identities if identity is not None}
+        if len(fids) <= _ONE_COMMANDER:
+            return events
+        current = self.extract_commander(events)
+        kept: list[RawEvent] = []
+        for event, identity in zip(events, identities, strict=True):
+            current = identity or current
+            if current is not None and current.fid == commander.fid:
+                kept.append(event)
+        return tuple(kept)
 
     def _current_tiers(
         self, events: tuple[RawEvent, ...]

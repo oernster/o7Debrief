@@ -48,6 +48,25 @@ _MISSING_FIELD = (
 )
 _MISSING_EVENT_TOKEN = "{event}"
 _MISSING_FIELD_TOKEN = "{field}"
+# Wording for a field the event carried in a form no figure can hold (a
+# negative balance), which is left out of the report rather than ending it.
+_UNREADABLE_FIELD = (
+    "diagnostic.unreadable_field",
+    (
+        "{event} stated a {field} that is not a usable amount, so that reading "
+        "was left out."
+    ),
+)
+# Wording for the journal lines that could not be read at all: a torn line or
+# one with no usable timestamp. Whatever they recorded is absent from the report.
+_UNREADABLE_LINES = (
+    "diagnostic.unreadable_lines",
+    (
+        "Journal lines that could not be read were left out: {count}. Anything "
+        "they recorded is missing from this report."
+    ),
+)
+_COUNT_TOKEN = "{count}"
 
 
 class DebriefPresenter:
@@ -83,26 +102,50 @@ class DebriefPresenter:
         self._text_renderer = text_renderer
         self._app_version = app_version
 
-    def _notices(self, missing_fields: tuple[tuple[str, str], ...]) -> tuple[str, ...]:
-        """Word each unread field as a notice, in the order they were found."""
-        template = self._resolver.generic(*_MISSING_FIELD)
+    def _field_notices(
+        self, wording: tuple[str, str], fields: tuple[tuple[str, str], ...]
+    ) -> tuple[str, ...]:
+        """Word each (event, field) pair as a notice, in the order given."""
+        template = self._resolver.generic(*wording)
         return tuple(
             template.replace(_MISSING_EVENT_TOKEN, event).replace(
                 _MISSING_FIELD_TOKEN, field
             )
-            for event, field in missing_fields
+            for event, field in fields
+        )
+
+    def _notices(
+        self,
+        missing_fields: tuple[tuple[str, str], ...],
+        unreadable_fields: tuple[tuple[str, str], ...],
+        unreadable_lines: int,
+    ) -> tuple[str, ...]:
+        """Word every gap in the reading as a notice."""
+        lines = ()
+        if unreadable_lines:
+            template = self._resolver.generic(*_UNREADABLE_LINES)
+            lines = (template.replace(_COUNT_TOKEN, str(unreadable_lines)),)
+        return (
+            self._field_notices(_MISSING_FIELD, missing_fields)
+            + self._field_notices(_UNREADABLE_FIELD, unreadable_fields)
+            + lines
         )
 
     def present(
         self,
         debrief: SessionDebrief,
         missing_fields: tuple[tuple[str, str], ...] = (),
+        *,
+        unreadable_fields: tuple[tuple[str, str], ...] = (),
+        unreadable_lines: int = 0,
     ) -> DebriefView:
         """Build the fully formatted view for a session debrief.
 
         ``missing_fields`` are the (event, field) pairs a rule named but the
         matching event never carried. They describe the reading rather than
-        the session, so they become notices instead of figures.
+        the session, so they become notices instead of figures. So do
+        ``unreadable_fields`` (the pairs whose value no figure can hold) and
+        ``unreadable_lines`` (how many journal lines could not be read at all).
         """
         fmt = self._formatter
         resolver = self._resolver
@@ -118,5 +161,5 @@ class DebriefPresenter:
             ranks=build_ranks(debrief, fmt, resolver),
             milestones=build_milestones(debrief.moments, self._spec, resolver),
             footer=build_footer(debrief, fmt, resolver, self._app_version),
-            notices=self._notices(missing_fields),
+            notices=self._notices(missing_fields, unreadable_fields, unreadable_lines),
         )

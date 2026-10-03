@@ -14,16 +14,23 @@ import json
 from pathlib import Path
 from typing import Any
 
-__all__ = ["parse_file", "parse_line", "parse_lines"]
+__all__ = ["parse_line", "parse_lines", "read_lines"]
+
+# The byte-order mark an editor may write at the start of a re-saved file. The
+# game never writes one; JSON refuses it, so it would cost the first line.
+# Removed here rather than at each decode because both the cold read and the
+# live tail pass every line through this function.
+_BYTE_ORDER_MARK = "﻿"
 
 
 def parse_line(line: str) -> dict[str, Any] | None:
     """Parse one journal line into a dict or None if it is not a JSON object.
 
-    Whitespace is stripped first. Invalid JSON or JSON that is not an object
-    (for example a bare array or number), yields None so the caller can skip it.
+    Whitespace and a leading byte-order mark are stripped first. Invalid JSON
+    or JSON that is not an object (for example a bare array or number) yields
+    None so the caller can skip it.
     """
-    text = line.strip()
+    text = line.strip().lstrip(_BYTE_ORDER_MARK)
     if not text:
         return None
     try:
@@ -45,15 +52,15 @@ def parse_lines(lines: tuple[str, ...]) -> tuple[dict[str, Any], ...]:
     return tuple(parsed)
 
 
-def parse_file(path: Path) -> tuple[dict[str, Any], ...]:
-    """Parse every line of a journal file into dicts, tolerating bad lines.
+def read_lines(path: Path) -> tuple[str, ...]:
+    """Return every line of a journal file, unparsed, for ``parse_lines``.
 
-    A missing or unreadable file yields an empty tuple rather than raising, so
-    a transient read error degrades gracefully.
+    The lines are handed back raw so a caller can tell how many held something
+    from how many became records. A missing or unreadable file yields an empty
+    tuple rather than raising, so a transient read error degrades gracefully.
     """
     try:
         with open(path, "r", encoding="utf-8", errors="replace") as handle:
-            raw_lines = tuple(handle.readlines())
+            return tuple(handle.readlines())
     except OSError:
         return ()
-    return parse_lines(raw_lines)
