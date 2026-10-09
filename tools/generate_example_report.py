@@ -67,6 +67,16 @@ from o7debrief.infrastructure.render.jinja_text_renderer import (  # noqa: E402
 
 _TAXONOMY = _ROOT / "config" / "debrief_taxonomy.toml"
 _OUT = _ROOT / "docs" / "example-report.html"
+# The site's page-load counter, the same tag every other docs page carries. It
+# is added here rather than in the exporter, so a report a user exports never
+# calls out to the counter.
+_HEAD_CLOSE = "</head>"
+_PAGE_COUNTER = (
+    "<script>window.goatcounter = {path: function (p) "
+    "{ return location.host + p }}</script>\n"
+    '<script data-goatcounter="https://oernster.goatcounter.com/count" '
+    'async src="https://gc.zgo.at/count.js"></script>\n'
+)
 # The day the sample timestamps are built on. It never appears in the output:
 # the site is timeless; a dated specimen reads as an abandoned project the
 # moment it ages. It exists only so the sample's ISO timestamps are valid.
@@ -298,6 +308,7 @@ def main() -> int:
     )
     view = presenter.present(_debrief())
     html = HtmlDebriefExporter().render(view).decode("utf-8")
+    html = html.replace(_HEAD_CLOSE, _PAGE_COUNTER + _HEAD_CLOSE, 1)
     _OUT.write_text(html, encoding="utf-8")
     print(f"wrote {_OUT} ({len(html)} chars)")
     return 0
